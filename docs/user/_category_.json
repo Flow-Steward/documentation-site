@@ -1,0 +1,8 @@
+{
+  "label": "User Guides",
+  "position": 2,
+  "link": {
+    "type": "generated-index",
+    "description": "Install Flow Steward, understand the operator workspace, and run the first workflows."
+  }
+}

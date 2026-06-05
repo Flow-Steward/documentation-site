@@ -1,0 +1,69 @@
+---
+sidebar_position: 1
+title: What is Flow Steward?
+description: Start here for the public Flow Steward documentation.
+---
+
+# What is Flow Steward?
+
+Flow Steward is an autonomous AI software delivery platform. Give it a task and
+it can plan, code, test, review, and coordinate a pull request while keeping
+human approval gates at major decision points.
+
+The application combines an operator web UI, workflow execution, project
+knowledge indexing, agent/tool registries, extension runtimes, and operational
+controls for long-running AI-assisted work.
+
+## Who this documentation is for
+
+- **Operators** who want to install Flow Steward, load demo data, run jobs, and
+  understand the workspace.
+- **Developers** who want to work on the application, test changes, or extend the
+  runtime.
+- **Extension authors** who want to build notification, task, or tool providers
+  without importing provider-specific code into the core server process.
+
+## Documentation map
+
+- [Getting Started](user/getting-started) covers the local Docker Compose path,
+  database initialization, demo data, and admin bootstrap.
+- [Core Concepts](user/core-concepts) names the main product objects: projects,
+  jobs, workflows, agents, tools, skills, datasets, connections, and approvals.
+- [Local Development](developer/local-development) collects the commands
+  contributors need while working on backend, frontend, tests, and quality gates.
+- [Architecture](developer/architecture) explains the first-release runtime
+  shape.
+- [CLI Reference](reference/cli) keeps operator and developer commands in a
+  stable reference page.
+
+## Current status
+
+This site is the first public documentation shell. Some deeper material still
+lives in the application repository under `README.md`, `docs/`, `AGENTS.md`, and
+the engineering standards pack. Promote material here when it is ready for users
+or external contributors.
+
+The classic template will automatically be added to your project after you run the command:
+
+```bash
+npm init docusaurus@latest my-website classic
+```
+
+You can type this command into Command Prompt, Powershell, Terminal, or any other integrated terminal of your code editor.
+
+The command also installs all necessary dependencies you need to run Docusaurus.
+
+## Start your site
+
+Run the development server:
+
+```bash
+cd my-website
+npm run start
+```
+
+The `cd` command changes the directory you're working with. In order to work with your newly created Docusaurus site, you'll need to navigate the terminal there.
+
+The `npm run start` command builds your website locally and serves it through a development server, ready for you to view at http://localhost:3000/.
+
+Open `docs/intro.md` (this page) and edit some lines: the site **reloads automatically** and displays your changes.
