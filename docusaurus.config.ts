@@ -3,6 +3,8 @@ import type {Config} from '@docusaurus/types';
 import type * as Preset from '@docusaurus/preset-classic';
 
 // This runs in Node.js - Don't use client-side code here (browser APIs, JSX...)
+const siteUrl = process.env.SITE_URL ?? 'https://flow-steward.github.io';
+const baseUrl = process.env.BASE_URL ?? '/';
 
 const config: Config = {
   title: 'Flow Steward',
@@ -14,16 +16,11 @@ const config: Config = {
     v4: true, // Improve compatibility with the upcoming Docusaurus v4
   },
 
-  // Set the production url of your site here
-  url: 'https://flowsteward.dev',
-  // Set the /<baseUrl>/ pathname under which your site is served
-  // For GitHub pages deployment, it is often '/<projectName>/'
-  baseUrl: '/',
+  url: siteUrl,
+  baseUrl,
 
-  // GitHub pages deployment config.
-  // If you aren't using GitHub pages, you don't need these.
-  organizationName: 'flow-steward',
-  projectName: 'flow-steward-doc',
+  organizationName: 'Flow-Steward',
+  projectName: 'documentation-site',
 
   onBrokenLinks: 'throw',
 
