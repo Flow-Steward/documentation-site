@@ -570,5 +570,4 @@ When an extension does not compile or render correctly:
 ## Related Pages
 
 - [Build An Extension](../integrations/build-an-extension)
-- [Extension Operator Guide](../integrations/extension-operator-guide)
 - [CLI Reference](../reference/cli)
