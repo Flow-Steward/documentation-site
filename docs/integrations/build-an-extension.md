@@ -1070,5 +1070,4 @@ For a safe update:
 ## Related Pages
 
 - [Developer Extensions](../developer/extensions)
-- [Extension Operator Guide](extension-operator-guide)
 - [CLI Reference](../reference/cli)
