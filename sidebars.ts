@@ -26,6 +26,11 @@ const sidebars: SidebarsConfig = {
     },
     {
       type: 'category',
+      label: 'Deploy & Run',
+      items: ['deploy/installation'],
+    },
+    {
+      type: 'category',
       label: 'Developer Docs',
       items: [
         'developer/local-development',

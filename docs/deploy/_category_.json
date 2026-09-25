@@ -1,0 +1,8 @@
+{
+  "label": "Deploy & Run",
+  "position": 4,
+  "link": {
+    "type": "generated-index",
+    "description": "Install, update, observe, back up, recover, and operate Flow Steward in production-like environments."
+  }
+}

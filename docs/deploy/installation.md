@@ -1,0 +1,304 @@
+---
+sidebar_position: 1
+title: Installation
+description: Install Flow Steward on a VPS or deploy Compact on Railway.
+---
+
+# Installation
+
+On a VPS, the normal path is to clone the repository, run `./install.sh`, answer
+the guided questions, and wait for readiness. The installer builds the selected
+runtime and creates its Docker services. Railway uses a published Compact image
+and three Railway services; the downloadable fresh-project example stages them
+in dependency order.
+
+| Destination | Application layout | Entry point |
+| --- | --- | --- |
+| VPS with Docker | Compact (default) or Scalable | `./install.sh` in a Git checkout |
+| Railway | One Compact runtime, separate PostgreSQL and RabbitMQ | Railway project settings and a published image |
+
+This Railway guide covers Compact. For Scalable, use the VPS installation path
+until a separate Railway deployment has been tested and documented.
+
+## VPS: guided installation
+
+You need access to the Flow Steward Git repository, Git LFS, Docker Engine, and
+the Docker Compose v2 plugin. Run Docker as a regular deployment user, not
+`root`. The host does not need Python or Node for the normal installation path;
+the launcher runs product commands in Linux containers. Allow enough disk space
+for the images and persistent data. For a public HTTPS site, prepare a DNS name
+pointing at the VPS and decide whether Flow Steward or an existing reverse proxy
+will own TLS.
+
+```bash
+git clone <flow-steward-repository-url> flow-steward
+cd flow-steward
+git lfs pull
+./install.sh
+```
+
+Select **Production**. Accept **Compact** for one runtime container, or select
+**Scalable** when app, workers, MCP, and control services need separate
+containers. The wizard also asks who owns ingress and TLS, the public hostname,
+artifact storage, and worker capacity. Its default Compact profile uses local
+persistent storage; choosing bundled storage adds its own SeaweedFS service.
+For a first local trial, the default local certificate and `localhost:8099`
+are enough. For a public VPS, choose the TLS/ingress option that matches the
+actual network: bundled ACME with working DNS and ports 80/443, or the existing
+proxy/Traefik option and its requested backend/network details. Do not accept
+the localhost default for a public domain.
+
+The first build can take time. Leave the installer running until it reports
+completion; rerun the same `./install.sh` after a recoverable interruption.
+Then check the result:
+
+```bash
+./flow-steward status
+./flow-steward doctor
+./flow-steward stack status
+```
+
+Open the URL printed by the installer and create the first administrator.
+For a non-local address, the installer prints the location of an owner-only
+setup token and a bootstrap URL. Keep the token private. If it expires while
+no administrator exists, rerun `./install.sh` to issue a new link. AI provider
+credentials are optional at installation and can be configured after login.
+
+The guided path does **not** currently configure your DNS, an external proxy,
+or off-host backups. Those remain operator steps. The installer also requires
+the repository and Git LFS content to be accessible from that host. Before
+holding real data, verify backups and a restore procedure for your installation.
+
+## Railway: Compact in dependency order
+
+For a **new, empty Railway project**, download the
+[Compact deployment example](/examples/railway/deploy-compact.sh). Install the
+Railway CLI, `jq`, `openssl`, and `curl`, then run from a new directory:
+
+```bash
+railway login
+railway init --name flow-steward
+bash deploy-compact.sh
+```
+
+If you already created an empty project, use `railway link` instead of
+`railway init`. The example refuses to modify a project that already has
+services. It generates distinct PostgreSQL and RabbitMQ passwords, creates
+the three services and their volumes before connecting images, waits for the
+database and broker to become ready, and only then starts Compact. It pins the
+2026-09-25 evaluated images, checks `/health/ready`, and prints the private
+first-admin setup link from Compact's deploy logs. Open that link promptly;
+it expires 15 minutes after Compact starts. Keep the downloaded file if you need
+to review the exact commands;
+it is a fresh-install example, not an upgrade tool. If a step fails, inspect
+the named Railway services and their logs before deciding whether to remove
+the partial installation and start with a new empty project.
+
+Railway's older `railway.json` configures only one service and is deprecated;
+it cannot enforce the PostgreSQL → RabbitMQ → Compact sequence. Railway's
+[project-level IaC](https://docs.railway.com/infrastructure-as-code) can
+describe the graph, but a staged installer still has to wait for the two
+dependencies before enabling the app image.
+
+### Manual sequence
+
+Railway does not run this repository's Compose file. Create **three services in
+one project and environment**, with private networking enabled. Start the
+database first, then the broker, and only then connect the Compact image. Do
+not attach an image to an empty Compact service before configuring its volume
+and variables: Railway starts image-backed services immediately, so an early
+boot can write incomplete state. Use immutable image digests from an evaluated
+Flow Steward release, not a mutable `latest` tag.
+
+### 1. PostgreSQL
+
+Create an empty service named `postgres`. Attach a persistent Railway volume at
+`/var/lib/postgresql/data`. Set these service variables before choosing the
+image:
+
+```text
+PGDATA=/var/lib/postgresql/data/pgdata
+POSTGRES_DB=flow_steward
+POSTGRES_USER=flow_steward
+POSTGRES_PASSWORD=<new strong random password>
+```
+
+`PGDATA` must be a subdirectory of the volume because a new Railway volume can
+contain `lost+found`, which PostgreSQL refuses as its data directory. Use the
+published **Flow Steward PostgreSQL 17 image with Apache AGE and pgvector**,
+`ghcr.io/vasily-piksis/fs-postgres-extended@sha256:47a10afb648b55a29e0422f7944a5eb8f12f99f4fecfbb5a2af721fe42196ce8`
+for the 2026-09-25 evaluated deployment.
+Railway's standard managed PostgreSQL image does not supply the required AGE
+extension. Wait until its logs say the database is ready to accept connections.
+Keep port 5432 private.
+
+### 2. RabbitMQ
+
+Create an empty service named `rabbitmq`. Attach a persistent volume at
+`/var/lib/rabbitmq` so queue data survives replacement. Set:
+
+```text
+RABBITMQ_DEFAULT_USER=flow_steward
+RABBITMQ_DEFAULT_PASS=<different strong random password>
+RABBITMQ_DEFAULT_VHOST=flow
+```
+
+Connect the 2026-09-25 evaluated RabbitMQ image
+`rabbitmq@sha256:e582c0bc7766f3342496d8485efb5a1df782b5ce3886ad017e2eaae442311f69`.
+Wait for the AMQP listener on port 5672 and keep it private; the management
+port must not be published just to make the app work.
+
+### 3. Compact runtime
+
+Create an **empty** service named `compact`, attach a persistent volume at
+`/data`, and generate a Railway public domain routed to container port `8080`.
+Set the following variables before adding its image. The `${{...}}` strings
+are Railway references to the two backing services; keep the service names
+exactly as shown or adjust the references accordingly.
+
+```text
+FS_DB_DSN=postgresql://${{postgres.POSTGRES_USER}}:${{postgres.POSTGRES_PASSWORD}}@postgres.railway.internal:5432/${{postgres.POSTGRES_DB}}
+RABBITMQ_URL=amqp://${{rabbitmq.RABBITMQ_DEFAULT_USER}}:${{rabbitmq.RABBITMQ_DEFAULT_PASS}}@rabbitmq.railway.internal:5672/flow
+POSTGRES_HOST=postgres.railway.internal
+POSTGRES_DB=${{postgres.POSTGRES_DB}}
+POSTGRES_USER=${{postgres.POSTGRES_USER}}
+POSTGRES_PASSWORD=${{postgres.POSTGRES_PASSWORD}}
+RABBITMQ_HOST=rabbitmq.railway.internal
+FS_PUBLIC_BASE_URL=https://<generated-railway-domain>
+ARTIFACT_STORAGE_BACKEND=local_fs
+PORT=8080
+```
+
+Configure one replica, health check `/health/ready`, **Always** restart, zero
+deployment overlap, and at least 180 seconds of draining time. Compact is a
+single-runtime profile; overlapping two live copies against the same database
+and broker is unsupported. Finally connect the 2026-09-25 evaluated Compact
+image
+`ghcr.io/vasily-piksis/flow-steward-compact@sha256:9a6bb5598e538602e46bd1e496f28aac583109d6734eedca68146bf807339768`
+from source commit `5f55e90d1f3298173ac9c37dc3b53a3ba4ab5f80`.
+Wait for Railway deployment status **Success** and HTTP readiness. A successful
+image upload or a running PostgreSQL service alone does not prove the app is
+ready.
+
+The two `*_HOST` values are required even though the connection URLs already
+contain hostnames: Compact checks dependency readiness through those separate
+settings. Its LangGraph schema setup also builds a PostgreSQL URI from the
+`POSTGRES_*` components, including the password. The default PostgreSQL
+hostname, `pg-fs`, belongs to the Compose network and does not resolve inside
+Railway.
+
+The runtime initializes the empty database, generates its own long-lived app
+secrets on `/data`, and logs a one-time first-admin URL. Open that URL within
+15 minutes and create the administrator. If it expires while there is still no
+administrator, restart the runtime to receive a new link. Do not copy the
+token into tickets, screenshots, or a query string.
+
+### First administrator and the Railway container
+
+Opening the public `/bootstrap` page directly shows a **Setup token** field:
+the public page cannot display the secret. Use the complete URL containing
+`#setup-token=...` instead. The browser removes that fragment from the address
+bar and submits the token with the form. The downloaded deployment example
+prints this URL when Compact first becomes ready. If you configured Railway
+manually, open **Compact → Deployments → current deployment → Deploy Logs** in
+the Railway dashboard and find the line beginning `Flow Steward has no
+administrator yet`. Copy the whole URL at the end of that line privately. The
+link is issued at startup and lasts **15 minutes**, not an hour.
+
+If the link has expired and no user has been created, restart **only the
+Compact service** from its deployment menu, then read its fresh Deploy Logs.
+Keep the PostgreSQL and RabbitMQ services and all three volumes in place. From
+a local terminal linked to the Railway project, the equivalent commands are:
+
+```bash
+railway service restart --service compact --yes
+railway logs --service compact --lines 100 --filter 'Flow Steward has no administrator yet'
+```
+
+The restart mints another link while the user table is empty. If the logs say
+`a setup link issued earlier is still valid`, read the earlier deployment's
+log or wait until it expires before restarting. Do not use an old link after a
+new one is issued. After you submit the form, sign in at `/login` with the new
+administrator account.
+
+Railway runs a **published Docker image**, not a Git checkout. Inside the
+running Compact container the packaged application is under `/app`; `/data`
+is the persistent volume, and `/project` points to `/data/projects` for user
+projects. The service source in Railway therefore need not contain a visible
+repository folder. You do **not** need a shell or a Flow Steward CLI command
+to create the first administrator. If you need to inspect the running container,
+register an SSH key with Railway and run `railway ssh --service compact`
+from a linked local terminal; `pwd` there returns `/app`. `railway run` runs a
+command on your **local machine** with Railway variables and is not a shell in
+the deployed container. On Compact, `flow-steward users issue-bootstrap-token`
+is installer-owned and is not the recovery command; use the restart and log
+procedure above.
+
+### Administrative commands on Railway
+
+Open the **Compact service console** in Railway. You start inside the running
+container; no repository checkout or local environment variables are needed.
+The application is under `/app`, but you can run its management command from
+any directory:
+
+```bash
+flow-steward --help
+flow-steward users list
+flow-steward users create --role admin
+flow-steward projects list
+flow-steward jobs list
+flow-steward status
+flow-steward users create --help
+```
+
+`users create --role admin` opens an interactive form in the service terminal;
+enter the email and password there. It is an alternative to the one-time setup
+link when no administrator exists yet. The built-in command obtains Compact's
+saved runtime settings for that command alone, then uses its container-aware
+management adapters. Do not read or copy
+`/data/state/runtime-secrets.json` yourself. If `flow-steward` is not found,
+the deployed image predates this command: update the Compact image. Until then,
+the [legacy Railway command wrapper](/examples/railway/admin-compact.sh) can
+run the packaged CLI over Railway SSH from your computer. That fallback needs
+Railway CLI and a registered SSH key; `railway ssh --service compact` opens the
+same running container from a locally linked Railway project.
+
+The command is part of the Compact image, so its invocation is the same in a
+container console on another provider. Each provider's deployment, persistent
+storage, and console access still need their own tested installation guide.
+
+For user changes, inspect the command-specific help first. For example,
+`users create` and `users set-password` accept `--password-stdin`, so do not
+put passwords on the command line. Creating the initial administrator in the
+browser using the one-time setup link remains the simplest path.
+
+Compact on Railway has
+no Docker daemon, Compose installation, retained `fs-cli`, `fs-audit`, or
+`fs-test-runner` services. Host installation, stack/config management, quality
+and test commands that require those services are therefore **not** available
+through this runtime shell. The built-in command explains this for unsupported
+operations. Use the Railway dashboard/CLI for deployment operations and the
+supported product/Compact maintenance commands for app administration.
+
+Verify the public `/health` and `/health/ready` endpoints, the sign-in page,
+an authenticated sign-in, and one small workflow. Restart Compact once and
+confirm the same login and data still work; this checks that the `/data` volume
+and generated keys survived. Before holding valuable data, arrange backups of
+**all three** persistent stores: PostgreSQL, RabbitMQ, and `/data`. The
+Compose-based Flow Steward restore command is not a Railway restore procedure.
+
+The downloadable example automates the passwords, services, volumes, domain,
+variables, and dependency sequence for a fresh project. Manual setup still
+requires these steps. `PORT=8080` must match the Compact listener because
+Railway uses it for its health check; the domain target port alone does not
+configure that check. A prebuilt image is required: Railway's native builder
+has rejected the source Dockerfile's BuildKit bind mounts in testing. The
+Railway CLI and its helper tools are separate from the VPS installer.
+
+## Other providers
+
+Compact's provider contract is not Railway-specific: it requires persistent
+`/data`, compatible PostgreSQL 17 with AGE/pgvector, RabbitMQ, a public HTTP
+route, and graceful shutdown. Do not treat the Railway walkthrough as proof
+that another provider has been tested. Verify each provider's volumes, network,
+startup ordering, health checks, and backup/restore path independently.
