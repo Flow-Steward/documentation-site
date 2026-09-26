@@ -1,7 +1,7 @@
 ---
 sidebar_position: 1
 title: Installation
-description: Install Flow Steward on a VPS, Railway, or Render.
+description: Install Flow Steward on a VPS, Railway, Render, or Elestio.
 ---
 
 # Installation
@@ -17,8 +17,9 @@ in dependency order.
 | VPS with Docker | Compact (default) or Scalable | `./install.sh` in a Git checkout |
 | Railway | One Compact runtime, separate PostgreSQL and RabbitMQ | Railway project settings and a published image |
 | Render | One Compact runtime, separate PostgreSQL and RabbitMQ | [One public Blueprint](render) that pulls the Compact image |
+| Elestio | Compact, PostgreSQL and RabbitMQ on one dedicated VM | [Compose template](elestio) using the same public images |
 
-The Railway and Render guides cover Compact. For Scalable, use the VPS
+The Railway, Render and Elestio guides cover Compact. For Scalable, use the VPS
 installation path until a separate hosted deployment has been tested and
 documented.
 
