@@ -395,6 +395,86 @@ configure that check. A prebuilt image is required: Railway's native builder
 has rejected the source Dockerfile's BuildKit bind mounts in testing. The
 Railway CLI and its helper tools are separate from the VPS installer.
 
+## Fly.io: Compact with persistent volumes
+
+Use the same public Compact, extension-enabled PostgreSQL and RabbitMQ images
+as the Render and Elestio examples. Fly uses one application per image, so
+this installation has three TOMLs:
+
+- [Compact configuration](/examples/fly/compact.toml)
+- [PostgreSQL configuration](/examples/fly/postgres.toml)
+- [RabbitMQ configuration](/examples/fly/rabbitmq.toml)
+- [Complete installation commands](/examples/fly/installation.txt)
+
+The same files are in the public
+[deployment configuration repository](https://github.com/Flow-Steward/flow-steward-deploy/tree/main/fly).
+They pull pinned images; they do not build a separate Fly-specific image.
+
+Install [Fly CLI](https://fly.io/docs/flyctl/install/) and sign in with
+`fly auth login`. A paid account is needed for a persistent installation:
+the trial stops each Machine after five minutes. Choose one organization,
+one region and a globally unique app-name prefix. Replace `your-fs-demo`
+in all three files, including private hostnames and the public URL.
+
+Follow the supplied commands to create three apps and volumes, import
+generated passwords through stdin, and allocate public IPs only for Compact.
+Start PostgreSQL first and verify `pg_isready`; start RabbitMQ second and
+verify `rabbitmq-diagnostics -q ping`; then deploy Compact. Keep
+`--ha=false`: these are single-instance stores, without database or broker
+replication. Compact also waits for its dependencies before initialization.
+
+The example uses 2 performance CPUs / 4 GB RAM for Compact, 1 shared CPU / 2 GB for each
+dependency, and 10 GB / 10 GB / 1 GB volumes. These are tested sizes, not a
+minimum requirement. Review Fly's current estimate. Auto-stop is disabled
+because workers must run without web traffic; this means ongoing compute
+charges. PostgreSQL and RabbitMQ stay on the organization's private network.
+
+During testing, 2 shared CPUs started the fresh installation, but a restart
+did not become ready within ten minutes after CPU burst credits were spent.
+Linux reported about 76% CPU steal time. Changing only Compact to performance
+CPUs, keeping the same image, memory and volume, restored readiness in about
+2–3 minutes. The template therefore uses performance CPUs for Compact; its
+price differs from the shared-CPU plans. See
+[Fly's CPU performance explanation](https://fly.io/docs/machines/cpu-performance/).
+
+Wait for public `/health/ready` to return HTTP 200. Initial role startup can
+take several minutes after Fly reports a Machine as `started`. Read Compact's
+logs for the private first-administrator URL; it expires after 15 minutes.
+Alternatively, create the first administrator inside the existing Machine:
+
+```bash
+fly ssh console -a <prefix>-compact --pty -C 'flow-steward users create --role admin'
+```
+
+Enter the email and password interactively, then open
+`https://<prefix>-compact.fly.dev` and sign in. Administrative commands are
+already on `PATH`:
+
+```bash
+fly ssh console -a <prefix>-compact -C 'flow-steward --help'
+fly ssh console -a <prefix>-compact -C 'flow-steward users list'
+fly ssh console -a <prefix>-compact -C 'flow-steward status'
+fly ssh console -a <prefix>-compact -C 'flow-steward doctor'
+```
+
+Use `fly ssh console`, which connects to the running installation.
+`fly console` creates a separate temporary Machine. The application is under
+`/app`, persistent files are under `/data`, and no Git checkout or manual
+database-secret exports are needed for administration. As on Railway,
+commands that require host Docker/Compose or quality containers are not
+available in this runtime shell.
+
+Restart with `fly apps restart <prefix>-compact`, retaining all volumes.
+This interrupts availability. The TOML specifies SIGTERM and time to drain;
+keep dependencies running during shutdown. Do not use force-stop. The
+`fly machine restart --time 180` invocation was rejected by the Machines
+API during testing, so use the tested app restart command.
+
+Before storing valuable data, arrange and test backups of PostgreSQL,
+RabbitMQ and `/data`. These files do not configure high availability or
+certify backup/restore or AI-provider execution. Remove disposable test apps
+and their volumes when finished; merely stopping Machines retains storage.
+
 ## Other providers
 
 Compact's provider contract is not Railway-specific: it requires persistent
