@@ -27,7 +27,7 @@ const sidebars: SidebarsConfig = {
     {
       type: 'category',
       label: 'Deploy & Run',
-      items: ['deploy/installation'],
+      items: ['deploy/installation', 'deploy/render'],
     },
     {
       type: 'category',

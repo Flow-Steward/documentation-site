@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Fresh-project example for the 2026-09-25 evaluated Flow Steward Compact image.
+# Fresh-project example for the 2026-09-26 evaluated Flow Steward Compact image.
 # Railway's single-service railway.json cannot order three services. This script
 # leaves every service without an image until its volume and variables exist.
 set -euo pipefail
@@ -7,7 +7,7 @@ set -euo pipefail
 environment_name=production
 postgres_image=ghcr.io/vasily-piksis/fs-postgres-extended@sha256:47a10afb648b55a29e0422f7944a5eb8f12f99f4fecfbb5a2af721fe42196ce8
 rabbitmq_image=rabbitmq@sha256:e582c0bc7766f3342496d8485efb5a1df782b5ce3886ad017e2eaae442311f69
-compact_image=ghcr.io/vasily-piksis/flow-steward-compact@sha256:9a6bb5598e538602e46bd1e496f28aac583109d6734eedca68146bf807339768
+compact_image=ghcr.io/vasily-piksis/flow-steward-compact@sha256:e41f179da299904b02cd60cb8b50d73e20f7fcf9f384a5bbc8edd17c8bfcf214
 
 for command_name in railway jq openssl curl; do
   command -v "$command_name" >/dev/null || {

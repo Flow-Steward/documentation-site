@@ -1,7 +1,7 @@
 ---
 sidebar_position: 1
 title: Installation
-description: Install Flow Steward on a VPS or deploy Compact on Railway.
+description: Install Flow Steward on a VPS, Railway, or Render.
 ---
 
 # Installation
@@ -16,9 +16,11 @@ in dependency order.
 | --- | --- | --- |
 | VPS with Docker | Compact (default) or Scalable | `./install.sh` in a Git checkout |
 | Railway | One Compact runtime, separate PostgreSQL and RabbitMQ | Railway project settings and a published image |
+| Render | One Compact runtime, separate PostgreSQL and RabbitMQ | [One public Blueprint](render) that pulls the Compact image |
 
-This Railway guide covers Compact. For Scalable, use the VPS installation path
-until a separate Railway deployment has been tested and documented.
+The Railway and Render guides cover Compact. For Scalable, use the VPS
+installation path until a separate hosted deployment has been tested and
+documented.
 
 ## VPS: guided installation
 
@@ -37,6 +39,11 @@ git lfs pull
 ./install.sh
 ```
 
+Use a full clone, without `--depth`: source builds verify release history and
+need the referenced ancestor commits. If the repository is private, configure
+your normal Git authentication before cloning. The installer does not provision
+GitHub access for you.
+
 Select **Production**. Accept **Compact** for one runtime container, or select
 **Scalable** when app, workers, MCP, and control services need separate
 containers. The wizard also asks who owns ingress and TLS, the public hostname,
@@ -47,6 +54,30 @@ are enough. For a public VPS, choose the TLS/ingress option that matches the
 actual network: bundled ACME with working DNS and ports 80/443, or the existing
 proxy/Traefik option and its requested backend/network details. Do not accept
 the localhost default for a public domain.
+
+For a temporary test by IP, select **Bundled Traefik**, **Hostname generated
+certificate**, and enter the server IP in **Public host**. Set an unused
+**Public port**, for example `18599`. Expand **Show advanced** to set an unused
+**Plain-HTTP redirect port**, for example `18598`. Open
+`https://<server-ip>:18599`. The generated certificate is self-signed, so a
+browser will warn about its trust; a production public site should use a DNS
+name and a trusted certificate. Database, broker, and storage ports remain
+private to Docker.
+
+The normal interactive form lets you edit these fields. The line-oriented
+`--plain` mode currently prompts for choices but keeps defaults for optional
+text and numeric fields. Supply the address and ports explicitly in that mode:
+
+```bash
+./install.sh --plain --public-host <server-ip> \
+  --public-port 18599 --redirect-http-port 18598
+```
+
+When testing alongside an existing installation, use a separate clone,
+unused ports, and a unique Compose project name on the first invocation:
+`FS_COMPOSE_PROJECT_NAME=fs-demo-test ./install.sh`. The installer records that
+identity for subsequent commands in that clone. Do not reuse a working
+installation's directory, project name, or persistent data.
 
 The first build can take time. Leave the installer running until it reports
 completion; rerun the same `./install.sh` after a recoverable interruption.
@@ -63,6 +94,23 @@ For a non-local address, the installer prints the location of an owner-only
 setup token and a bootstrap URL. Keep the token private. If it expires while
 no administrator exists, rerun `./install.sh` to issue a new link. AI provider
 credentials are optional at installation and can be configured after login.
+
+Run administrative commands from the clone; the `./flow-steward` launcher
+selects the installed containers and their configuration:
+
+```bash
+./flow-steward users list
+./flow-steward projects list
+./flow-steward jobs list
+./flow-steward users create --help
+./flow-steward stack restart --confirm
+./flow-steward status
+```
+
+The VPS installer link lasts **60 minutes**; the Compact provider startup link
+described below lasts **15 minutes**. After a restart, verify that the same user
+can still sign in. Email delivery and AI execution require their respective
+provider settings; a successful installation does not configure those services.
 
 The guided path does **not** currently configure your DNS, an external proxy,
 or off-host backups. Those remain operator steps. The installer also requires
@@ -86,7 +134,7 @@ If you already created an empty project, use `railway link` instead of
 services. It generates distinct PostgreSQL and RabbitMQ passwords, creates
 the three services and their volumes before connecting images, waits for the
 database and broker to become ready, and only then starts Compact. It pins the
-2026-09-25 evaluated images, checks `/health/ready`, and prints the private
+2026-09-26 evaluated images, checks `/health/ready`, and prints the private
 first-admin setup link from Compact's deploy logs. Open that link promptly;
 it expires 15 minutes after Compact starts. Keep the downloaded file if you need
 to review the exact commands;
@@ -127,7 +175,7 @@ POSTGRES_PASSWORD=<new strong random password>
 contain `lost+found`, which PostgreSQL refuses as its data directory. Use the
 published **Flow Steward PostgreSQL 17 image with Apache AGE and pgvector**,
 `ghcr.io/vasily-piksis/fs-postgres-extended@sha256:47a10afb648b55a29e0422f7944a5eb8f12f99f4fecfbb5a2af721fe42196ce8`
-for the 2026-09-25 evaluated deployment.
+for the 2026-09-26 evaluated deployment.
 Railway's standard managed PostgreSQL image does not supply the required AGE
 extension. Wait until its logs say the database is ready to accept connections.
 Keep port 5432 private.
@@ -143,7 +191,7 @@ RABBITMQ_DEFAULT_PASS=<different strong random password>
 RABBITMQ_DEFAULT_VHOST=flow
 ```
 
-Connect the 2026-09-25 evaluated RabbitMQ image
+Connect the 2026-09-26 evaluated RabbitMQ image
 `rabbitmq@sha256:e582c0bc7766f3342496d8485efb5a1df782b5ce3886ad017e2eaae442311f69`.
 Wait for the AMQP listener on port 5672 and keep it private; the management
 port must not be published just to make the app work.
@@ -172,10 +220,10 @@ PORT=8080
 Configure one replica, health check `/health/ready`, **Always** restart, zero
 deployment overlap, and at least 180 seconds of draining time. Compact is a
 single-runtime profile; overlapping two live copies against the same database
-and broker is unsupported. Finally connect the 2026-09-25 evaluated Compact
+and broker is unsupported. Finally connect the 2026-09-26 evaluated Compact
 image
-`ghcr.io/vasily-piksis/flow-steward-compact@sha256:9a6bb5598e538602e46bd1e496f28aac583109d6734eedca68146bf807339768`
-from source commit `5f55e90d1f3298173ac9c37dc3b53a3ba4ab5f80`.
+`ghcr.io/vasily-piksis/flow-steward-compact@sha256:e41f179da299904b02cd60cb8b50d73e20f7fcf9f384a5bbc8edd17c8bfcf214`
+from source commit `367d5ff885a5b7557cdb0fb712fe754539fa4d09`.
 Wait for Railway deployment status **Success** and HTTP readiness. A successful
 image upload or a running PostgreSQL service alone does not prove the app is
 ready.
@@ -211,7 +259,7 @@ Keep the PostgreSQL and RabbitMQ services and all three volumes in place. From
 a local terminal linked to the Railway project, the equivalent commands are:
 
 ```bash
-railway service restart --service compact --yes
+railway restart --service compact --yes
 railway logs --service compact --lines 100 --filter 'Flow Steward has no administrator yet'
 ```
 
@@ -279,6 +327,13 @@ and test commands that require those services are therefore **not** available
 through this runtime shell. The built-in command explains this for unsupported
 operations. Use the Railway dashboard/CLI for deployment operations and the
 supported product/Compact maintenance commands for app administration.
+
+The 2026-09-26 fresh-project check used the downloadable example and this exact
+image: dependency startup, readiness, first administrator, browser sign-in,
+`users list`, `projects list`, `jobs list`, and `status` passed. After restarting
+Compact, the same administrator and existing session still worked, and a file
+on `/data` and the saved runtime keys retained their checksums. This was an
+installation check, not a test of every CLI command or AI workflow.
 
 Verify the public `/health` and `/health/ready` endpoints, the sign-in page,
 an authenticated sign-in, and one small workflow. Restart Compact once and
