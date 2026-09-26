@@ -1,14 +1,15 @@
 ---
 sidebar_position: 1
 title: Installation
-description: Install Flow Steward on a VPS, Railway, Render, or Elestio.
+description: Install Flow Steward on a VPS, Railway, Render, Elestio, or Fly.io.
 ---
 
 # Installation
 
 On a VPS, the normal path is to clone the repository, run `./install.sh`, answer
-the guided questions, and wait for readiness. The installer builds the selected
-runtime and creates its Docker services. Railway uses a published Compact image
+the guided questions, and wait for readiness. Production installation downloads
+verified images from an official release and creates its Docker services.
+Railway uses a published Compact image
 and three Railway services; the downloadable fresh-project example stages them
 in dependency order.
 
@@ -18,8 +19,9 @@ in dependency order.
 | Railway | One Compact runtime, separate PostgreSQL and RabbitMQ | Railway project settings and a published image |
 | Render | One Compact runtime, separate PostgreSQL and RabbitMQ | [One public Blueprint](render) that pulls the Compact image |
 | Elestio | Compact, PostgreSQL and RabbitMQ on one dedicated VM | [Compose template](elestio) using the same public images |
+| Fly.io | One Compact Machine, separate PostgreSQL and RabbitMQ Machines | [Three TOML examples](#flyio-compact-with-persistent-volumes) and sequential deployment commands |
 
-The Railway, Render and Elestio guides cover Compact. For Scalable, use the VPS
+The Railway, Render, Elestio and Fly.io guides cover Compact. For Scalable, use the VPS
 installation path until a separate hosted deployment has been tested and
 documented.
 
@@ -42,8 +44,10 @@ git lfs pull
 ./install.sh
 ```
 
-Use a full clone, without `--depth`: source builds verify release history and
-need the referenced ancestor commits. If the repository is private, configure
+Use a full clone, without `--depth`: the installer resolves an official release
+and switches to its exact Git tag. Production requires an available stable
+GitHub Release and a complete set of verified product images; it does not fall
+back to building application images from an arbitrary checkout. If the repository is private, configure
 your normal Git authentication before cloning. The installer does not provision
 GitHub access for you.
 
@@ -83,7 +87,7 @@ unused ports, and a unique Compose project name on the first invocation:
 identity for subsequent commands in that clone. Do not reuse a working
 installation's directory, project name, or persistent data.
 
-The first build can take time. Leave the installer running until it reports
+The first image download and infrastructure preparation can take time. Leave the installer running until it reports
 completion; rerun the same `./install.sh` after a recoverable interruption.
 Then check the result:
 
