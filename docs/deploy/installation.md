@@ -27,7 +27,9 @@ documented.
 
 You need access to the Flow Steward Git repository, Git LFS, Docker Engine, and
 the Docker Compose v2 plugin. Run Docker as a regular deployment user, not
-`root`. The host does not need Python or Node for the normal installation path;
+`root`. On a Linux VPS with systemd, the user also needs sudo to set up automatic
+startup; the installer requests it after the runtime is ready. The host does not
+need Python or Node for the normal installation path;
 the launcher runs product commands in Linux containers. Allow enough disk space
 for the images and persistent data. For a public HTTPS site, prepare a DNS name
 pointing at the VPS and decide whether Flow Steward or an existing reverse proxy
@@ -48,8 +50,9 @@ GitHub access for you.
 Select **Production**. Accept **Compact** for one runtime container, or select
 **Scalable** when app, workers, MCP, and control services need separate
 containers. The wizard also asks who owns ingress and TLS, the public hostname,
-artifact storage, and worker capacity. Its default Compact profile uses local
-persistent storage; choosing bundled storage adds its own SeaweedFS service.
+artifact storage, and worker capacity. Select **Local filesystem** explicitly
+for local persistent storage; choosing bundled storage adds its own SeaweedFS
+service.
 For a first local trial, the default local certificate and `localhost:8099`
 are enough. For a public VPS, choose the TLS/ingress option that matches the
 actual network: bundled ACME with working DNS and ports 80/443, or the existing
@@ -87,7 +90,6 @@ Then check the result:
 ```bash
 ./flow-steward status
 ./flow-steward doctor
-./flow-steward stack status
 ```
 
 Open the URL printed by the installer and create the first administrator.
@@ -104,9 +106,51 @@ selects the installed containers and their configuration:
 ./flow-steward projects list
 ./flow-steward jobs list
 ./flow-steward users create --help
-./flow-steward stack restart --confirm
 ./flow-steward status
 ```
+
+`stack status` and `stack restart` are Scalable commands. Compact does not retain
+the CLI container those commands manage; use `status` and `doctor` for its
+readiness, and the installer for installation recovery.
+
+### Linux VPS automatic startup
+
+For Compact on native Linux with systemd and the system Docker daemon, successful installation
+configures `flow-steward-<compose-project>.service`. The installer prints its exact
+name. This service starts the installed containers after a server or Docker
+restart, waiting for the database and broker health checks first. It does not
+download images, rebuild, or rerun the installation wizard during boot.
+
+The systemd service is a one-time startup action, so `active (exited)` is normal;
+use `./flow-steward status` and `doctor` to check application readiness. Docker
+still owns failure retries, including Compact's finite retry policy. This avoids
+two supervisors continually restarting the same containers.
+
+Use the service name printed by your installer:
+
+```bash
+sudo systemctl status flow-steward-<compose-project>.service
+# Stop this installation and keep it stopped across reboots:
+sudo systemctl disable --now flow-steward-<compose-project>.service
+# Restore automatic startup and start the installation:
+sudo systemctl enable --now flow-steward-<compose-project>.service
+```
+
+Rerunning the installer refreshes the recorded container IDs but preserves an
+explicitly disabled service. That explicit installation starts the application
+and restores stop control, but does not re-enable future automatic startup.
+Stopping the service drains the application before stopping its database and
+broker. If containers were deleted, rerun `./install.sh`;
+the boot service refuses to silently recreate them. Keep the checkout,
+configuration and volumes. Never delete volumes to recover a stopped service.
+
+If system service setup fails because sudo is unavailable, the runtime may
+already be running, but automatic startup is not configured. Have an administrator
+provide the required sudo access and rerun the installer. On Mac, Windows,
+rootless/remote Docker, or managed platforms, follow that platform's startup
+settings; the installer reports that no host systemd service was configured.
+Scalable retains its existing Docker restart policies. Switching from Compact to
+Scalable removes the matching Compact startup service automatically.
 
 The VPS installer link lasts **60 minutes**; the Compact provider startup link
 described below lasts **15 minutes**. After a restart, verify that the same user
