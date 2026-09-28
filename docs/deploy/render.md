@@ -20,9 +20,9 @@ This is the **Compact** topology. For **Scalable**, use the
 [VPS installation](installation#vps-guided-installation) until a Render-specific
 Scalable deployment has been tested.
 
-Fresh Blueprint acceptance on **2026-09-26** used Compact source
-`367d5ff885a5b7557cdb0fb712fe754539fa4d09`, image digest
-`sha256:e41f179da299904b02cd60cb8b50d73e20f7fcf9f384a5bbc8edd17c8bfcf214`.
+Fresh Blueprint acceptance on **2026-09-28** used Compact source
+`31652e30e9c65b16576e9a4b3d105072c24b8337`, image digest
+`sha256:dee794207e38a4828cadd659cb41cbeaf65a1bdfedd6e4532bcb2a89c77681b1`.
 It covered readiness, first-administrator setup, browser sign-in, the users,
 projects, jobs and status CLI commands, and a restart preserving the user,
 existing session, a data file and saved runtime keys. Graceful shutdown was
@@ -96,7 +96,7 @@ If you cannot use the first-administrator link, create an administrator from
 this private Shell instead:
 
 ```bash
-flow-steward users create --role admin
+flow-steward users create --role admin --plain
 ```
 
 Enter your email and password in the interactive form. For a shell that does

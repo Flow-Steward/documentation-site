@@ -17,10 +17,10 @@ in dependency order.
 | Destination | Application layout | Entry point |
 | --- | --- | --- |
 | VPS with Docker | Compact (default) or Scalable | `./install.sh` in a Git checkout |
-| Railway | One Compact runtime, separate PostgreSQL and RabbitMQ | Railway project settings and a published image |
+| Railway | One Compact runtime, separate PostgreSQL and RabbitMQ | `bash deploy-compact.sh` with guided project setup |
 | Render | One Compact runtime, separate PostgreSQL and RabbitMQ | [One public Blueprint](render) that pulls the Compact image |
 | Elestio | Compact, PostgreSQL and RabbitMQ on one dedicated VM | [Compose template](elestio) using the same public images |
-| Fly.io | One Compact Machine, separate PostgreSQL and RabbitMQ Machines | [Three TOML examples](#flyio-compact-with-persistent-volumes) and sequential deployment commands |
+| Fly.io | One Compact Machine, separate PostgreSQL and RabbitMQ Machines | [Guided installer and three TOML examples](#flyio-compact-with-persistent-volumes) |
 
 The Railway, Render, Elestio and Fly.io guides cover Compact. For Scalable, use the VPS
 installation path until a separate hosted deployment has been tested and
@@ -195,22 +195,30 @@ holding real data, verify backups and a restore procedure for your installation.
 
 ## Railway: Compact in dependency order
 
-For a **new, empty Railway project**, download the
-[Compact deployment example](/examples/railway/deploy-compact.sh). Install the
-Railway CLI, `jq`, `openssl`, and `curl`, then run from a new directory:
+Download the [Compact installer](/examples/railway/deploy-compact.sh), then
+run it from a new directory:
 
 ```bash
-railway login
-railway init --name flow-steward
 bash deploy-compact.sh
 ```
 
-If you already created an empty project, use `railway link` instead of
-`railway init`. The example refuses to modify a project that already has
-services. It generates distinct PostgreSQL and RabbitMQ passwords, creates
+The installer signs you in through Railway's browser flow if needed and creates
+the project. Press Enter to accept `flow-steward` as its name. If your account
+belongs to several workspaces, choose the workspace that should pay for the
+installation. You do not need to export variables, generate passwords, create
+services, or start them in a particular order.
+
+The computer running this helper needs the [Railway CLI](https://docs.railway.com/cli),
+`jq`, `openssl`, and `curl`. These are local installation tools; you do not need
+to install Python, Node.js, or Docker to run the image on Railway. On Windows,
+use a Bash shell in WSL.
+
+If you already linked an empty project in that directory, the installer uses it.
+It refuses to modify a project that already has services. It generates
+distinct PostgreSQL and RabbitMQ passwords, creates
 the three services and their volumes before connecting images, waits for the
 database and broker to become ready, and only then starts Compact. It pins the
-2026-09-26 evaluated images, checks `/health/ready`, and prints the private
+2026-09-28 evaluated images, checks `/health/ready`, and prints the private
 first-admin setup link from Compact's deploy logs. Open that link promptly;
 it expires 15 minutes after Compact starts. Keep the downloaded file if you need
 to review the exact commands;
@@ -251,7 +259,7 @@ POSTGRES_PASSWORD=<new strong random password>
 contain `lost+found`, which PostgreSQL refuses as its data directory. Use the
 published **Flow Steward PostgreSQL 17 image with Apache AGE and pgvector**,
 `ghcr.io/vasily-piksis/fs-postgres-extended@sha256:47a10afb648b55a29e0422f7944a5eb8f12f99f4fecfbb5a2af721fe42196ce8`
-for the 2026-09-26 evaluated deployment.
+for the 2026-09-28 evaluated deployment.
 Railway's standard managed PostgreSQL image does not supply the required AGE
 extension. Wait until its logs say the database is ready to accept connections.
 Keep port 5432 private.
@@ -267,7 +275,7 @@ RABBITMQ_DEFAULT_PASS=<different strong random password>
 RABBITMQ_DEFAULT_VHOST=flow
 ```
 
-Connect the 2026-09-26 evaluated RabbitMQ image
+Connect the 2026-09-28 evaluated RabbitMQ image
 `rabbitmq@sha256:e582c0bc7766f3342496d8485efb5a1df782b5ce3886ad017e2eaae442311f69`.
 Wait for the AMQP listener on port 5672 and keep it private; the management
 port must not be published just to make the app work.
@@ -296,9 +304,9 @@ PORT=8080
 Configure one replica, health check `/health/ready`, **Always** restart, zero
 deployment overlap, and at least 180 seconds of draining time. Compact is a
 single-runtime profile; overlapping two live copies against the same database
-and broker is unsupported. Finally connect the 2026-09-26 evaluated Compact
+and broker is unsupported. Finally connect the 2026-09-28 evaluated Compact
 image
-`ghcr.io/vasily-piksis/flow-steward-compact@sha256:e41f179da299904b02cd60cb8b50d73e20f7fcf9f384a5bbc8edd17c8bfcf214`
+`ghcr.io/vasily-piksis/flow-steward-compact@sha256:dee794207e38a4828cadd659cb41cbeaf65a1bdfedd6e4532bcb2a89c77681b1`
 from source commit `367d5ff885a5b7557cdb0fb712fe754539fa4d09`.
 Wait for Railway deployment status **Success** and HTTP readiness. A successful
 image upload or a running PostgreSQL service alone does not prove the app is
@@ -368,7 +376,7 @@ any directory:
 ```bash
 flow-steward --help
 flow-steward users list
-flow-steward users create --role admin
+flow-steward users create --role admin --plain
 flow-steward projects list
 flow-steward jobs list
 flow-steward status
@@ -404,7 +412,7 @@ through this runtime shell. The built-in command explains this for unsupported
 operations. Use the Railway dashboard/CLI for deployment operations and the
 supported product/Compact maintenance commands for app administration.
 
-The 2026-09-26 fresh-project check used the downloadable example and this exact
+The 2026-09-28 fresh-project check used the downloadable example and this exact
 image: dependency startup, readiness, first administrator, browser sign-in,
 `users list`, `projects list`, `jobs list`, and `status` passed. After restarting
 Compact, the same administrator and existing session still worked, and a file
@@ -428,6 +436,14 @@ Railway CLI and its helper tools are separate from the VPS installer.
 
 ## Fly.io: Compact with persistent volumes
 
+Fresh guided installation on **2026-09-28** used Compact source
+`31652e30e9c65b16576e9a4b3d105072c24b8337`, image index
+`sha256:dee794207e38a4828cadd659cb41cbeaf65a1bdfedd6e4532bcb2a89c77681b1`.
+The actual script generated credentials, deployed dependencies in sequence
+and delivered the private bootstrap link. First-administrator setup, browser
+login, native CLI administration and user/session/file/key persistence after
+restart passed. AI execution, HA and backup/restore were outside this check.
+
 Use the same public Compact, extension-enabled PostgreSQL and RabbitMQ images
 as the Render and Elestio examples. Fly uses one application per image, so
 this installation has three TOMLs:
@@ -435,22 +451,40 @@ this installation has three TOMLs:
 - [Compact configuration](/examples/fly/compact.toml)
 - [PostgreSQL configuration](/examples/fly/postgres.toml)
 - [RabbitMQ configuration](/examples/fly/rabbitmq.toml)
+- [Guided installation script](/examples/fly/install.sh)
 - [Complete installation commands](/examples/fly/installation.txt)
 
 The same files are in the public
 [deployment configuration repository](https://github.com/Flow-Steward/flow-steward-deploy/tree/main/fly).
 They pull pinned images; they do not build a separate Fly-specific image.
 
-Install [Fly CLI](https://fly.io/docs/flyctl/install/) and sign in with
-`fly auth login`. A paid account is needed for a persistent installation:
-the trial stops each Machine after five minutes. Choose one organization,
-one region and a globally unique app-name prefix. Replace `your-fs-demo`
-in all three files, including private hostnames and the public URL.
+Install [Fly CLI](https://fly.io/docs/flyctl/install/); the installer also
+needs `jq`, `openssl` and `curl`. A paid account is needed for a persistent
+installation: the trial stops each Machine after five minutes. Clone the
+public configuration repository, then run one installation command:
 
-Follow the supplied commands to create three apps and volumes, import
-generated passwords through stdin, and allocate public IPs only for Compact.
-Start PostgreSQL first and verify `pg_isready`; start RabbitMQ second and
-verify `rabbitmq-diagnostics -q ping`; then deploy Compact. Keep
+```bash
+git clone https://github.com/Flow-Steward/flow-steward-deploy.git
+cd flow-steward-deploy
+bash fly/install.sh
+```
+
+The script opens Fly sign-in when needed, asks for the billing organization
+when there is a choice, an installation name and a region. Press Enter to
+accept the suggested name and Frankfurt region. It generates matching
+passwords without asking you to enter or export them, creates the three
+apps and their volumes, and allocates public IPs only for Compact. It starts
+PostgreSQL and checks `pg_isready`, then RabbitMQ and checks
+`rabbitmq-diagnostics -q ping`, then Compact and checks public readiness.
+The final output includes the public URL and, when present in the startup
+logs, the private first-administrator link.
+
+Generated TOMLs are saved under `fly/generated/<installation-name>/` and
+contain no passwords. Existing app names or generated configuration folders
+are refused. This script is for a fresh installation, not an upgrade. If it
+fails after creating resources, it prints the exact app names and deletion
+commands: those resources remain billable until removed. It does not delete
+them automatically. The full manual commands remain available above. Keep
 `--ha=false`: these are single-instance stores, without database or broker
 replication. Compact also waits for its dependencies before initialization.
 
@@ -474,7 +508,7 @@ logs for the private first-administrator URL; it expires after 15 minutes.
 Alternatively, create the first administrator inside the existing Machine:
 
 ```bash
-fly ssh console -a <prefix>-compact --pty -C 'flow-steward users create --role admin'
+fly ssh console -a <prefix>-compact --pty -C 'flow-steward users create --role admin --plain'
 ```
 
 Enter the email and password interactively, then open
@@ -500,6 +534,12 @@ This interrupts availability. The TOML specifies SIGTERM and time to drain;
 keep dependencies running during shutdown. Do not use force-stop. The
 `fly machine restart --time 180` invocation was rejected by the Machines
 API during testing, so use the tested app restart command.
+
+The fresh 2026-09-28 check needed about six minutes to restore public readiness
+after restart, including normal role initialization. Fly's restart command
+timed out before the application became ready; the same Machine subsequently
+recovered and preserved the login session, users, a file and internal keys.
+Check `/health/ready` and `flow-steward status` before reopening the application.
 
 Before storing valuable data, arrange and test backups of PostgreSQL,
 RabbitMQ and `/data`. These files do not configure high availability or

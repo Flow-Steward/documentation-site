@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Fresh-project example for the 2026-09-26 evaluated Flow Steward Compact image.
+# Guided fresh-project installation with immutable Flow Steward images.
 # Railway's single-service railway.json cannot order three services. This script
 # leaves every service without an image until its volume and variables exist.
 set -euo pipefail
@@ -7,7 +7,7 @@ set -euo pipefail
 environment_name=production
 postgres_image=ghcr.io/vasily-piksis/fs-postgres-extended@sha256:47a10afb648b55a29e0422f7944a5eb8f12f99f4fecfbb5a2af721fe42196ce8
 rabbitmq_image=rabbitmq@sha256:e582c0bc7766f3342496d8485efb5a1df782b5ce3886ad017e2eaae442311f69
-compact_image=ghcr.io/vasily-piksis/flow-steward-compact@sha256:e41f179da299904b02cd60cb8b50d73e20f7fcf9f384a5bbc8edd17c8bfcf214
+compact_image=ghcr.io/vasily-piksis/flow-steward-compact@sha256:dee794207e38a4828cadd659cb41cbeaf65a1bdfedd6e4532bcb2a89c77681b1
 
 for command_name in railway jq openssl curl; do
   command -v "$command_name" >/dev/null || {
@@ -16,13 +16,46 @@ for command_name in railway jq openssl curl; do
   }
 done
 
-project_json=$(railway status --json)
+if ! account_json=$(railway whoami --json 2>/dev/null); then
+  printf 'Sign in to Railway in the browser opened by the installer.\n'
+  railway login
+  account_json=$(railway whoami --json)
+fi
+
+project_json=$(railway status --json 2>/dev/null || true)
+if [[ -z "$project_json" ]]; then
+  workspace_count=$(jq '.workspaces | length' <<<"$account_json")
+  if [[ "$workspace_count" -eq 0 ]]; then
+    printf 'Your Railway account has no workspace. Complete account setup in Railway first.\n' >&2
+    exit 1
+  fi
+  workspace_index=1
+  if [[ "$workspace_count" -gt 1 ]]; then
+    printf 'Choose the workspace that should be billed for this installation:\n'
+    jq -r '.workspaces | to_entries[] | "\(.key + 1). \(.value.name)"' <<<"$account_json"
+    read -r -p 'Workspace number [1]: ' workspace_selection || true
+    workspace_index=${workspace_selection:-1}
+    if [[ ! "$workspace_index" =~ ^[0-9]+$ ]] ||
+      (( workspace_index < 1 || workspace_index > workspace_count )); then
+      printf 'Choose one of the listed workspace numbers.\n' >&2
+      exit 1
+    fi
+  fi
+  workspace_id=$(jq -r --argjson index "$((workspace_index - 1))" \
+    '.workspaces[$index].id' <<<"$account_json")
+  read -r -p 'New project name [flow-steward]: ' project_selection || true
+  new_project_name=${project_selection:-flow-steward}
+  printf 'Creating Railway project %s. Its services and volumes incur Railway charges.\n' \
+    "$new_project_name"
+  railway init --name "$new_project_name" --workspace "$workspace_id" --json >/dev/null
+  project_json=$(railway status --json)
+fi
 project_id=$(jq -r '.id // empty' <<<"$project_json")
 project_name=$(jq -r '.name // empty' <<<"$project_json")
 environment_id=$(jq -r --arg name "$environment_name" \
   '.environments.edges[] | select(.node.name == $name) | .node.id' <<<"$project_json")
 if [[ -z "$project_id" || -z "$environment_id" ]]; then
-  printf 'Link an empty Railway project with a production environment first: railway link\n' >&2
+  printf 'Railway did not return a project with a production environment. Inspect the project in Railway.\n' >&2
   exit 1
 fi
 if [[ $(jq '.services.edges | length' <<<"$project_json") -ne 0 ]]; then

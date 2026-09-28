@@ -16,9 +16,9 @@ The public configuration repository contains `docker-compose.yml` and
 health checks and image digests. The second fills in Elestio's deployment
 commands, generated passwords and HTTPS reverse proxy settings.
 
-Fresh GitHub-template acceptance on **2026-09-26** used Compact source
-`367d5ff885a5b7557cdb0fb712fe754539fa4d09`, image digest
-`sha256:e41f179da299904b02cd60cb8b50d73e20f7fcf9f384a5bbc8edd17c8bfcf214`.
+Fresh GitHub-template acceptance on **2026-09-28** used Compact source
+`31652e30e9c65b16576e9a4b3d105072c24b8337`, image digest
+`sha256:dee794207e38a4828cadd659cb41cbeaf65a1bdfedd6e4532bcb2a89c77681b1`.
 It covered generated credentials, HTTPS readiness, first-administrator creation,
 browser sign-in, users/projects/jobs/status CLI commands, graceful shutdown,
 and a restart preserving the user, existing sessions, a file and runtime keys.
@@ -106,7 +106,7 @@ under `/data`. The CLI works from any directory. As an alternative to the
 first-user web form, run this from the VM terminal and answer its prompts:
 
 ```bash
-docker compose exec compact flow-steward users create --role admin
+docker compose exec compact flow-steward users create --role admin --plain
 ```
 
 Host installation and stack commands, and `users issue-bootstrap-token`, are
