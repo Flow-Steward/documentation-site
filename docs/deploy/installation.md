@@ -7,8 +7,9 @@ description: Install Flow Steward on a VPS, Railway, Render, Elestio, or Fly.io.
 # Installation
 
 On a VPS, the normal path is to clone the repository, run `./install.sh`, answer
-the guided questions, and wait for readiness. Production installation downloads
-verified images from an official release and creates its Docker services.
+the guided questions, and wait for readiness. A fresh Git checkout builds the
+application images locally and creates its Docker services. Release checks and
+upgrades use official release metadata separately.
 Railway uses a published Compact image
 and three Railway services; the downloadable fresh-project example stages them
 in dependency order.
@@ -44,10 +45,9 @@ git lfs pull
 ./install.sh
 ```
 
-Use a full clone, without `--depth`: the installer resolves an official release
-and switches to its exact Git tag. Production requires an available stable
-GitHub Release and a complete set of verified product images; it does not fall
-back to building application images from an arbitrary checkout. If the repository is private, configure
+Use a full clone, without `--depth`, and retrieve its Git LFS files before
+installation. A fresh local installation uses the checked-out source; it does
+not require a published GitHub Release or a version tag. If the repository is private, configure
 your normal Git authentication before cloning. The installer does not provision
 GitHub access for you.
 
@@ -87,7 +87,7 @@ unused ports, and a unique Compose project name on the first invocation:
 identity for subsequent commands in that clone. Do not reuse a working
 installation's directory, project name, or persistent data.
 
-The first image download and infrastructure preparation can take time. Leave the installer running until it reports
+The first image build and infrastructure image downloads can take time. Leave the installer running until it reports
 completion; rerun the same `./install.sh` after a recoverable interruption.
 Then check the result:
 
@@ -95,6 +95,8 @@ Then check the result:
 ./flow-steward status
 ./flow-steward doctor
 ```
+
+Run `./flow-steward` without arguments to see the available commands.
 
 Open the URL printed by the installer and create the first administrator.
 For a non-local address, the installer prints the location of an owner-only
