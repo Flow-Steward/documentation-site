@@ -98,6 +98,31 @@ Then check the result:
 
 Run `./flow-steward` without arguments to see the available commands.
 
+### DigitalOcean Droplet
+
+A Droplet follows the VPS procedure above: prepare Docker Engine, Compose and
+Git LFS, clone the repository as your deployment user, and run `./install.sh`.
+It does not use an App Platform `app.yaml` or a separate application image.
+
+The guided Compact installation was checked on an Ubuntu 24.04 x64 Droplet
+with 4 vCPUs and 8 GB RAM. The check covered the first administrator setup,
+CLI user management, HTTPS login, systemd stop/start, and rerunning the
+installer while preserving users. These are the resources used for the check,
+not a stated minimum. A cold source build and first startup took about
+12 minutes on that test machine.
+
+For an IP-only trial, use the explicit public host and ports shown above.
+Allow the selected HTTPS and redirect ports through the host or cloud firewall;
+keep PostgreSQL, RabbitMQ and storage ports private. Use a domain and trusted
+TLS for a production public site.
+
+After a disposable Droplet test, preserve the evidence you need and **destroy
+the Droplet** in DigitalOcean. Powering it off alone does not end its
+[billing](https://docs.digitalocean.com/products/droplets/details/pricing/).
+Remove any SSH key or other resource created only for that test.
+
+### First administrator and CLI
+
 Open the URL printed by the installer and create the first administrator.
 For a non-local address, the installer prints the location of an owner-only
 setup token and a bootstrap URL. Keep the token private. If it expires while
