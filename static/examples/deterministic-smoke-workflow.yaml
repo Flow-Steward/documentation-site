@@ -1,0 +1,106 @@
+schema_version: platform.workflow_bundle.v1
+kind: workflow_bundle
+metadata:
+  exported_at: '2026-09-17T00:00:00+00:00'
+  exported_by: flow-steward-docs
+  source_workflow_id: docs_deterministic_smoke_v1
+  portability_kind: workflow_bundle
+workflows:
+  - workflow_id: docs_deterministic_smoke_v1
+    version: 1.0.0
+    display_name: Documentation Deterministic Smoke
+    description: Transforms one JSON payload into a declared JSON output without models, tools, connectors, HTTP, extensions, or child workflows.
+    enabled: false
+    trigger:
+      confidence_threshold: 0.0
+    settings:
+      traits:
+        documentation_fixture: true
+      callable:
+        enabled: true
+        input_mode: fields
+        output_mode: variables
+        strict_inputs: true
+        allow_empty_inputs: false
+        expected_inputs:
+          - name: payload
+            type: json
+            required: true
+        expected_outputs:
+          - name: normalized
+            type: json
+            required: true
+        trigger_channels:
+          - ui
+          - api
+          - mcp
+        expected_artifacts: []
+        side_effects: []
+      portability:
+        import_state: draft
+    participants: []
+    tags:
+      - documentation
+      - deterministic
+      - provider-free
+    phases:
+      - phase_id: normalize_input
+        display_name: Normalize input
+        description: Copy the payload message into the declared normalized JSON output.
+        phase_kind: start
+        on_failure:
+          action: escalate
+          max_retries: 0
+        gate:
+          type: none
+        required_outputs: []
+        expected_inputs:
+          - name: payload
+            type: json
+            required: true
+        steps:
+          - step_id: normalize_message
+            step_kind: transform
+            display_name: Normalize message
+            optional: false
+            override:
+              transform:
+                input:
+                  source: state.inputs.payload
+                mode: object
+                result_target: state.normalized
+                fields:
+                  - from: message
+                    to: message
+                    type: text
+      - phase_id: complete
+        display_name: Complete
+        description: End after the deterministic value is available.
+        phase_kind: terminal
+        on_failure:
+          action: escalate
+          max_retries: 0
+        gate:
+          type: none
+        required_outputs: []
+        expected_inputs: []
+        steps:
+          - step_id: workflow_success
+            step_kind: stop_success
+            display_name: Complete successfully
+            optional: false
+            override:
+              stop_success:
+                message: Documentation smoke workflow completed.
+dependencies:
+  agents: []
+  skills: []
+  tools: []
+  child_workflows: []
+  published_blocks: []
+  extensions: []
+  project_connections: []
+import_hints:
+  default_enabled: false
+  import_state: draft
+  conflict_policy: rename_workflow

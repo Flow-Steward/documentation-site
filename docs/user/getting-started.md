@@ -1,87 +1,95 @@
 ---
 sidebar_position: 1
 title: Getting Started
-description: Run Flow Steward locally and create the first admin user.
+description: Reach a healthy Flow Steward instance and prepare for a first controlled workflow.
 ---
 
 # Getting Started
 
-Run these commands from the Flow Steward application repository, not from this
-documentation site repository.
+Choose the path that matches what you have.
 
-## Requirements
+- If an operator already gave you a healthy URL and account, sign in and
+  continue with the [Product Tour](product-tour) and
+  [First Workflow](first-workflow).
+- If you operate the stack, choose a destination in [Installation](../deploy/installation),
+  then follow the [Installer Walkthrough](../deploy/installer-walkthrough) for a
+  Docker host or [Platform Deployment](../deploy/platforms) for provider hosting.
 
-- Docker with Compose support
-- A local checkout of the Flow Steward application repository
-- At least one LLM provider key in `.env`, such as `ANTHROPIC_API_KEY` or
-  `OPENAI_API_KEY`
 
-## Start the stack
+## Install a local instance
 
-```bash
-cp .env.example .env
-# Edit .env and add at least one LLM API key.
+This sequence runs in a Flow Steward application checkout on the machine that
+will host Docker. For Railway, Fly.io, or Render with a prebuilt image, follow
+the provider guide instead; those deployments do not need a local Docker daemon.
+A DigitalOcean Droplet follows this Docker-host sequence over SSH.
 
-docker compose -p flow-steward -f infra/docker/docker-compose.yaml up -d --build
-```
+Before running `./install.sh`, install and start Docker with **Linux containers**
+and Docker Compose v2. This prerequisite applies to both Compact and Scalable,
+on a desktop or a server; downloading Flow Steward does not install Docker.
 
-For local development with relaxed auth and hot reload:
+- Linux server: follow the official [Docker Engine installation](https://docs.docker.com/engine/install/)
+  instructions ([Ubuntu](https://docs.docker.com/engine/install/ubuntu/)) and the
+  [Compose plugin instructions](https://docs.docker.com/compose/install/linux/).
+- Mac, Windows or Linux desktop: install [Docker Desktop](https://docs.docker.com/desktop/),
+  which includes Compose. On Windows, run the shell entrypoints in Git Bash or WSL.
 
-```bash
-docker compose -p flow-steward \
-  -f infra/docker/docker-compose.yaml \
-  -f infra/docker/docker-compose.dev.yaml \
-  up -d --build
-```
-
-## Initialize the database
-
-```bash
-docker compose -p flow-steward -f infra/docker/docker-compose.yaml exec fs-app \
-  python -m core.entrypoints.cli tooling db init-db
-```
-
-Upgrade an existing environment to the current canonical schema and seed state:
+Check from the same non-root account that will install Flow Steward:
 
 ```bash
-docker compose -p flow-steward -f infra/docker/docker-compose.yaml exec fs-app \
-  python -m core.entrypoints.cli tooling db upgrade
+docker --version
+docker compose version
+docker info
 ```
 
-## Optional demo data
+If Docker/Compose is missing, follow the appropriate official installation guide.
+If `docker info` fails, start Docker or fix access to its socket using Docker's
+[Linux post-install instructions](https://docs.docker.com/engine/install/linux-postinstall/).
+Do not solve access errors by running Flow Steward as root.
 
-Demo data creates a separate Flow Steward Demo Project plus demo tools, skills,
-agents, and runnable workflows.
+From the Flow Steward application repository:
 
 ```bash
-docker compose -p flow-steward -f infra/docker/docker-compose.yaml exec fs-app \
-  python -m core.entrypoints.cli tooling db init-db --with-demo-data
+./install.sh
+./flow-steward status
+./flow-steward doctor
 ```
 
-You can remove the demo pack later:
+`./install.sh` installs or resumes; it has no subcommands. It also reconciles
+installer-built images after an intentional source update; see
+[Installation And Updates](installation-and-updates). A host Python runtime
+and model-provider credentials are not required for core readiness.
 
-```bash
-docker compose -p flow-steward -f infra/docker/docker-compose.yaml exec fs-app \
-  python -m core.entrypoints.cli tooling db demo-data -- uninstall
-```
-
-## Create the first admin user
-
-The bootstrap endpoint is localhost-only and closes after the first user exists.
-
-```bash
-curl -k https://localhost:8099/auth/bootstrap \
-  -d '{"username":"admin","password":"changeme123"}'
-```
-
-Then open the application:
+Open the bootstrap URL printed by the installer. For the default local endpoint:
 
 ```bash
 open https://localhost:8099
 ```
 
-If the dev frontend is enabled, the Vite shell is available at:
+Complete first-administrator setup in the web interface. Do not invent or reuse
+an old `/auth/bootstrap` payload; the current installer supplies the applicable
+bootstrap URL and, for non-loopback setup, the owner-only token handoff.
 
-```bash
-open http://localhost:5173/app/
-```
+## Confirm your access
+
+Before a first workflow, confirm:
+
+1. the instance is healthy;
+2. your account has the role required by the guide;
+3. you know which workspace and project will own the work;
+4. a model provider is configured only if the selected workflow needs one;
+5. tests will not call real providers or create unintended external effects.
+
+The core installer applies the canonical schema baseline and seed. Old
+`tooling db init-db` and demo-data commands are not public commands. To use
+ready-made automation, open the [Workflow Catalog](workflow-and-extension-catalogs)
+and create a local workflow draft; installing demo data is not required.
+
+## What to read next
+
+- [Product Tour](product-tour) for current navigation and role boundaries.
+- [First Workflow](first-workflow) for a deterministic local result.
+- [Users, Roles, And Access](users-roles-and-access) before issuing tokens or
+  inviting operators.
+- [Workflows](workflows) before creating production automation.
+- [Datasets And Data Connections](datasets-and-data-connections) before exposing
+  database-backed context.

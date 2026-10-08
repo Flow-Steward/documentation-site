@@ -1,0 +1,25 @@
+manifest_version: 2
+lifecycle: {data_schema_version: 1, data_migrations: []}
+extension_id: com.acme.crm-sync
+kind: task_provider
+version: 0.1.0
+display_name: Acme CRM Sync
+description: Minimal deterministic task-provider example for the public extension tutorial.
+vendor: {name: Acme Example}
+features: [task_ingress]
+required_scopes:
+  - extension:invoke
+  - event:subscribe
+event_subscriptions:
+  - event_type: job.completed
+    severity: info
+entrypoint:
+  mode: subprocess
+  command: [python3, main.py]
+health:
+  command: [python3, health.py]
+  timeout_seconds: 5
+ui_manifest: ui/ui_manifest.yaml
+query_manifest: ui/queries/queries.yaml
+action_manifest: ui/actions/actions.yaml
+python_requirements: []

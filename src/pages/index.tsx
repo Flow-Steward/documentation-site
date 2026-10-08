@@ -11,11 +11,11 @@ function HomepageHeader(): ReactNode {
       <div className={styles.heroInner}>
         <p className={styles.kicker}>Flow Steward Documentation</p>
         <Heading as="h1" className={styles.heroTitle}>
-          Operate autonomous delivery workflows with clear human control.
+          Operate AI workflows with clear human control.
         </Heading>
         <p className={styles.heroCopy}>
-          Flow Steward plans, runs, reviews, and coordinates AI-assisted software
-          delivery while keeping approvals, jobs, tools, skills, and extensions
+          Flow Steward runs, reviews, and coordinates AI-assisted
+          workflows while keeping approvals, jobs, tools, skills, and extensions
           visible to the operator.
         </p>
         <div className={styles.actions}>
@@ -37,34 +37,49 @@ function HomepageHeader(): ReactNode {
 
 const docAreas = [
   {
-    title: 'User Guides',
-    href: '/docs/user/getting-started',
-    body: 'Install the stack, create the first admin user, load demo data, and understand the operator workspace.',
+    title: 'User Guide',
+    href: '/docs/user/dashboard',
+    body: 'Use the dashboard, projects, workflows, jobs, agents, datasets, MCP catalogs, extensions, and lifecycle controls.',
   },
   {
-    title: 'Developer Docs',
+    title: 'Admin & Operations',
+    href: '/docs/admin/events-and-redrive',
+    body: 'Administer users, providers, security policy, audit evidence, events, queues, retries, and monitoring.',
+  },
+  {
+    title: 'Deploy & Run',
+    href: '/docs/deploy/deployment-checklist',
+    body: 'Install, update, observe, back up, recover, and troubleshoot production-like Flow Steward stacks.',
+  },
+  {
+    title: 'Integrations & Extensions',
+    href: '/docs/integrations/built-in-mcp-quick-start',
+    body: 'Connect AI clients, external MCP catalogs, webhooks, data sources, provider callbacks, and extension bundles.',
+  },
+  {
+    title: 'Developer Platform',
     href: '/docs/developer/local-development',
-    body: 'Work on the FastAPI, worker, React, database, extension, and quality-gate surfaces with the repo conventions.',
+    body: 'Work on the app codebase, runtime, frontend, database, tests, MCP internals, and extension points.',
   },
   {
-    title: 'Reference',
+    title: 'API & Reference',
     href: '/docs/reference/cli',
-    body: 'Keep CLI commands, configuration profiles, and release-readiness checks in one stable place.',
+    body: 'Look up CLI commands, API surfaces, MCP tools, workflow step kinds, installer options, config, and upgrades.',
   },
 ];
 
 const releaseTracks = [
-  'Public quick start that can be followed from a clean checkout.',
-  'Developer setup that separates product runtime, frontend iteration, and test runners.',
-  'Extension authoring notes for tool, notification, and task providers.',
-  'Release checklist for open source hygiene, security intake, and version policy.',
+  'Start Here routes builders, admins, operators, developers, extension authors, and MCP users to the right lane.',
+  'Admin and deploy runbooks separate production operations from everyday product usage.',
+  'Integration docs give MCP and extension work a discoverable home without implying unsupported embedding features.',
+  'Maintainer notes preserve audit coverage and documentation debt outside the primary customer path.',
 ];
 
 export default function Home(): ReactNode {
   return (
     <Layout
       title="Flow Steward Documentation"
-      description="Documentation for Flow Steward, an autonomous AI software delivery platform with human approval gates.">
+      description="Documentation for Flow Steward, an AI workflow automation platform with human approval gates.">
       <HomepageHeader />
       <main>
         <section className={styles.section}>

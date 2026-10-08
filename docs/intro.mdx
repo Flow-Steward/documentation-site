@@ -1,69 +1,55 @@
 ---
 sidebar_position: 1
-title: What is Flow Steward?
-description: Start here for the public Flow Steward documentation.
+sidebar_label: Overview
+title: Start Here
+description: Role-based entry point for the public Flow Steward documentation.
 ---
 
-# What is Flow Steward?
+# Start Here
 
-Flow Steward is an autonomous AI software delivery platform. Give it a task and
-it can plan, code, test, review, and coordinate a pull request while keeping
-human approval gates at major decision points.
+Flow Steward is a self-hosted AI workflow automation platform. Compose phases
+and steps, connect external systems through extensions, and run controlled
+workflows with human approval gates. Core is not a software-delivery or
+application-code generation engine.
 
 The application combines an operator web UI, workflow execution, project
-knowledge indexing, agent/tool registries, extension runtimes, and operational
+knowledge, agent/tool registries, extension runtimes, and operational
 controls for long-running AI-assisted work.
 
-## Who this documentation is for
+## Choose your path
 
-- **Operators** who want to install Flow Steward, load demo data, run jobs, and
-  understand the workspace.
-- **Developers** who want to work on the application, test changes, or extend the
-  runtime.
-- **Extension authors** who want to build notification, task, or tool providers
-  without importing provider-specific code into the core server process.
+| Role | Start with | Then read |
+|---|---|---|
+| Builder or normal user | [Product Tour](user/product-tour) | [Dashboard](user/dashboard), [Workflows](user/workflows), [Jobs And Approvals](user/jobs-and-approvals) |
+| Workspace admin | [Users, Roles, And Access](user/users-roles-and-access) | [Settings And Model Providers](user/settings-and-model-providers), [Events And Redrive](admin/events-and-redrive), [Audit Trail](admin/audit-trail) |
+| Self-hosting operator | [Deployment Checklist](deploy/deployment-checklist) | [Installation And Updates](user/installation-and-updates), [Observability](deploy/observability), [Backups And Restore](deploy/backups-and-restore) |
+| Developer | [Local Development](developer/local-development) | [Architecture](developer/architecture), [Workflow Runtime](developer/workflow-runtime), [Quality And Testing](developer/quality-and-testing) |
+| Extension author | [Build An Extension](integrations/build-an-extension), [Agent Plugin](integrations/agent-plugin) | [Extension Operator Guide](integrations/extension-operator-guide), [Developer Extensions](developer/extensions) |
+| AI agent or MCP client user | [Connect An AI Client With MCP](integrations/built-in-mcp-quick-start) | [Agent Plugin](integrations/agent-plugin), [Tools And MCP](user/tools-and-mcp), [MCP Reference](reference/mcp) |
 
 ## Documentation map
 
-- [Getting Started](user/getting-started) covers the local Docker Compose path,
-  database initialization, demo data, and admin bootstrap.
-- [Core Concepts](user/core-concepts) names the main product objects: projects,
-  jobs, workflows, agents, tools, skills, datasets, connections, and approvals.
-- [Local Development](developer/local-development) collects the commands
-  contributors need while working on backend, frontend, tests, and quality gates.
-- [Architecture](developer/architecture) explains the first-release runtime
-  shape.
-- [CLI Reference](reference/cli) keeps operator and developer commands in a
-  stable reference page.
+- [Start Here](intro) gives a short product overview, role paths, concepts, and
+  first-run guidance.
+- [User Guide](user/dashboard) explains the product through the UI: dashboard,
+  workspaces, jobs, workflows, agents, MCP catalogs, datasets, extensions, and
+  lifecycle controls.
+- [Admin & Operations](admin/events-and-redrive) covers users, roles, providers,
+  policy, redaction, events, audit evidence, queues, retries, and monitoring.
+- [Deploy & Run](deploy/deployment-checklist) covers install, update,
+  environment configuration, backups, storage, observability, rollback, and
+  deployment troubleshooting.
+- [Integrations & Extensions](integrations/built-in-mcp-quick-start) covers
+  incoming webhooks, external MCP catalogs, built-in MCP client setup, data
+  connections, and extension authoring.
+- [Developer Platform](developer/local-development) explains how to work on the
+  application codebase, runtime, frontend, database, tests, and internals.
+- [API & Reference](reference/cli) keeps command, MCP, API, installer, workflow,
+  environment, configuration, and upgrade details in stable lookup pages.
 
 ## Current status
 
-This site is the first public documentation shell. Some deeper material still
+This site is the public documentation surface. Some deeper material still
 lives in the application repository under `README.md`, `docs/`, `AGENTS.md`, and
-the engineering standards pack. Promote material here when it is ready for users
+the engineering standards pack. Publish material here when it is ready for users
 or external contributors.
-
-The classic template will automatically be added to your project after you run the command:
-
-```bash
-npm init docusaurus@latest my-website classic
-```
-
-You can type this command into Command Prompt, Powershell, Terminal, or any other integrated terminal of your code editor.
-
-The command also installs all necessary dependencies you need to run Docusaurus.
-
-## Start your site
-
-Run the development server:
-
-```bash
-cd my-website
-npm run start
-```
-
-The `cd` command changes the directory you're working with. In order to work with your newly created Docusaurus site, you'll need to navigate the terminal there.
-
-The `npm run start` command builds your website locally and serves it through a development server, ready for you to view at http://localhost:3000/.
-
-Open `docs/intro.md` (this page) and edit some lines: the site **reloads automatically** and displays your changes.

@@ -1,0 +1,8 @@
+{
+  "label": "Admin & Operations",
+  "position": 3,
+  "link": {
+    "type": "generated-index",
+    "description": "Administer users, providers, security policy, runtime evidence, queues, events, and operational controls."
+  }
+}

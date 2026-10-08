@@ -10,37 +10,25 @@ This page describes how Flow Steward loads, validates, renders, and invokes
 extensions. For an authoring walkthrough, start with
 [Build An Extension](../integrations/build-an-extension).
 
-The source reference implementation is `flowsteward.example-showcase`. It is
-designed as a living example for manifests, schemas, UI components, actions,
-queries, events, callbacks, Contract v2, descriptor artifacts, smoke scripts,
-and pytest coverage.
-
-## Example Showcase Map
-
-Open `extensions/flowsteward_example_showcase/` in the Flow Steward source tree
-when you need a concrete implementation to copy from.
-
-| Need a real example of | Look at |
-| --- | --- |
-| Runtime manifest validation inputs | `extension.yaml` |
-| Marketplace/import descriptor and published artifacts | `extension-descriptor.yaml` |
-| UI page and component composition | `ui/ui_manifest.yaml`, `ui/pages/*.yaml`, `ui/components/*.yaml` |
-| Query and action catalogs | `ui/queries/queries.yaml`, `ui/actions/actions.yaml` |
-| Runtime dispatch and handlers | `main.py`, `handlers/router.py`, `handlers/queries.py`, `handlers/actions.py` |
-| Workflow trigger registration | `workflow_triggers` in `extension.yaml` |
-| Callback registration | `callbacks` in `extension.yaml` and `ui/components/callback_setup.yaml` |
-| Contract v2 builder operations | `contracts/*.yaml` |
-| Workflow artifacts | `artifacts/workflows/*.yaml` plus `artifacts.workflows` in `extension-descriptor.yaml` |
-| Agent, skill, and tool artifacts | `artifacts/agents/*.yaml`, `artifacts/skills/*.yaml`, `artifacts/tools/*.yaml`, plus the matching descriptor sections |
-| Dataset and data connection examples | `artifacts/datasets/`, `artifacts/data_connections/`, `artifacts/saved_queries/` |
-| Smoke and regression coverage | `scripts/smoke_check.py`, `tests/test_example_showcase.py` |
-
-The showcase descriptor publishes workflows, agents, skills, and tools. Dataset
-and data connection files are included as reference material next to the
-descriptor so extension authors can see realistic project seed data even where
-the descriptor schema does not publish that artifact type directly.
+Core does not bundle a showcase extension. Use the current manifest standard,
+compiler, and runtime consumers for the target release. The authoring guide
+includes a small downloadable provider-free example; its scope is deliberately
+narrower than a production provider. The
+[Extension Authoring Skill](../integrations/extension-authoring-skill) helps coding
+agents follow these contracts and report actual validation evidence.
 
 ## Runtime Boundary
+
+Publisher identity and catalog verification carry no privilege tier. Host access
+comes from supported scopes and extension-owned `runtime_grants`, validated
+against the owning namespace. `runtime_target` belongs in `.fs-package.yaml`,
+not `extension.yaml`; the archive validator checks it before publishing files.
+
+Successful subprocesses exit 0 with `ok: true`. Domain failures exit 2 with
+`ok: false`, nonempty `error_code` and `error`, and a nonempty `errors` list
+whose first code/message exactly match those top-level fields. Other failures
+can trip the runtime circuit breaker. See the authoring guide's
+[response envelope](../integrations/build-an-extension#response-envelope).
 
 Flow Steward treats local extensions as out-of-process provider bundles:
 
@@ -76,9 +64,8 @@ core/application/extensions/
   extension_contract_v2.py
   extension_projection_v2.py
   lifecycle.py
-  schema.py
 
-core/infrastructure/db/
+core/infrastructure/extension_runtime/
   extension_runtime_manifest.py
   extension_runtime_ui_manifest.py
   extension_runtime_validation.py
@@ -87,6 +74,13 @@ core/infrastructure/db/
   extension_runtime_invocation.py
   extension_runtime_entrypoints.py
   extension_runtime_platform.py
+
+  boundary.py
+  python_dependencies.py
+  extension_runtime_helpers.py
+
+core/infrastructure/extension_sdk/public/
+  flowsteward_extension_sdk/
 
 assets/frontend/src/pages/extensions/
   extension-manifest-renderer.tsx
@@ -115,17 +109,21 @@ Compile flow:
 6. Detect duplicate page ids and component ids.
 7. Resolve `ui/actions/actions.yaml` and `ui/queries/queries.yaml`.
 8. Detect duplicate action and query ids.
-9. Validate component references to action and query ids.
-10. Validate callbacks, dependencies, event subscriptions, workflow triggers,
+9. Normalize and validate `python_requirements`.
+10. Validate bundled wheels when Python requirements are declared.
+11. Validate component references to action and query ids.
+12. Validate callbacks, dependencies, event subscriptions, workflow triggers,
     and kind-specific feature rules.
-11. Return a lifecycle-aware result with compile errors, validation errors,
+13. Validate the runtime boundary for private `core.*` imports and `sys.path`
+    mutation.
+14. Return a lifecycle-aware result with compile errors, validation errors,
     warnings, preview details, and enablement readiness.
 
 Compiled manifest fields are intentionally restricted. The compiler only keeps
 known fields such as identity, kind, version, features, scopes, schemas, UI,
 actions, queries, callbacks, event subscriptions, supported events,
-dependencies, workflow triggers, entrypoint, healthcheck, and validation
-metadata.
+dependencies, `python_requirements`, workflow triggers, entrypoint,
+healthcheck, and validation metadata.
 
 ## Validation Issues
 
@@ -134,7 +132,7 @@ Validation issues are structured objects:
 ```json
 {
   "severity": "error",
-  "code": "extension.ui_unknown_query",
+  "code": "unknown_query_reference",
   "message": "Component references an unknown query.",
   "file_path": "ui/components/provider_health.yaml",
   "field_path": "query_id",
@@ -146,18 +144,22 @@ Use issue codes in tests and CI rather than string-matching full messages.
 
 Common validation failures:
 
-| Code family | Meaning |
+| Emitted code or prefix | Meaning |
 | --- | --- |
 | `extension.yaml_only_violation` | A forbidden JSON authoring contract exists. |
-| `extension.folder_mismatch` | Folder name does not match normalized `extension_id`. |
-| `extension.ref_*` | A ref is absolute, escapes the bundle, points to JSON, or is missing. |
-| `extension.ui_*` | Page, component, form, grid, action, query, or binding problem. |
-| `extension.action_*` | Action id, mutating command, handler, or result contract problem. |
-| `extension.query_*` | Query id, handler, or result contract problem. |
-| `extension.callback_*` | Callback id, method, auth, or action binding problem. |
-| `extension.dependency_*` | Invalid extension dependency declaration. |
-| `extension.feature_*` | Kind and feature mismatch. |
-| `extension.contract_v2_*` | Builder contract validation failure. |
+| `extension_folder_mismatch` | Folder name does not match normalized `extension_id`. |
+| `ref_resolution_error` | A referenced file cannot be resolved. |
+| `unknown_query_reference` | A UI binding references an undeclared query. |
+| `workflow_visibility_required` | An action lacks an explicit boolean visibility flag. |
+| `workflow_action_requires_contract_v2` | A visible action lacks its required Contract V2 declaration. |
+| `workflow_action_operation_mismatch` | A visible action does not match its visible V2 operation. |
+| `task_ingress_feature_required` | A task provider lacks its required feature. |
+| `invalid_notification_provider_delivery_contract` | An active notification provider lacks its reserved delivery contract. |
+| `invalid_section_type` | A Contract V2 section has an invalid type; no automatic `extension.contract_v2_` prefix is added. |
+| `invalid_python_requirement*` | Malformed `python_requirements` entries. |
+| `python_requirement_*` | Missing hashes, undeclared wheels, hash mismatch, or incomplete dependency closure. |
+| `extension_private_core_import` | Runtime code imports private `core.*` modules. |
+| `extension_sys_path_manipulation` | Runtime code mutates `sys.path` instead of using SDK/dependencies. |
 
 ## Runtime Manifest V2
 
@@ -177,10 +179,73 @@ Kind-specific rules:
 | `notification_provider` | `notify` |
 | `tool_provider` | `tool` |
 
-The `ingress_event` feature is valid only on notification providers. When used,
-the extension must include an `ingress_event` action, expose expected result
-fields such as `result.ingress_type`, and declare provider events such as
-`external.comment.received` in `supported_events`.
+Capability flags do not replace operation contracts. See the [kind-specific operation tables](../integrations/build-an-extension#kind-specific-operation-contracts) for each task-ingress action/query, required result fields and error catalog, and the active notification provider's reserved `deliver_notification` action/V2 operation/effect. The `placeholder` delivery exemption does not bypass kind/feature validation.
+
+The `ingress_event` feature is valid only on notification providers. It requires an `ingress_event` action declaring `result.ingress_type` and an authored `event_subscriptions` selector for `external.comment.received`. `notification.interaction_received` is recommended, not mandatory. Compilation derives `supported_events`; authors must not write that projection directly.
+
+## Python Dependencies
+
+Extension subprocess dependencies are declared in the runtime manifest and can
+also appear in the distribution descriptor:
+
+```yaml
+python_requirements:
+  - name: attrs
+    version: "25.3.0"
+    hashes:
+      - sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
+```
+
+The validator normalizes and enforces:
+
+| Rule | Enforcement |
+| --- | --- |
+| List shape | `python_requirements` must be a list of objects. |
+| Package name | PEP 503-normalized lowercase name. |
+| Version | Exact PEP 440 version, not a range or wildcard. |
+| Hashes | Non-empty list of lowercase `sha256:` hashes. |
+| Closure | Wheel metadata must not reference undeclared or incompatible transitive dependencies. |
+| Wheels only | Bundled artifacts under `wheels/` must be `.whl` files. |
+| Offline default | With `FS_EXTENSION_DEPS_FETCH=off`, every declared requirement must have a matching bundled wheel and hash. |
+
+`extensions lock-deps` reads direct requirements, downloads wheels for
+the target platforms, computes hashes, and writes the full lock into
+`extension.yaml`. `extensions bundle --with-wheels` downloads the
+matching wheels into `wheels/` before writing the zip archive.
+
+Distributable Python extensions must support **both Linux AMD64 and ARM64**,
+including the complete transitive dependency closure and hashes. The default
+lock/download targets are `manylinux2014_x86_64,manylinux2014_aarch64`.
+`bundle --with-wheels` prepares both automatically when no platform override is
+given; bare `bundle` does not download missing dependencies. A universal
+`py3-none-any.whl` can satisfy both targets, but compiled dependencies need
+compatible wheels for each target and the runtime Python version/ABI.
+
+Docker on Apple Silicon and ARM Linux servers uses Linux ARM64 wheels, not
+macOS wheels; Windows Docker deployments likewise use Linux containers.
+`--platforms active` means the current **tool runtime**, not necessarily the host
+OS, and is only for local development output. Do not publish it as portable.
+If either target cannot be resolved, fix the dependency pins or provide compatible
+prebuilt wheels; do not silently omit that target or build dependencies during
+installation. Native executables require separate `linux-amd64` and `linux-arm64`
+archives via `--runtime-target`; wheel targeting does not cross-compile binaries.
+
+During install or update, Flow Steward materializes selected compatible wheels
+into:
+
+```text
+.fs-python/<extension-version>/site/
+```
+
+The host Python environment is not modified. Obsolete dependency directories are
+removed after versioned updates.
+
+Runtime dependency settings:
+
+| Setting | Default | Description |
+| --- | --- | --- |
+| `FS_EXTENSION_DEPS_FETCH` | `off` | `off` requires bundled wheels. `allowlist` permits install-time wheel fetches from the default index when hashes match. |
+| `FS_EXTENSION_DEPS_SITE_MAX_BYTES` | `500 MiB` | Maximum size for the materialized site directory, clamped between 1 MiB and 10 GiB. |
 
 ## Descriptor Model
 
@@ -200,6 +265,7 @@ Root descriptor fields:
 | `listing` | Marketplace visibility, category, and extra listing metadata. |
 | `distribution` | Channel, execution modes, self-hosting support, and import sources. |
 | `runtime` | Runtime contract version, compatibility, auth, local or remote settings, and optional Contract v2. |
+| `python_requirements` | Optional dependency lock validated with the same rules as the runtime manifest. |
 | `dependencies` | External dependency metadata. |
 | `artifacts` | Workflows, agents, skills, tools, contracts, guardrails, and nested extension artifacts. |
 | `provenance` | Origin and supply-chain metadata. |
@@ -307,7 +373,7 @@ Grid column types:
 text, datetime, date, number, badge, boolean, json_summary, link, id
 ```
 
-The frontend implements the common showcase components directly, including
+The frontend implements the common extension components directly, including
 forms, grids, stats rows, health panels, callback setup, markdown, log lists,
 and repeater form fields. Other validated component types are available as
 contract vocabulary and may need frontend implementation in the target version.
@@ -342,18 +408,66 @@ The frontend action payload includes:
 The backend normalizes this into the runtime `action.input` envelope before
 launching the extension subprocess.
 
+## Public Extension SDK
+
+The public SDK is exported on the subprocess `PYTHONPATH` as
+`flowsteward_extension_sdk`. Extension runtime code may import this namespace,
+but must not import private `core.*` modules.
+
+Public SDK surface:
+
+| Module area | Exports |
+| --- | --- |
+| Runtime context | `RuntimeContext`, `runtime_context_from_payload` |
+| Safe HTTP | `assert_safe_remote_http_url`, `resolve_pinned_ips`, `build_pinned_opener`, `open_pinned_url`, `Request`, `PinnedPeerError` |
+| Artifact access | `read_artifact_bytes`, `write_artifact_bytes`, `find_artifact_descriptor`, `artifact_descriptors_from_payload`, `ArtifactAccessError` |
+| Artifact/dataset plane | `ArtifactDatasetPlane`, `ArtifactHandle`, `DatasetHandle`, `create_storage_adapter`, storage adapters |
+
+Example:
+
+```python
+from flowsteward_extension_sdk import open_pinned_url, runtime_context_from_payload
+
+
+def provider_health(request_payload: dict) -> dict:
+    ctx = runtime_context_from_payload(request_payload)
+    return {
+        "ok": True,
+        "result": {
+            "project_id": ctx.project_id,
+            "safe_http_available": callable(open_pinned_url),
+        },
+    }
+```
+
+The runtime boundary validator scans extension Python files, entrypoint inline
+commands, and health inline commands. It rejects private `core.*` imports,
+dynamic private core imports, and `sys.path` manipulation. The current
+grandfathered exception set is empty. Use the SDK and `python_requirements`
+for every extension.
+
 ## Subprocess Isolation
 
 Local extension subprocesses receive a limited environment. Host database DSNs,
 encryption keys, and unrelated process environment values are not passed to the
 extension.
 
-Allowed environment names include common runtime variables such as:
+Allowed inherited environment names include common runtime variables such as:
 
 ```text
 PATH, HOME, USER, LANG, LC_ALL, LC_CTYPE, TMPDIR, TMP, TEMP,
-PYTHONPATH, PYTHONDONTWRITEBYTECODE, PYTHONUNBUFFERED, NODE_PATH, NODE_ENV
+PYTHONDONTWRITEBYTECODE, PYTHONUNBUFFERED, NODE_PATH, NODE_ENV,
+FS_ALLOW_PRIVATE_REMOTE_URLS
 ```
+
+`PYTHONPATH` is not inherited. The platform constructs it for each invocation:
+
+```text
+<extension bundle>/.fs-python/<version>/site:<public extension SDK path>
+```
+
+The dependency site directory is present only when `python_requirements` were
+materialized for that extension version. The SDK path is always appended.
 
 Subprocess controls:
 
@@ -414,11 +528,17 @@ Runtime event envelopes can carry event id, type, correlation id, occurrence
 time, account id, severity, summary, payload, project/workflow/job/phase/step
 scope, source, aggregate id, actor, URLs, and metadata.
 
-When an extension declares `supported_events`, emitted events must match the
-declared types. Supported event declarations may be exact event names or
-patterns supported by the runtime matcher.
+Emitted events must match the compiler-derived `supported_events` projection.
+Authors declare delivery selectors through `event_subscriptions`, not by adding
+`supported_events` to `extension.yaml`.
 
 ## Callback Runtime
+
+Supported auth modes are `none`, `shared_secret_header`, and `hmac_sha256`.
+The HMAC option has a fixed timestamp/delivery-ID/raw-body contract, bounded
+freshness, and replay detection; see the
+[authoring callback contract](../integrations/build-an-extension#callbacks).
+OAuth authorization callbacks follow their separate host-owned flow.
 
 Callbacks bridge provider webhooks into extension actions.
 
@@ -463,7 +583,8 @@ POST /api/extensions/{extension_id}/action/{action_id}
 POST /api/extensions/{extension_id}/invoke
 POST /api/extensions/{extension_id}/enable
 POST /api/extensions/{extension_id}/disable
-DELETE /api/extensions/{extension_id}
+GET  /api/extensions/{extension_id}/uninstall-plan
+POST /api/extensions/{extension_id}/uninstall  {"revision":"<plan-revision>"}
 ```
 
 Descriptor and import endpoints:
@@ -472,10 +593,11 @@ Descriptor and import endpoints:
 POST /api/extensions/descriptors/validate
 POST /api/extensions/descriptors/import/file
 POST /api/extensions/descriptors/import/url
-POST /api/extensions/validate
-POST /api/extensions/build
-POST /api/extensions/import
 ```
+
+These descriptor routes accept JSON, not an extension manifest or archive upload. Validation accepts `source_type` (`file`, `url`, `builtin`, or `payload`). File/URL/payload modes use the corresponding `descriptor_path`, `descriptor_url`, or `descriptor_payload`; builtin mode uses a descriptor payload or path with optional `source_root`, not a promise of a bundled showcase. File import takes a server-visible `descriptor_path`; URL import takes `descriptor_url`. Import requests may include `install_after_import`, `runtime_mode` and `remote_base_url` under the supported request schema. All remain subject to caller authorization and source policy.
+
+Archive installation is `POST /api/extensions/install` with `multipart/form-data`, required `file`, and optional `approved_browser_authority_impact_hash` for a reviewed authority impact. Manifest compilation and ZIP bundling are authoring tooling operations, not bare `/api/extensions/validate`, `/build`, or `/import` endpoints. Descriptor validation does not replace compiler validation.
 
 Marketplace and installation endpoints:
 
@@ -488,7 +610,6 @@ POST /api/extensions/releases/{release_id}/install
 POST /api/extensions/installs/{install_id}/handshake
 POST /api/extensions/{extension_id}/install
 POST /api/extensions/runtime/token
-POST /api/extensions/bootstrap/system
 POST /api/extensions/generated-jobs
 ```
 
@@ -497,31 +618,42 @@ POST /api/extensions/generated-jobs
 Authoring commands:
 
 ```bash
-python -m core.entrypoints.cli tooling extensions create <extension_id>
-python -m core.entrypoints.cli tooling extensions validate <extension_id>
-python -m core.entrypoints.cli tooling extensions test <extension_id>
-python -m core.entrypoints.cli tooling extensions bundle <extension_id>
+./flow-steward extensions create <extension_id>
+./flow-steward extensions validate <extension_id>
+./flow-steward extensions test <extension_id>
+./flow-steward extensions lock-deps <extension_id>
+./flow-steward extensions bundle <extension_id> --with-wheels
 ```
+
+For noninteractive authoring, explicitly confirm local changes with `--confirm` on `create`, `lock-deps` and `bundle`. The reviewed native CLI returns review exit `10` for unconfirmed changes and `0` for success; installed launcher dispatch can have different confirmation/error boundaries. Record the actual context and status rather than treating any nonzero code as success.
+
+Use the explicit `validate → test → bundle` sequence. Bundling is packaging, not full compiler validation: an invalid manifest can still be packaged. Validate the unpacked final archive as well when verifying a published deliverable. `validate --marketplace` checks manifest vendor/listing/scopes/machine-auth/account-scope metadata, not descriptor-schema validity; ordinary validation also checks some descriptor-referenced artifact modules.
+
+Default testing requires `requirements-dev.txt`, validates the manifest and runs smoke/local pytest targets in an environment inheriting the tooling interpreter's packages. Development dependency installation is offline (`--no-index`, `dev-wheels`/`wheels`); missing requirements or unavailable dependencies fail. The generated zero-dependency scaffold uses a comment-only requirements file and runs three tests without either wheel directory. Missing pytest targets fail by default (tooling exit `1`); `--allow-no-pytest` permits their absence explicitly, and `--skip-pytest` skips them. Neither proves regression coverage. A missing bundle exits `2`; controller rendering may wrap tooling failures.
 
 Useful options:
 
 ```bash
-python -m core.entrypoints.cli tooling extensions validate <extension_id> --json
-python -m core.entrypoints.cli tooling extensions validate <extension_id> --health
-python -m core.entrypoints.cli tooling extensions validate <extension_id> --marketplace
-python -m core.entrypoints.cli tooling extensions test <extension_id> --skip-pytest
-python -m core.entrypoints.cli tooling extensions bundle <extension_id> --version 0.2.0
+./flow-steward extensions validate <extension_id> --json
+./flow-steward extensions validate <extension_id> --health
+./flow-steward extensions validate <extension_id> --marketplace
+./flow-steward extensions test <extension_id> --skip-pytest
+./flow-steward extensions lock-deps <extension_id> --input requirements.in
+./flow-steward extensions lock-deps <extension_id> --platforms active
+./flow-steward extensions bundle <extension_id> --extension-version 0.2.0
+./flow-steward extensions bundle <extension_id> --with-wheels
+./flow-steward extensions bundle <extension_id> --with-wheels --platforms manylinux2014_x86_64,manylinux2014_aarch64
 ```
 
-Descriptor validation can also be called directly from Python when working on
-descriptor-only changes:
+For a bundle that actually includes a distribution descriptor, descriptor
+validation can also be called directly from Python in the Development toolchain:
 
 ```bash
 python - <<'PY'
 from core.application.extensions.lifecycle import validate_extension_descriptor_file
 
 result = validate_extension_descriptor_file(
-    "extensions/flowsteward_example_showcase/extension-descriptor.yaml"
+    "extensions/com_acme_crm_sync/extension-descriptor.yaml"
 )
 print(result["valid"])
 print(result.get("extension_contract_v2", {}))
@@ -534,8 +666,8 @@ Smoke scripts and pytest tests are both first-class extension checks.
 
 | Check | Runs how | Best for |
 | --- | --- | --- |
-| `scripts/smoke_check.py` | Direct Python execution, also called by `tooling extensions test`. | Fast proof that health, representative queries, and representative actions work. |
-| `tests/test_*.py` | Pytest, also called by `tooling extensions test`. | Regression coverage for compiler output, descriptor validation, Contract v2, ingress events, OAuth secrets, external request safety, and response shapes. |
+| `scripts/smoke_check.py` | Direct Python execution, also called by `extensions test`. | Fast proof that health, representative queries, and representative actions work. |
+| `tests/test_*.py` | Pytest, also called by `extensions test`. | Regression coverage for compiler output, descriptor validation, Contract v2, ingress events, OAuth secrets, external request safety, and response shapes. |
 
 Smoke scripts should be short and close to the package. Tests should be
 specific, assert on stable contract fields, and cover behavior that could
@@ -552,9 +684,15 @@ When an extension does not compile or render correctly:
 5. Confirm every UI query or action binding points to a declared operation id.
 6. Confirm form action bindings are under `data`.
 7. Confirm mutating actions declare `command_type`.
-8. Confirm response envelopes include `ok`.
-9. Confirm emitted event types are declared in `supported_events`.
-10. Run the smoke script directly, then run pytest for the extension.
+8. Confirm runtime files import `flowsteward_extension_sdk`, not private
+   `core.*` modules.
+9. Confirm runtime files do not mutate `sys.path`.
+10. If `python_requirements` is present, confirm `wheels/` contains matching
+    hashes for every requirement.
+11. Confirm response envelopes include `ok`.
+12. Confirm authoring uses `event_subscriptions` and emitted events match the
+    compiled `supported_events` projection.
+13. Run the smoke script directly, then run pytest for the extension.
 
 ## Platform Design Rules
 
@@ -563,6 +701,10 @@ When an extension does not compile or render correctly:
 - Keep platform mutations auditable through action manifests and response
   commands.
 - Keep credentials in secrets, not config, manifests, logs, or UI responses.
+- Keep platform primitives in `flowsteward_extension_sdk`, not private core
+  imports.
+- Keep third-party runtime libraries in `python_requirements`, not manual
+  `sys.path` manipulation or runtime `pip install`.
 - Treat action, query, trigger, connection type, operation, resource query, and
   artifact ids as stable public contracts.
 - Add validation or pytest coverage before broadening the extension contract.
@@ -570,4 +712,5 @@ When an extension does not compile or render correctly:
 ## Related Pages
 
 - [Build An Extension](../integrations/build-an-extension)
+- [Extension Operator Guide](../integrations/extension-operator-guide)
 - [CLI Reference](../reference/cli)

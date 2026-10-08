@@ -23,10 +23,17 @@ FastAPI application surface
           +--> Worker runtime: workflow execution and delivery loops
           +--> React shell: app workspace under /app/*
           +--> Extension runtime: out-of-process providers
-          +--> MCP / CLI providers: Codex, Claude, code search, and tools
+          +--> External MCP / CLI providers: declared, authorized provider tools
 ```
 
 ## Repository layout
+
+The inbound built-in MCP server is a thin, API-backed transport adapter for
+projects, workflows, jobs, reports, and notifications. It is not a
+repository-code indexing or generation service. Outbound MCP client sessions
+belong to worker execution attempts and are cleaned up by that lifecycle.
+Core exposes generic extension contracts; each extension owns its integration
+logic and onboarding.
 
 The target first-release layout is:
 
@@ -46,7 +53,11 @@ approves an exception.
 ## API contract direction
 
 The React shell uses normalized `/api/v2/*` JSON envelopes where available.
-Legacy `/api/*` contracts remain backward-compatible during migration.
+Compatibility exists only for legacy `/api/*` routes that are still explicitly
+registered; it is not a blanket migration guarantee. Workflow runs start at
+`/api/workflow-runs`; the transport delegates authorization and orchestration to
+the application service. Use the current [Public API Reference](../reference/api)
+before integrating with an endpoint.
 
 Success envelope:
 

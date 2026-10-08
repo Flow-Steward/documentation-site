@@ -3,13 +3,13 @@ import type {Config} from '@docusaurus/types';
 import type * as Preset from '@docusaurus/preset-classic';
 
 // This runs in Node.js - Don't use client-side code here (browser APIs, JSX...)
-const siteUrl = process.env.SITE_URL ?? 'https://flow-steward.github.io';
+const siteUrl = process.env.SITE_URL ?? 'https://flowsteward.org';
 const baseUrl = process.env.BASE_URL ?? '/';
 
 const config: Config = {
   title: 'Flow Steward',
-  tagline: 'Autonomous software delivery with human approval gates',
-  favicon: 'img/favicon.ico',
+  tagline: 'AI workflow automation with human approval gates',
+  favicon: 'img/favicon.svg',
 
   // Future flags, see https://docusaurus.io/docs/api/docusaurus-config#future
   future: {
@@ -63,7 +63,7 @@ const config: Config = {
   ],
 
   themeConfig: {
-    image: 'img/flow-steward-workflow-builder.png',
+    image: 'img/logo.svg',
     colorMode: {
       respectPrefersColorScheme: true,
     },
@@ -80,8 +80,10 @@ const config: Config = {
           position: 'left',
           label: 'Docs',
         },
-        {to: '/docs/user/getting-started', label: 'User Guides', position: 'left'},
-        {to: '/docs/developer/local-development', label: 'Developer', position: 'left'},
+        {to: '/docs/intro', label: 'Start Here', position: 'left'},
+        {to: '/docs/user/dashboard', label: 'User Guide', position: 'left'},
+        {to: '/docs/deploy/deployment-checklist', label: 'Deploy & Run', position: 'left'},
+        {to: '/docs/integrations/built-in-mcp-quick-start', label: 'Integrations', position: 'left'},
         {to: '/docs/reference/cli', label: 'Reference', position: 'left'},
       ],
     },
@@ -92,16 +94,37 @@ const config: Config = {
           title: 'Docs',
           items: [
             {
-              label: 'Overview',
+              label: 'Start Here',
               to: '/docs/intro',
             },
             {
-              label: 'Getting Started',
-              to: '/docs/user/getting-started',
+              label: 'Dashboard',
+              to: '/docs/user/dashboard',
             },
             {
-              label: 'Architecture',
-              to: '/docs/developer/architecture',
+              label: 'Workflow Export and Import',
+              to: '/docs/user/workflow-promotion',
+            },
+          ],
+        },
+        {
+          title: 'Operate',
+          items: [
+            {
+              label: 'Deployment Checklist',
+              to: '/docs/deploy/deployment-checklist',
+            },
+            {
+              label: 'Observability',
+              to: '/docs/deploy/observability',
+            },
+            {
+              label: 'Events And Redrive',
+              to: '/docs/admin/events-and-redrive',
+            },
+            {
+              label: 'Backups And Restore',
+              to: '/docs/deploy/backups-and-restore',
             },
           ],
         },
@@ -113,12 +136,12 @@ const config: Config = {
               to: '/docs/developer/local-development',
             },
             {
-              label: 'Extensions',
-              to: '/docs/developer/extensions',
+              label: 'Build An Extension',
+              to: '/docs/integrations/build-an-extension',
             },
             {
-              label: 'Release Readiness',
-              to: '/docs/reference/release-readiness',
+              label: 'Documentation Site',
+              to: '/docs/developer/documentation-site',
             },
           ],
         },
@@ -132,6 +155,10 @@ const config: Config = {
             {
               label: 'Configuration',
               to: '/docs/reference/configuration',
+            },
+            {
+              label: 'Environment Variables',
+              to: '/docs/reference/environment-variables',
             },
           ],
         },

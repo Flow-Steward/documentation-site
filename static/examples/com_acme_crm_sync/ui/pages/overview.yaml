@@ -1,0 +1,7 @@
+page_id: overview
+title: Overview
+description: Minimal deterministic CRM task-provider summary.
+components:
+  - component_id: acme_crm_summary
+    type: markdown
+    content: Minimal deterministic CRM task-provider example.

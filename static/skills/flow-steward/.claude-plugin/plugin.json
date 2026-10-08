@@ -1,0 +1,8 @@
+{
+  "name": "flow-steward",
+  "version": "1.0.1",
+  "description": "Use Flow Steward workflows and operational reports, or build extensions against current platform contracts.",
+  "author": {
+    "name": "Flow Steward"
+  }
+}

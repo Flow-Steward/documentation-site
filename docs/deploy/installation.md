@@ -26,6 +26,30 @@ The Railway, Render, Elestio and Fly.io guides cover Compact. For Scalable, use 
 installation path until a separate hosted deployment has been tested and
 documented.
 
+## Docker host prerequisites
+
+Before running `./install.sh`, install a running Docker Engine with Linux
+containers, Docker Compose v2, Git and Git LFS on the deployment host. Flow Steward
+does not install Docker. Use [Docker Engine](https://docs.docker.com/engine/install/)
+and the [Compose plugin](https://docs.docker.com/compose/install/linux/) on Linux,
+or [Docker Desktop](https://docs.docker.com/desktop/) for a local desktop trial.
+Windows shell launchers require Git Bash or WSL with Linux containers enabled.
+
+From the same non-root deployment account, check:
+
+```bash
+docker --version
+docker compose version
+docker info
+```
+
+See [Docker's Linux post-install instructions](https://docs.docker.com/engine/install/linux-postinstall/)
+if socket access is unavailable. For detailed answers to all installer questions,
+including Apache, Nginx and Traefik discovery, use the
+[Installer Walkthrough](installer-walkthrough). Use
+[Platform Deployment](platforms) for shared provider runtime requirements and
+[Diagnostics and Migration](diagnostics-and-migration) for doctor and Clone.
+
 ## VPS: guided installation
 
 You need access to the Flow Steward Git repository, Git LFS, Docker Engine, and

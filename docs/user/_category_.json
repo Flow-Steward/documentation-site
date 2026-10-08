@@ -1,8 +1,8 @@
 {
-  "label": "User Guides",
+  "label": "User Guide",
   "position": 2,
   "link": {
     "type": "generated-index",
-    "description": "Install Flow Steward, understand the operator workspace, and run the first workflows."
+    "description": "Use Flow Steward through the UI: dashboard, projects, workflows, jobs, agents, data, MCP, extensions, and lifecycle controls."
   }
 }

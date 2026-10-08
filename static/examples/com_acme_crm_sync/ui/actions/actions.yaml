@@ -1,0 +1,28 @@
+actions:
+  - action_id: normalize_task_action
+    title: Normalize CRM task
+    description: Normalize one example CRM record into a task envelope.
+    required_scopes: [extension:invoke]
+    handler: {mode: extension}
+    result_fields: [result.normalized]
+    error_codes: [not_configured, authentication_failed, invalid_payload, rate_limited, provider_unavailable, timeout, internal_error]
+    mutates_platform: false
+    workflow_visible: false
+  - action_id: fetch_attachments
+    title: Fetch CRM attachments
+    description: Return normalized attachment metadata without downloading external data in this example.
+    required_scopes: [extension:invoke]
+    handler: {mode: extension}
+    result_fields: [result.attachments]
+    error_codes: [not_configured, authentication_failed, not_found, rate_limited, provider_unavailable, timeout, internal_error]
+    mutates_platform: false
+    workflow_visible: false
+  - action_id: sync_completion_status
+    title: Sync completion status
+    description: Return the requested completion state without contacting an external CRM.
+    required_scopes: [extension:invoke]
+    handler: {mode: extension}
+    result_fields: [result.status]
+    error_codes: [not_configured, authentication_failed, conflict, rate_limited, provider_unavailable, timeout, internal_error]
+    mutates_platform: false
+    workflow_visible: false

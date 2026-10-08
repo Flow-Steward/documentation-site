@@ -1,0 +1,8 @@
+{
+  "label": "Integrations & Extensions",
+  "position": 5,
+  "link": {
+    "type": "generated-index",
+    "description": "Connect Flow Steward to external systems, MCP clients, data sources, webhooks, and extension bundles."
+  }
+}

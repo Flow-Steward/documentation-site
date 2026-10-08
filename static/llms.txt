@@ -1,0 +1,103 @@
+# Flow Steward Documentation Index
+
+Use this file to discover the public documentation pages before asking a
+documentation assistant to answer from Flow Steward docs.
+
+## Start Here
+
+- [Start Here](docs/intro): Product introduction, role router, and documentation map.
+- [Product Tour](docs/user/product-tour): Main screens and navigation.
+- [Use Cases](docs/user/use-cases): Common user scenarios.
+- [Getting Started](docs/user/getting-started): Shortest path to a first run.
+- [Core Concepts](docs/user/core-concepts): Main product objects.
+- [Feature Catalog](docs/user/feature-catalog): User-facing capability map.
+
+## User Guide
+
+- [Dashboard](docs/user/dashboard): First-screen activity, attention, cost, failure, and recent-work signals.
+- [Workspaces And Projects](docs/user/workspaces-and-projects): Workspace/project organization.
+- [Project Knowledge](docs/user/project-knowledge-and-code-intelligence): Internal project context and the removed public KB/code-indexing boundary.
+- [Workflows](docs/user/workflows): Build, validate, test, import/export, and run workflows.
+- [Workflow and Extension Catalogs](docs/user/workflow-and-extension-catalogs): Browse ready-made automation, install and update extensions, and contribute releases.
+- [First Workflow](docs/user/first-workflow): First controlled workflow run.
+- [Workflow Export and Import](docs/user/workflow-promotion): Copy workflows between environments using YAML export, dependency checks, and import.
+- [Failed-Run Diagnostics](docs/user/failed-run-diagnostics): Inspect and recover failed jobs.
+- [Jobs And Approvals](docs/user/jobs-and-approvals): Runtime evidence and human gates.
+- [Agents And Skills](docs/user/agents-and-skills): Agent and skill concepts.
+- [Tools And MCP](docs/user/tools-and-mcp): External MCP catalogs and tools.
+- [Datasets And Data Connections](docs/user/datasets-and-data-connections): Scoped data access.
+- [Extensions](docs/user/extensions): Extension operation.
+- [Registry Management](docs/user/registry-management): Registry object management.
+- [Trash And Lifecycle](docs/user/trash-and-lifecycle): Soft delete, restore, and hard-delete planning.
+
+## Admin & Operations
+
+- [Users, Roles, And Access](docs/user/users-roles-and-access): Accounts, roles, PATs, and service accounts.
+- [Settings And Model Providers](docs/user/settings-and-model-providers): Settings, providers, notifications, and security.
+- [Security, Policy, And Redaction](docs/admin/security-policy-and-redaction): Security scanning, PII handling, and sensitive evidence.
+- [Feature Configuration](docs/user/feature-configuration): Configuration scopes and feature knobs.
+- [Events And Redrive](docs/admin/events-and-redrive): Event inspection and safe redrive.
+- [Audit Trail](docs/admin/audit-trail): Where to inspect operational evidence.
+- [Queues, Concurrency, Retries, And DLQ](docs/admin/queues-concurrency-retries-dlq): Queue and failed-work operations.
+- [Monitoring And Troubleshooting](docs/user/monitoring-and-troubleshooting): Monitoring, telemetry, watchdog, and troubleshooting.
+
+## Deploy & Run
+
+- [Installation](docs/deploy/installation): Choose a Docker-host or managed-platform route.
+- [Answer the Installer Questions](docs/deploy/installer-walkthrough): Every prompt, Docker prerequisites, and Apache/Nginx/Traefik value discovery.
+- [Render (Compact)](docs/deploy/render): Install with the public Render Blueprint and operate the deployed runtime.
+- [Elestio (Compact)](docs/deploy/elestio): Install the Compact Compose template on a dedicated provider VM.
+- [Platform Deployment](docs/deploy/platforms): Railway, Fly.io, Render, and DigitalOcean Droplet requirements and support boundaries.
+- [Diagnostics And Migration](docs/deploy/diagnostics-and-migration): Doctor, targeted repairs, and Clone transfer between servers.
+
+- [Installation And Updates](docs/user/installation-and-updates): Installer, update, status, and doctor flows.
+- [Installer Reference](docs/reference/installer): `install.sh` commands and flags.
+- [Upgrade Reference](docs/reference/upgrade): Upgrade flow and checks.
+- [Deployment Checklist](docs/deploy/deployment-checklist): Production-readiness preflight.
+- [Environment Variables](docs/reference/environment-variables): Environment variable catalog.
+- [Configuration](docs/reference/configuration): Configuration files and backend profiles.
+- [Backups And Restore](docs/deploy/backups-and-restore): Database backup, validation, restore, and drills.
+- [Storage And Artifacts](docs/deploy/storage-and-artifacts): Logs, artifacts, backups, extensions, workspaces, and object storage.
+- [Observability](docs/deploy/observability): Sentry, Prometheus, readiness, metrics, and incident evidence.
+- [Deployment Troubleshooting](docs/deploy/troubleshooting): Problem-shaped operator checks.
+- [Rollback Runbook](docs/deploy/rollback): Rollback boundaries and database restore flow.
+- [Deployment Architecture](docs/deploy/architecture): Operator-oriented runtime component map.
+
+## Integrations & Extensions
+
+- [Flow Steward Agent Plugin](docs/integrations/agent-plugin): One plugin for user workflow/operations and developer extension skills; install, verify and update with an existing MCP connection.
+- [Extension Authoring Skill](docs/integrations/extension-authoring-skill): Developer task guide and optional individual canonical skill download.
+
+- [Incoming Workflow Webhooks](docs/integrations/incoming-workflow-webhooks): Receive external events and start workflows.
+- [External MCP Catalogs](docs/integrations/external-mcp-catalogs): Register external MCP servers as tool catalogs.
+- [Connect An AI Client With MCP](docs/integrations/built-in-mcp-quick-start): Built-in Flow Steward MCP quick start.
+- [Start And Observe A Workflow Run With The Public API](docs/integrations/public-api-quick-start): Explicit workflow launch and job observation.
+- [Extension Operator Guide](docs/integrations/extension-operator-guide): Install, preview, enable, health-check, and disable extensions.
+- [Build An Extension](docs/integrations/build-an-extension): Extension manifest, runtime, testing, and packaging path.
+- [Integrations](docs/developer/integrations): Developer integration choices.
+- [Developer Extensions](docs/developer/extensions): Extension bundle development.
+
+## Developer Platform
+
+- [Local Development](docs/developer/local-development): Local development workflow.
+- [Quality And Testing](docs/developer/quality-and-testing): Quality gates, tests, linters, and audits.
+- [Architecture](docs/developer/architecture): System architecture overview.
+- [Workflow Runtime](docs/developer/workflow-runtime): Runtime model for workflows, phases, and steps.
+- [MCP Server](docs/developer/mcp-server): Built-in MCP server internals.
+- [Project Knowledge](docs/developer/project-knowledge-and-code-intelligence): Application memory and API-backed MCP boundaries.
+- [Operations Internals](docs/developer/operations-internals): Logs, backups, retention, telemetry, and runtime files.
+- [CLI And Automation](docs/developer/cli-and-automation): CLI automation patterns.
+- [Documentation Site](docs/developer/documentation-site): Docusaurus docs workflow.
+- [Contributing Documentation](docs/developer/contributing-documentation): Source-backed public documentation workflow.
+
+## API & Reference
+
+- [CLI Reference](docs/reference/cli): Command groups and examples.
+- [API Reference](docs/reference/api): API groups, schema surfaces, health, and metrics.
+- [Configuration](docs/reference/configuration): Configuration files and backend profiles.
+- [Environment Variables](docs/reference/environment-variables): Environment variable catalog.
+- [MCP Reference](docs/reference/mcp): Built-in MCP tool groups and usage order.
+- [Workflow Step Kinds](docs/reference/workflow-step-kinds): Step type reference.
+- [Limits And File Formats](docs/reference/limits-and-file-formats): Surface-specific limits, formats, timeouts, and retention.
+- [Installer Reference](docs/reference/installer): `install.sh` commands and flags.
+- [Upgrade Reference](docs/reference/upgrade): Upgrade flow and checks.
