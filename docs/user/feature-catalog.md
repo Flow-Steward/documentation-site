@@ -38,7 +38,7 @@ Each feature page should answer the same questions:
 | Workflow Builder | Administrators compose phases and steps, use configured templates and shared authoring services, and review disabled drafts before execution. |
 | Workflow Test Run | Administrator-only durable test-job submission from the workflow builder; it may execute external effects. |
 | Incoming Webhooks | External systems can start workflow runs through configured webhook entrypoints with auth, content-type limits, source restrictions, and input mapping. |
-| Scheduled Jobs | Create or edit schedules from a linked workflow's Settings > Smart setup > Schedules after saving an enabled interface with the Schedule trigger. The project's Scheduled jobs page supports run-now, pause/resume, concurrency changes, and deletion; API clients can also use the authenticated internal API. |
+| Scheduled Jobs | Administrators create or edit schedules from a linked workflow's Settings > Smart setup > Schedules after saving an enabled interface with the Schedule trigger. The project's Scheduled jobs page supports run-now, pause/resume, and deletion, plus an administrator workflow selector leading to the editor. Overlap protection is automatic; API clients use the authenticated internal API with the required authority. |
 | Human Approval Gates | Phases can pause for human review before continuing, auto-approving, or routing to failure/rework. |
 | Notifications | Project routes can send workflow, job, approval, failure, or operational events to configured providers. |
 | Agents and Skills | Agent steps run a selected agent/skill contract. Inputs and outputs become workflow variables that the UI can surface automatically. |

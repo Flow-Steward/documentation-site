@@ -130,8 +130,12 @@ manifest is shown below.
 Download all nine published files into the canonical bundle root. Set
 `DOCS_BASE_URL` to the deployed documentation base, including any path prefix:
 
+The command below matches the configured GitHub Pages build. For a root-domain
+build with `SITE_URL=https://flowsteward.org` and `BASE_URL=/`, use
+`DOCS_BASE_URL=https://flowsteward.org` instead.
+
 ```bash
-export DOCS_BASE_URL=https://flowsteward.org/documentation-site
+export DOCS_BASE_URL=https://flow-steward.github.io/documentation-site
 mkdir -p extensions/com_acme_crm_sync/{scripts,ui/{pages,actions,queries}}
 
 curl --fail-with-body "$DOCS_BASE_URL/examples/com_acme_crm_sync/extension.yaml" \
@@ -157,6 +161,9 @@ curl --fail-with-body "$DOCS_BASE_URL/examples/com_acme_crm_sync/ui/queries/quer
 The `--root` value is the directory containing `com_acme_crm_sync/`, not the
 extension folder itself. Validate, run the provider-free smoke harness, and
 bundle those exact bytes:
+
+Run each command separately and stop after any nonzero exit. A successful
+bundle must not hide failed validation or tests.
 
 ```bash
 ./flow-steward extensions validate com.acme.crm-sync --root extensions --health
@@ -1104,18 +1111,38 @@ can be enabled:
 9. Validate callbacks, dependencies, workflow triggers, and event selectors.
 10. Build the compiled manifest preview.
 
-Validation issues include severity, code, message, file path, field path, and
-hint. Run validation with JSON output when you need machine-readable diagnostics:
+Compiler validation issues include severity, code, message, file path, field
+path, and hint. These compiler codes are separate from public CLI envelope codes.
+Use JSON output to inspect the public command result:
 
 ```bash
 ./flow-steward extensions validate com.acme.crm-sync --json
 ```
 
-Marketplace validation checks manifest vendor/listing/scopes/machine-auth/account-scope metadata, not the distribution descriptor schema. Ordinary validation also checks certain descriptor-referenced artifact modules when a descriptor is present. Validate the descriptor separately when distributing one:
+The public CLI maps failed extension validation or tests to exit `3` and envelope
+code `validation_failed`; it does not preserve each compiler issue as the
+envelope's `.error.code`. Internal tooling exit values are not public process
+statuses. Successful commands exit `0`. An unattended create/bundle reaching
+review without confirmation exits `10` with `cancelled`. Record actual launcher
+results and prerequisite failures, not inferred successes.
+
+Marketplace validation checks manifest vendor/listing/scopes/machine-auth/account-scope metadata, not the distribution descriptor schema. Ordinary validation also checks certain descriptor-referenced artifact modules when a descriptor is present. Use `--marketplace` for the additional manifest checks:
 
 ```bash
 ./flow-steward extensions validate com.acme.crm-sync --marketplace
 ```
+
+`vendor.name` is required even in ordinary validation. Marketplace validation
+additionally requires a listing category/summary, nonempty `required_scopes`,
+`machine_auth.service_account_key`, nonempty `machine_auth.required_scopes`,
+`account_scope.scope_type` and `account_scope.description`. Listing summary can
+be normalized from the manifest description; an absent listing still lacks the
+required category. Marketplace rejections are textual diagnostics, not invented
+compiler issue codes.
+
+Validate distribution descriptors separately through the descriptor API described
+in [Developer Extensions](../developer/extensions); `--marketplace` is not a
+descriptor-validation command.
 
 ## Tests And Scripts
 

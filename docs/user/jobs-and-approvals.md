@@ -40,19 +40,22 @@ cancel is permitted.
 1. Open `Jobs`.
 2. Select the job.
 3. Review the summary and current agent.
-4. As an admin or operator, open `Advanced diagnostics`. Its tabs are `Overview`,
-   `Errors`, `Runtime`, `Decisions`, and `Causal`.
-5. Inspect `Runtime` records and available message projections; expand `Raw data`
-   on a selected record when you need its underlying fields.
-6. Inspect `Errors` or the failed step's inspector for failure details.
-7. Use authorized API/CLI access for raw logs, messages, and job events. These are
-   not dedicated job-detail tabs. Viewers do not see `Advanced diagnostics` or
-   `Restart`, even when they can read the job.
+4. Review `Failure summary` when the run includes failure information.
+5. Select a step in the execution waterfall to open `Step details`. Inspect its
+   inputs, outputs, message, generated files, and `Errors` when those are present.
+6. Review `Decision history` when recorded decisions are available, and the
+   review workspace when a human gate is active.
+7. Use authorized API/CLI access for raw logs, messages, and job events. The
+   current job page has no `Advanced diagnostics` drawer or dedicated
+   `Overview`, `Runtime`, `Decisions`, `Causal`, `Messages`, `Logs`, or `Events`
+   tabs. Backend diagnostic fields and runtime message projections do not imply
+   named UI controls. Viewers can read scoped jobs, but cannot decide a gate,
+   cancel, or restart them; admin/operator actions still depend on state and policy.
 8. Check cost breakdown when model or tool usage matters.
 
-[![Completed provider-free job detail with status, timing, execution waterfall, restart, report, and diagnostics controls](/img/screenshots/2026-10-04/job-detail-completed.png)](/img/screenshots/2026-10-04/job-detail-completed.png)
+[![Historical completed provider-free job detail with status, timing, execution waterfall, restart, report, and diagnostics controls](/img/screenshots/2026-10-04/job-detail-completed.png)](/img/screenshots/2026-10-04/job-detail-completed.png)
 
-*A pre-existing synthetic provider-free run completed with no billable model usage. No restart or diagnostic action was invoked during capture.*
+*Historical capture from 2026-10-04 of a pre-existing synthetic provider-free run with no billable model usage. Its diagnostics controls are not the current page layout. No restart or diagnostic action was invoked during capture.*
 
 ## Handle an approval
 

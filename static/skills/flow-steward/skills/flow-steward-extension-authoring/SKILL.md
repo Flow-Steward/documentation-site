@@ -57,8 +57,46 @@ verification on both architectures; report the environments and checks actually
 run, including missing architecture coverage. Keep the full procedure in the
 located `docs/integrations/build-an-extension.md` wheel/distribution guide.
 
+## Authoring traps
+
+- `extensions create` generates a `tool_provider` with features `[tool, action]`,
+  version `1.0.0`, a hidden `save_settings` action and three pytest tests. Its
+  owner is `core/application/extensions/scaffold.py`; the command has no `--kind`.
+  Adapt the kind, features, handlers and contracts to the requested provider.
+- Runtime manifests require `vendor.name`; strict distribution descriptors use
+  `vendor.vendor_name`. Keep manifest `version` and descriptor `release_version`
+  consistent. `--marketplace` checks manifest listing/vendor/scopes/machine/account
+  metadata, not descriptor validity. Use the located guide's separate descriptor
+  API contracts when needed.
+- Every action needs explicit boolean `workflow_visible`. A visible action and
+  visible Contract V2 operation must share an ID. Use the located guide's full
+  task-ingress operation/result/error table and active notification-provider
+  `deliver_notification` action/operation/effect contract; placeholder exemption
+  does not establish a working active provider.
+- Author selectors under `event_subscriptions`, not compiled `supported_events`.
+  Feature `ingress_event` requires `external.comment.received`, an `ingress_event`
+  action, and `result.ingress_type` in its result fields.
+- `runtime_grants` and `project_state` are optional. Declare grants only for
+  needed resources/mutations: scope is `owning_extension`, and provider-key grants
+  name this extension's own ID. Unknown kinds, foreign namespaces and malformed
+  lists fail with `runtime_grant_forbidden`; successful validation does not imply
+  undeclared resource access will work.
+- The ordinary test path requires `requirements-dev.txt` and installs offline
+  with `--no-index`, searching `dev-wheels/` and `wheels/`. Inherited tooling
+  packages can satisfy the generated comment-only file; wheel directories are
+  not universally required. Supply compatible local wheels for unavailable
+  development dependencies. A test run with no `tests/test_*.py` targets fails
+  unless explicitly allowed with `--allow-no-pytest`; that option does not prove
+  runtime behavior.
+- Bundle success means packaging, not full manifest validation. Run validate and
+  test first. Compiler issue codes are not public CLI envelope error codes; use
+  the located guide's validation section to distinguish them.
+
 The bare bundle example below is for zero third-party Python dependencies, from
 the application checkout with a task-authorized new ID:
+
+Run it one command at a time, stopping after any nonzero exit. Do not proceed
+to packaging after failed validation or tests.
 
 ```bash
 ./flow-steward extensions create com.acme.example --non-interactive --confirm
@@ -75,6 +113,15 @@ MCP/QA/admin client can refuse. Report that limitation and use the supported
 launcher, without setting `FS_EXTENSION_TEST_RUNTIME` to bypass it. Production
 does not provision test tooling implicitly. Nonzero or review exits are not
 successful validation.
+
+The public CLI uses exit `0` for success, `3` with `validation_failed` for
+extension validation/test failures, and `10` with `cancelled` when unattended
+create/bundle reaches review without confirmation. Internal tooling exit values
+differ; record actual launcher results and prerequisite failures. The default
+scaffold archive is `dist/extensions/com.acme.example-1.0.0.zip`. Report published
+sample validation and source/archive parity only when those exact artifacts were
+checked; compiler evidence does not prove authenticated API, health, OAuth or
+runtime invocation acceptance.
 
 ## Install only within the request
 

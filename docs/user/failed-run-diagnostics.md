@@ -14,21 +14,23 @@ that should not be trusted.
 1. Open `Jobs`.
 2. Select the failed or suspicious job.
 3. Read the final status and current phase or step.
-4. As an admin or operator, open `Advanced diagnostics > Errors` for structured
-   failures. A failed step can also show its error in the step inspector.
-5. Open `Advanced diagnostics > Runtime` for runtime records and available
-   message projections. Select a record and expand `Raw data` for its details.
-6. Use `Decisions` and `Causal` in the same drawer to follow decisions and the
-   causal chain. `Overview` summarizes the diagnostics.
+4. Read `Failure summary` when the run contains failure information. Select a
+   failed step in the execution waterfall to open `Step details` and its `Errors`
+   section when a failure is recorded.
+5. Inspect the step's inputs, outputs, message, and generated files. These are
+   readable execution projections, not an unfiltered raw-message browser.
+6. Review `Decision history` when available and the active review workspace.
 7. For raw logs, messages, or job events, use the authorized API/CLI paths in
    [CLI Reference](../reference/cli) and [API Reference](../reference/api).
-   There are no dedicated `Messages`, `Logs`, or `Events` tabs in the job drawer.
+   The current page has no `Advanced diagnostics` drawer, `Raw data` expansion,
+   or dedicated `Overview`, `Runtime`, `Decisions`, `Causal`, `Messages`, `Logs`,
+   or `Events` tabs. Backend diagnostics are not a promise of matching UI tabs.
 8. Review approvals before judging whether the job was allowed to proceed.
 9. Check generated artifacts and cost when the job used models or tools.
 
-Viewers can inspect jobs within their authorized project scope but do not receive
-the `Advanced diagnostics` or `Restart` controls. Admin/operator access still
-depends on the job's scope and available policy actions.
+Viewers can inspect jobs within their authorized project scope but cannot decide
+a gate, cancel, or restart a job. Admin/operator actions still depend on the
+job's scope, current state, and available policy actions.
 
 ## Common failure shapes
 

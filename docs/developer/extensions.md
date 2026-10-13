@@ -140,7 +140,12 @@ Validation issues are structured objects:
 }
 ```
 
-Use issue codes in tests and CI rather than string-matching full messages.
+Use compiler issue codes when inspecting structured compiler results rather than
+string-matching full messages. These are not the public CLI envelope's error
+codes: `extensions validate` and `extensions test` map failed validation to
+process exit `3` and `validation_failed`. JSON command output does not make every
+compiler code available as `.error.code`; internal tooling exit values also
+differ from public process statuses.
 
 Common validation failures:
 
@@ -627,9 +632,9 @@ Authoring commands:
 
 For noninteractive authoring, explicitly confirm local changes with `--confirm` on `create`, `lock-deps` and `bundle`. The reviewed native CLI returns review exit `10` for unconfirmed changes and `0` for success; installed launcher dispatch can have different confirmation/error boundaries. Record the actual context and status rather than treating any nonzero code as success.
 
-Use the explicit `validate → test → bundle` sequence. Bundling is packaging, not full compiler validation: an invalid manifest can still be packaged. Validate the unpacked final archive as well when verifying a published deliverable. `validate --marketplace` checks manifest vendor/listing/scopes/machine-auth/account-scope metadata, not descriptor-schema validity; ordinary validation also checks some descriptor-referenced artifact modules.
+Use the explicit `validate → test → bundle` sequence, running each command separately and stopping after any nonzero exit. Bundling is packaging, not full compiler validation: an invalid manifest can still be packaged. Validate the unpacked final archive as well when verifying a published deliverable. `validate --marketplace` checks manifest vendor/listing/scopes/machine-auth/account-scope metadata, not descriptor-schema validity; ordinary validation also checks some descriptor-referenced artifact modules.
 
-Default testing requires `requirements-dev.txt`, validates the manifest and runs smoke/local pytest targets in an environment inheriting the tooling interpreter's packages. Development dependency installation is offline (`--no-index`, `dev-wheels`/`wheels`); missing requirements or unavailable dependencies fail. The generated zero-dependency scaffold uses a comment-only requirements file and runs three tests without either wheel directory. Missing pytest targets fail by default (tooling exit `1`); `--allow-no-pytest` permits their absence explicitly, and `--skip-pytest` skips them. Neither proves regression coverage. A missing bundle exits `2`; controller rendering may wrap tooling failures.
+Default testing requires `requirements-dev.txt`, validates the manifest and runs smoke/local pytest targets in an environment inheriting the tooling interpreter's packages. Development dependency installation is offline (`--no-index`, `dev-wheels`/`wheels`); missing requirements or unavailable dependencies fail. The generated zero-dependency scaffold uses a comment-only requirements file and runs three tests without either wheel directory. Missing pytest targets fail by default; `--allow-no-pytest` permits their absence explicitly, and `--skip-pytest` skips them. Neither proves regression coverage. Internal test tooling returns `1` for failed checks and `2` for a missing bundle or unavailable dedicated test runtime; the public CLI wraps those failures as exit `3` with `validation_failed`. `extensions test` has no `--confirm`. Do not substitute private tooling modules or a host interpreter for the supported Development launcher.
 
 Useful options:
 

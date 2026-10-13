@@ -203,8 +203,10 @@ services. See the [Public API Quick Start](../integrations/public-api-quick-star
 ## Manage scheduled runs
 
 The project **Scheduled jobs** page lists existing schedules and recent runs.
-It supports run-now, enable/disable, concurrency updates, and deletion. The
-retired project submission dialog is no longer a way to create a schedule.
+It supports run-now, enable/disable, and deletion. Administrators can choose a
+linked workflow there to open its schedule editor; workflow authoring controls
+are not available to operators or viewers. The retired project submission
+dialog is no longer a way to create a schedule.
 
 To create or edit a schedule, open the linked workflow from its project and use
 `Settings > Smart setup`. Enable its interface, allow the `Schedule` trigger,
@@ -212,8 +214,10 @@ and save those settings. The saved workflow and interface must be enabled;
 an unsaved trigger selection is not sufficient. The `Schedules` section shows
 `New schedule` and `Edit` only in a valid linked project context.
 
-Enter the task summary and declared workflow inputs, choose a timezone and a
-friendly repeat pattern or custom cron, and review the preview. Leave the
+Enter values for the workflow inputs that need caller-supplied values; fixed
+defaults are applied automatically. Input definitions belong in workflow
+settings, not in the schedule editor. Choose a timezone and a friendly repeat
+pattern or custom cron, and use `Preview next runs`. Leave the
 schedule paused for a controlled setup check, then save it and inspect the
 project's `Scheduled jobs` list. Saving workflow settings alone does not create
 or enable a schedule. API clients can use the authenticated internal contract
@@ -222,9 +226,11 @@ for `/api/projects/{project_id}/scheduled-jobs`.
 Scheduled runs need an explicit workflow and declared inputs admitted by its
 `schedule` channel. The stored request is revalidated for execution; creating or
 enabling a schedule does not bypass later workflow or credential changes.
-Review concurrency scope (`scheduled_job`, `workflow`, or a deliberate custom
-key), the `latest_only` catch-up behavior, timezone, and cron validity. Verify
-daylight-saving boundaries before relying on a schedule.
+Overlap protection is automatic for each schedule within its account and project.
+There are no user-configurable concurrency scope/key, catch-up policy,
+instructions, or task-summary fields in the schedule editor or its API request.
+The runtime derives its run summary from the workflow. Review timezone and cron
+validity, including daylight-saving boundaries, before relying on a schedule.
 
 ## Configure Automation rules
 

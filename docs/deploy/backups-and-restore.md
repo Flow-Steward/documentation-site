@@ -11,10 +11,13 @@ storage, RabbitMQ, application/source images, logs, generated builds,
 extensions, projects/workspaces on the host, TLS material, installer state, or
 provider-side effects.
 
-The checkout commands below use the selected installation's Docker/Compose context. Compact stores its database backup inside its durable `/data` volume; Scalable uses the host checkout. The host restore helper is not a Railway or
-other standalone-container restore procedure. On a hosting platform, plan and
-rehearse provider-specific recovery of PostgreSQL, RabbitMQ and Compact’s `/data`
-volume; its container has no host Compose tooling.
+The checkout commands below use the selected installation's Docker/Compose
+context. The host `./flow-steward` launcher uses checkout `backups/` for both
+Compact and Scalable. Native `flow-steward` inside a Compact runtime uses
+`/data/backups/` instead; these are separate stores. The host restore helper
+requires Compose. Flow Steward has no supported restore procedure on a provider
+without Compose, such as a standalone Railway container. Keep that provider's
+own database backups; do not apply the host helper inside its container.
 
 ## Keep the correct key
 
@@ -40,12 +43,17 @@ database.
 | Context | Public create/list storage | Verification path |
 | --- | --- | --- |
 | Checkout Scalable | Deployment checkout `backups/` on the host, reached through the installed CLI's checkout mount. | `backups/<file>.dump.enc` |
-| Checkout Compact | `/data/backups/` in the Compact durable volume, not checkout `backups/`. | `backups/<file>.dump.enc` through the Compact launcher. |
+| Checkout Compact, host `./flow-steward` launcher | Deployment checkout `backups/` on the host, reached through the launcher's checkout mount. | `backups/<file>.dump.enc` through the host launcher. |
+| Native Compact `flow-steward` inside the runtime | `/data/backups/` in the Compact durable volume. | `backups/<file>.dump.enc` through the native command. |
 | Standalone provider Compact | `/data/backups/` inside its mounted durable volume. Use native `flow-steward backup create/list/verify` in the provider console. | Container-native path; exporting the file requires provider volume/file controls. |
 
 Use the filename returned by `backup create` and confirm it appears in `backup list`. Keep an encrypted off-installation copy; a durable volume alone is not an independent recovery copy. `FS_BACKUPS_DIR` selects Clone transfer storage, not the public PostgreSQL backup gateway. The separate internal `db_backup.sh` uses `${FS_ARTIFACT_ROOT:-<application-repository>}/backups`; do not apply that script's environment override to the public gateway.
 
-For checkout Compact, exporting or importing a database backup is a separate file-copy operation on the Docker host. Resolve the running container through the selected context, not a guessed container name:
+An archive created through the checkout's host launcher is already in host
+`backups/`; copy that encrypted file to your protected off-installation storage.
+If it was created with native `flow-steward` inside Compact, exporting it is a
+separate file-copy operation on the Docker host. Resolve the running container
+through the selected context, not a guessed container name:
 
 ```bash
 # If installer state is external, first set FS_STACK_ENV_FILE to that
@@ -58,7 +66,16 @@ docker cp "$compact_container:/data/backups/<file>.dump.enc" /private/recovery/<
 chmod 600 /private/recovery/<file>.dump.enc
 ```
 
-Prepare `/private/recovery` as an existing owner-only directory and keep the key separately. The shown destination is a placeholder, not a directory the product creates. For a host-helper restore, put the exported encrypted file in the **target checkout's** `backups/` directory with mode `600`, verify its identity and use the explicit target helper below. To import it for Compact's public `backup verify`, copy it separately into the target container's `/data/backups/`, set ownership to that runtime's backup owner, and verify through that installation's launcher. Host copy/import does not restore a database. Do not apply Docker-host commands inside a standalone provider container.
+Prepare `/private/recovery` as an existing owner-only directory and keep the key
+separately. The shown destination is a placeholder, not a directory the product
+creates. For verification through the target host launcher or a host-helper
+restore, put the encrypted file in the **target checkout's** `backups/` directory
+with mode `600`, verify its identity and use the explicit target helper below.
+For verification with native `flow-steward` inside Compact, copy it separately
+into the target container's `/data/backups/`, set ownership to that runtime's
+backup owner, and run the native command inside that runtime. Host copy/import
+does not restore a database. Do not apply Docker-host commands inside a
+standalone provider container.
 
 The helper defaults to checkout `.flow-steward/compose.env`; `FS_INSTALLER_STATE_DIR` alone does not redirect that read. With a supported external state root, set `FS_STACK_ENV_FILE` to its exact `compose.env` before sourcing and before invoking the restore helper, which loads the same context. Inspect the resolved services/project before any copy or recovery operation.
 

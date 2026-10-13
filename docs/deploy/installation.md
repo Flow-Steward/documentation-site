@@ -148,8 +148,12 @@ Remove any SSH key or other resource created only for that test.
 ### First administrator and CLI
 
 Open the URL printed by the installer and create the first administrator.
-For a non-local address, the installer prints the location of an owner-only
-setup token and a bootstrap URL. Keep the token private. If it expires while
+For every normal checkout installation, including localhost, the installer
+prints an owner-only setup-token location and the complete private
+`/bootstrap#setup-token=...` link. Open the complete link promptly; setup tokens
+expire 60 minutes after issuance, not after a resumed installer prints the link.
+A plain `/bootstrap` URL does not bypass installed token checks on loopback.
+Keep the token and link private. If it expires while
 no administrator exists, rerun `./install.sh` to issue a new link. AI provider
 credentials are optional at installation and can be configured after login.
 

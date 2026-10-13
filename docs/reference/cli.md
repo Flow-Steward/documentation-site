@@ -169,6 +169,56 @@ review/restore sequence and external-effects boundary.
 For end-to-end diagnosis, repair, and installation Clone procedures, see
 [Diagnostics And Migration](../deploy/diagnostics-and-migration).
 
+## Database migrations
+
+`database upgrade` is a mutation, not a readiness check or an automatic part of
+release upgrade. Inspect the launcher's help and database state first:
+
+```bash
+./flow-steward database upgrade --help
+./flow-steward database status
+```
+
+On Compact, the host launcher's database help is the profile's restricted help
+page, not the full schema-driven per-command help. Do not infer that every
+database command in the inventory is supported there.
+
+Before applying SQL, review the matching release's instructions, verify a
+current backup and recovery assets, enable manual maintenance, wait for writers
+to stop, and confirm the target installation. Only then run:
+
+```bash
+./flow-steward database upgrade --author operator --maintenance-confirmed --confirm
+```
+
+`--maintenance-confirmed` asserts that writers are stopped and a verified backup
+exists; it does not create that backup or enable maintenance for you. Keep
+maintenance enabled after failure and until post-update verification passes.
+
+| Database command outcome | Public exit | Meaning |
+|---|---|---|
+| Upgrade completes | `0` | Inspect the result and verify the post-update state before reopening work. |
+| Invalid syntax or a launcher-required consent option is missing | `2` | No successful migration is established; correct the reported usage first. |
+| SQL fails, or migration safety checks reject checksum drift, empty/template-only files or an unresolved non-transactional marker | `9` | Recovery/inspection is required before retrying; never treat this as success. |
+
+These are not the installer's schema-preflight error exits. Authentication,
+dependency, confirmation and other launcher prerequisites can fail separately;
+read the actual returned context rather than assuming every nonzero exit is `9`.
+
+The 1.0 database baseline is `db/schema/`; post-1.0 migrations are ordered SQL
+files under `db/migrations/`, tracked in `public.platform_schema_migrations`.
+A database without a ledger must match the canonical baseline before it is
+stamped; upgrade does not replay the whole baseline DDL. Pre-1.0 development
+databases are refused rather than carried into 1.0: create a separate clean
+installation, not a destructive reset of the existing data.
+
+A transactional migration failure rolls back that migration and its tracking
+insert, not previously committed migrations. A non-transactional failure can
+leave partial effects and a durable in-progress marker. Inspect and reconcile
+that state before retrying; do not clear the marker or claim an automatic
+rollback. See [Installation and Updates](../user/installation-and-updates) for
+the separate installer schema-preflight outcomes and update procedure.
+
 ## Safe discovery
 
 ```bash

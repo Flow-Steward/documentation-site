@@ -219,6 +219,14 @@ for the complete procedure and recovery boundaries.
 | `database_newer_than_release` | `8` | The selected older release does not know migrations already applied. Return to the newer release, or rehearse restoration of a matching pre-migration backup before rolling back. Database upgrade cannot reverse this condition. |
 | `schema_baseline_failed` | `8` | Generic baseline-check failure remains possible. Read the actual cause; do not assume every occurrence means a pending migration. |
 
+This table describes installer schema preflight, not the SQL migration command.
+`database upgrade` SQL failures and migration safety refusals use public exit
+`9` (recovery required); invalid launcher usage is a separate exit `2`. A
+non-transactional failure may leave partial effects and an in-progress marker,
+so keep maintenance enabled and inspect the state before retrying. See
+[Database migrations](../reference/cli#database-migrations) for prerequisites,
+the confirmed command, and transactional versus non-transactional recovery.
+
 A plain rerun on the same revision verifies the installation and can restart
 stopped services. It is not a general configuration editor. Compact worker
 capacity is an explicit supported change:

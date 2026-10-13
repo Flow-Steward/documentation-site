@@ -10,8 +10,8 @@ Use monitoring when Flow Steward is running but work is slow, blocked, failing,
 or not visible where expected.
 
 The system Monitoring UI is admin-only. Operators and viewers should start with
-the jobs available in their project scope; admin/operator job diagnostics are a
-separate permission from system Monitoring.
+the jobs available in their project scope. Job read access is separate from
+system Monitoring access and does not authorize job mutations.
 
 ## Start with these checks
 
@@ -21,8 +21,10 @@ separate permission from system Monitoring.
 4. Check storage summary.
 5. Open `Events` and filter by the affected workflow, job, family, category, or
    dispatch status.
-6. Open the job detail page and review approvals and, when your role permits it,
-   `Advanced diagnostics > Errors`, `Runtime`, `Decisions`, and `Causal`.
+6. Open the job detail page and review `Failure summary`, the execution waterfall
+   and `Step details`, recorded `Decision history`, and any active approval.
+   See [Failed-Run Diagnostics](failed-run-diagnostics) for the current path and
+   the distinction between UI projections and raw API records.
 7. Check extension health if the failure involves an external provider.
 
 ## Common issues

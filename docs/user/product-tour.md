@@ -45,6 +45,10 @@ destination or permit a privileged action.
 Project knowledge-base and repository-code search are not public search surfaces.
 Internal schema objects remain read-only.
 
+ChatShell and the contextual-assistant screens are not available in this
+frontend. Use the supported workflow, job, and external-agent entrypoints;
+do not expect a built-in chat screen.
+
 ## Recommended first path
 
 1. Install the stack and create the first admin user.
