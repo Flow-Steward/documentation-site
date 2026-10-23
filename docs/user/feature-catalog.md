@@ -34,12 +34,12 @@ Each feature page should answer the same questions:
 | Projects and workspaces | Workspaces group a client, team, or data boundary; projects inside them hold rules, datasets, jobs, settings, workflow bindings, and scoped runtime context. |
 | Jobs | Jobs are workflow runs with status, logs, messages, approvals, artifacts, costs, and final reports. |
 | Workflow Catalog | [Find ready-made workflows](workflow-and-extension-catalogs), review requirements, and create independent local drafts; contribute through the catalog repository. |
-| Extension Catalog | Browse Extensions > Marketplace for published integrations, install or update a reviewed release, and contribute your own extension. |
-| Workflow Builder | Administrators compose phases and steps, use configured templates and shared authoring services, and review disabled drafts before execution. |
+| Extension Catalog | Browse Extensions > Catalog for published integrations, install or update a reviewed release, and contribute your own extension. |
+| Workflow Builder | Administrators compose steps, Groups, parallel lanes, For each loops and hooks on a canvas, with keyboard Undo/Redo and one Apply per change set; see [Workflow Builder](workflow-builder). |
 | Workflow Test Run | Administrator-only durable test-job submission from the workflow builder; it may execute external effects. |
 | Incoming Webhooks | External systems can start workflow runs through configured webhook entrypoints with auth, content-type limits, source restrictions, and input mapping. |
-| Scheduled Jobs | Administrators create or edit schedules from a linked workflow's Settings > Smart setup > Schedules after saving an enabled interface with the Schedule trigger. The project's Scheduled jobs page supports run-now, pause/resume, and deletion, plus an administrator workflow selector leading to the editor. Overlap protection is automatic; API clients use the authenticated internal API with the required authority. |
-| Human Approval Gates | Phases can pause for human review before continuing, auto-approving, or routing to failure/rework. |
+| Scheduled Jobs | Administrators create or edit schedules from a linked workflow's Schedules tab after saving an enabled interface with the Schedule trigger on its Smart setup tab. The project's Scheduled jobs page supports run-now, pause/resume, and deletion, plus an administrator workflow selector leading to the editor. Overlap protection is automatic; API clients use the authenticated internal API with the required authority. |
+| Human Approval | An Approval step pauses the run for a person; its Approved and Rejected outcomes decide what runs next. |
 | Notifications | Project routes can send workflow, job, approval, failure, or operational events to configured providers. |
 | Agents and Skills | Agent steps run a selected agent/skill contract. Inputs and outputs become workflow variables that the UI can surface automatically. |
 | Connector Steps | Connector steps call installed tools or extensions through operation schemas and project connections. |
@@ -79,7 +79,7 @@ surface map.
 
 For the public release, prioritize complete pages for:
 
-- workflows, phases, steps, test runs, and incoming webhooks;
+- workflows, steps, Groups, loops, hooks, test runs, and incoming webhooks;
 - artifact storage and S3-compatible deployment options;
 - project context, search, and explicit workflow launch;
 - manual workflow editing and disabled draft review;

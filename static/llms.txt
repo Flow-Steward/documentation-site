@@ -18,6 +18,7 @@ documentation assistant to answer from Flow Steward docs.
 - [Workspaces And Projects](docs/user/workspaces-and-projects): Workspace/project organization.
 - [Project Knowledge](docs/user/project-knowledge-and-code-intelligence): Internal project context and the removed public KB/code-indexing boundary.
 - [Workflows](docs/user/workflows): Build, validate, test, import/export, and run workflows.
+- [Workflow Builder](docs/user/workflow-builder): Canvas, step kinds, Groups, parallel lanes, For each, hooks, Undo/Redo, returned files and workflow page tabs.
 - [Workflow and Extension Catalogs](docs/user/workflow-and-extension-catalogs): Browse ready-made automation, install and update extensions, and contribute releases.
 - [First Workflow](docs/user/first-workflow): First controlled workflow run.
 - [Workflow Export and Import](docs/user/workflow-promotion): Copy workflows between environments using YAML export, dependency checks, and import.
@@ -97,7 +98,7 @@ documentation assistant to answer from Flow Steward docs.
 - [Configuration](docs/reference/configuration): Configuration files and backend profiles.
 - [Environment Variables](docs/reference/environment-variables): Environment variable catalog.
 - [MCP Reference](docs/reference/mcp): Built-in MCP tool groups and usage order.
-- [Workflow Step Kinds](docs/reference/workflow-step-kinds): Step type reference.
+- [Workflow Step Kinds](docs/reference/workflow-step-kinds): Step kinds, outcomes, containers and placement reference.
 - [Limits And File Formats](docs/reference/limits-and-file-formats): Surface-specific limits, formats, timeouts, and retention.
 - [Installer Reference](docs/reference/installer): `install.sh` commands and flags.
 - [Upgrade Reference](docs/reference/upgrade): Upgrade flow and checks.

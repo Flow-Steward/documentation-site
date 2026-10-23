@@ -42,6 +42,7 @@ const sidebars: SidebarsConfig = {
         'user/workspaces-and-projects',
         'user/project-knowledge-and-code-intelligence',
         'user/workflows',
+        'user/workflow-builder',
         'user/workflow-and-extension-catalogs',
         'user/first-workflow',
         'user/workflow-promotion',

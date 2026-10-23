@@ -74,8 +74,9 @@ Jobs are where operators see runtime evidence:
 
 ## Workflow
 
-A workflow is an executable plan made of phases and steps. It defines the order
-of work and the rules for moving from one step to another.
+A workflow is a set of steps connected by one execution graph, with Groups,
+parallel lanes, For each loops and hooks where needed. It defines the order of
+work and which step runs after each outcome.
 
 Workflows can combine:
 
@@ -87,7 +88,8 @@ Workflows can combine:
 - loops and batches;
 - child workflow invocation;
 - success and failure stops;
-- human approval gates.
+- human approval steps;
+- hooks where each project adds its own steps.
 
 Use workflows when a process should be repeatable and observable.
 

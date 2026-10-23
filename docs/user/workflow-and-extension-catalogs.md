@@ -1,23 +1,29 @@
 ---
 sidebar_position: 7
 title: Workflow and Extension Catalogs
-description: Find ready-made workflows and extensions, install them in your environment, and contribute your own.
+description: Find ready-made workflows, extensions and MCP servers, add them to your environment, and contribute your own.
 ---
 
 # Workflow and Extension Catalogs
 
-Flow Steward has two catalogs of reusable automation: **Workflow Catalog** for
-ready-made workflows and **Extension Catalog** for integrations and capabilities.
+Flow Steward has three catalogs of reusable pieces: **Workflow Catalog** for
+ready-made workflows, **Extension Catalog** for integrations and capabilities,
+and the **MCP catalog** of curated MCP servers.
 They can contain workflows and extensions published by Flow Steward and community
 contributors. Workflows can solve real operational tasks; demo content is only
 one possible kind of entry. Available entries grow as publishers add releases.
 
 | Surface | What you get | Where to open it |
 |---|---|---|
-| Workflow Catalog | A reusable workflow, including the child workflows it calls when included in its bundle. | `Registry > Workflows > Create workflow > From catalog`. |
-| Extension Catalog | An installable version of an extension that adds tools, providers, data connectors, or other declared capabilities. | `Extensions > Marketplace`. |
-| Local workflows | The workflows already created or imported into your installation. | `Registry > Workflows`. |
+| Workflow Catalog | A reusable workflow, including the child workflows it calls when included in its bundle. | **Workflows › Catalog** tab. |
+| Extension Catalog | An installable version of an extension that adds tools, providers, data connectors, or other declared capabilities. | **Extensions › Catalog** tab. |
+| MCP catalog | A curated MCP server you connect with your own credentials. | **MCP › Catalog** tab. |
+| Local workflows | The workflows already created or imported into your installation. | **Workflows › Workflows** tab. |
 | Installed extensions | Your installation's extension configuration, enabled state, and health. | `Extensions`, using its installed-extension controls. |
+
+All three catalogs filter by category, search, and mark recently added entries
+**New**. The Extension and MCP catalogs sort **A–Z** or **Recently added** and
+switch between a grid and a list.
 
 A catalog listing and a local installation are different states. Creating a
 workflow from the catalog makes local drafts; installing an extension makes its
@@ -25,13 +31,19 @@ release available locally. Both still need their own setup and validation.
 
 ## Use a ready-made workflow
 
+[![Workflows Catalog tab with category, integration, trigger and requirement filters and one template card marked Needs extension](/img/screenshots/2026-10-23/catalog-workflows.png)](/img/screenshots/2026-10-23/catalog-workflows.png)
+
+*The Workflow Catalog of the official index on 2026-10-23. The card is marked
+Needs extension because its IMAP extension was not installed.*
+
 Administrators create workflows; operators can browse the configured catalog.
 
-1. Open `Registry > Workflows`, then **Create workflow** and **From catalog**.
-2. Search or filter the catalog and open an entry.
+1. Open **Workflows** and the **Catalog** tab.
+2. Search or filter the catalog and open an entry. A card says **Needs
+   extension** when an extension it uses is not installed yet.
 3. Read its purpose, trigger types, integrations, setup requirements, compatibility,
    and included child workflows.
-4. Choose **Use this template**.
+4. Choose **Use template**.
 5. Choose the target project and workflow ID. Review the dependency preflight;
    install required extensions and map connections or other references as needed.
 6. Resolve existing-ID conflicts by selecting another ID or an offered reuse
@@ -49,12 +61,15 @@ merge, or overwrite your local workflow. To adopt a newer version, create and
 review a separate draft and deliberately move to it. See [Workflows](workflows)
 and [Workflow Export and Import](workflow-promotion).
 
-You can also choose **From scratch** or use **Import YAML** for a workflow that
-has not been published in a catalog. Installing demo data is not a prerequisite.
+You can also choose **Create workflow** to start from scratch, or **Import
+YAML** for a workflow that has not been published in a catalog. Installing demo data is not a prerequisite.
 
 ## Install an extension from the catalog
 
-1. Open `Extensions > Marketplace` and find an extension.
+[![Extensions Catalog tab with category and capability filters and the Sort menu open showing A–Z and Recently added](/img/screenshots/2026-10-23/catalog-extensions-sort.png)](/img/screenshots/2026-10-23/catalog-extensions-sort.png)
+
+1. Open **Extensions** and the **Catalog** tab, and find an extension. An
+   extension without its own icon shows a package icon.
 2. Open its entry and review the version, capabilities, requested permissions,
    setup instructions, publisher information, and compatibility.
 3. As an administrator, choose **Install**. If browser authority approval is
@@ -74,6 +89,21 @@ updating. Updates require administrator authority; they are not automatic. A
 disabled extension stays disabled after an update. Same-version reinstallation
 and downgrades through the catalog are refused. See [Extensions](extensions) and
 the [Extension Operator Guide](../integrations/extension-operator-guide).
+
+## Connect an MCP server from the catalog
+
+1. Open **MCP** and the **Catalog** tab.
+2. Filter by category or sign-in type, or search. Each server shows who
+   publishes it: **Official** when the vendor publishes it, **Community**
+   otherwise.
+3. Choose **Connect** and follow the connection form with your own credentials.
+   A connected server shows **Connected** in the catalog.
+
+The catalog never changes connectors you already have. See
+[Tools and MCP](tools-and-mcp) and
+[External MCP Catalogs](../integrations/external-mcp-catalogs).
+
+[![MCP Catalog tab with category and sign-in filters, server cards marked Official or Community, and the Sort menu open](/img/screenshots/2026-10-23/catalog-mcp-sort.png)](/img/screenshots/2026-10-23/catalog-mcp-sort.png)
 
 ## Share your work
 

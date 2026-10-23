@@ -6,9 +6,10 @@ description: Create, run, test, and maintain Flow Steward workflows from the UI.
 
 # Workflows
 
-A workflow is an executable delivery plan made of phases, steps, conditions, and
-runtime controls. Operators use workflows to turn repeatable work into a
-controlled process.
+A workflow is a set of steps connected by one execution graph, with Groups,
+parallel lanes, For each loops and hooks where needed. Operators use workflows to
+turn repeatable work into a controlled process. The canvas itself is described in
+[Workflow Builder](workflow-builder).
 
 ## Create a workflow
 
@@ -16,15 +17,16 @@ controlled process.
 
 *The local workflow list opens workflows already in this installation. Create workflow provides access to the separate Workflow Catalog. The records shown are synthetic test data.*
 
-1. Open `Registry`.
-2. Open `Workflows`.
-3. Choose the create action or open an existing workflow to clone or edit.
-4. Set a stable workflow ID, display name, and description.
-5. Add phases that match the real work sequence.
-6. Add steps inside each phase.
-7. Configure project bindings when only some projects may run it.
-8. Validate the workflow.
-9. Run a test job before using the workflow for production work.
+1. Open **Workflows**.
+2. Choose **Create workflow**, or open an existing workflow to edit it.
+3. Set a display name, a stable workflow ID and a description. **Create**
+   opens the empty canvas.
+4. Add steps, Groups and loops on the canvas and **Apply changes**. See
+   [Workflow Builder](workflow-builder).
+5. Declare inputs and outputs under **Interface** (or the **Smart setup** tab).
+6. Link the projects that may run it on the **Projects** tab.
+7. Check **Diagnostics** for validation issues, then enable the workflow.
+8. Run a test job before using the workflow for production work.
 
 [![Workflow overview with status, validation, and workflow actions](/img/screenshots/2026-10-04/workflow-overview.png)](/img/screenshots/2026-10-04/workflow-overview.png)
 
@@ -34,12 +36,12 @@ controlled process.
 
 The **Workflow Catalog** contains ready-made reusable workflows, including
 operational automation and examples from Flow Steward and community contributors.
-It is available through **Create workflow > From catalog**, with a **From scratch**
-alternative. Operators can browse; creating a workflow requires an administrator.
+It is the **Catalog** tab next to **Workflows**; **Create workflow** starts from
+scratch. Operators can browse; creating a workflow requires an administrator.
 Standard configuration uses the official catalog. If it is disabled, creation
 opens the ordinary form.
 
-Open an entry, review its requirements, then choose **Use this template**. Select
+Open an entry, review its requirements, then choose **Use template**. Select
 a project and resolve the dependency preflight before **Create draft**. Catalog
 creation uses the import portability checks and saves independent disabled drafts,
 including bundled children. Configure connections and credentials, validate, and
@@ -56,21 +58,14 @@ start disabled.
 
 ## Use the canvas builder
 
+Open the workflow and choose **Open builder** (**View workflow (read-only)** for
+a workflow an extension installs). The builder is described in its own page,
+[Workflow Builder](workflow-builder): adding and connecting steps, Groups and
+parallel lanes, For each loops, hooks, Undo/Redo, files returned from a
+workflow, and the workflow page tabs.
 
-Open the workflow `Overview`, then choose `Open builder`.
-
-The builder lets you:
-
-- add phases from the canvas;
-- add steps inside a phase;
-- drag paths from step outputs to phase entries;
-- stage topology changes before saving;
-- create branch phases for `if` and `switch` decisions;
-- inspect selected steps and connections;
-- save staged canvas changes when the graph is correct.
-
-Canvas edits are staged until you press `Save`; leaving the builder does not
-publish unsaved topology changes.
+Canvas structure stays local until **Apply changes**; leaving the builder asks
+before discarding unapplied changes.
 
 ## Author a disabled workflow through MCP
 
@@ -91,35 +86,19 @@ Inspect a saved draft in the manual editor or `workflow_list` with `enabled_only
 A user reviews and enables it when appropriate before Test Run; Test Run can cause
 external effects. See [MCP Reference](../reference/mcp#workflow-authoring) for exact arguments.
 
-## Common step types
+## Step kinds
 
-| Step kind | Use it when |
-|---|---|
-| `agent` | An AI role should reason, write, review, or decide. |
-| `connector` | A registered tool or extension action should run. |
-| `http_request` | The workflow must call an HTTP endpoint. |
-| `dataset_query` | The workflow needs scoped data from a dataset. |
-| `transform` | The workflow needs deterministic data shaping. |
-| `tabular_feed` | The workflow needs bounded row-oriented feed processing. |
-| `invoke_workflow` | A reusable child workflow should run. |
-| `if` | One condition chooses between two paths. |
-| `switch` | Several named cases route to different paths. |
-| `set_variable` | The workflow needs to write state for later steps. |
-| `for_each` | Execute a supported inline body for each collection item. |
-| `batch` | Group collection data into chunks; it does not by itself execute an arbitrary operation per chunk. |
-| `stop_success` | The workflow should end successfully at this point. |
-| `stop_fail` | The workflow should end as failed at this point. |
-
-See [Workflow Step Kinds](../reference/workflow-step-kinds) for the reference
-view.
+The builder's **Add step** menu groups the kinds into Actions, Data, Flow,
+Finish, Groups and Canvas. See the [step kinds table](workflow-builder#step-kinds)
+and the [Workflow Step Kinds](../reference/workflow-step-kinds) reference.
 
 ## Place approvals before later effects
 
-A phase gate evaluates after that phase's steps complete. To require human
-approval before an external action, put the review work and gate in one phase,
-and put the action in the following phase. A gate cannot undo effects already
-performed by steps in its own phase. Separate step-autonomy policy may impose
-its own approvals; it does not change phase-gate timing.
+An **Approval** step pauses the run until a person approves or rejects; its
+**Approved** and **Rejected** outcomes decide what runs next. To require human
+approval before an external action, put the Approval step before the step that
+performs it. An Approval cannot undo effects of steps that already ran. Separate
+step-autonomy policy may impose its own approvals.
 
 ## Run a workflow
 
@@ -208,11 +187,11 @@ linked workflow there to open its schedule editor; workflow authoring controls
 are not available to operators or viewers. The retired project submission
 dialog is no longer a way to create a schedule.
 
-To create or edit a schedule, open the linked workflow from its project and use
-`Settings > Smart setup`. Enable its interface, allow the `Schedule` trigger,
-and save those settings. The saved workflow and interface must be enabled;
-an unsaved trigger selection is not sufficient. The `Schedules` section shows
-`New schedule` and `Edit` only in a valid linked project context.
+To create or edit a schedule, open the workflow's **Smart setup** tab, set
+**Status** to enabled, tick **Schedule** under **Trigger channels** and choose
+**Save workflow settings**. The **Schedules** tab then appears next to Smart
+setup. Choose a linked project there; **New schedule** and **Edit** need a
+linked project. An unsaved trigger selection is not sufficient.
 
 Enter values for the workflow inputs that need caller-supplied values; fixed
 defaults are applied automatically. Input definitions belong in workflow
@@ -234,14 +213,15 @@ validity, including daylight-saving boundaries, before relying on a schedule.
 
 ## Configure Automation rules
 
-Open `Automation` at the workflow, phase, or step level and use `Add Rule`.
+Open **Automation** on the workflow page, or the **Automation** tab of a group
+or step drawer in the builder, and add a rule (from a common one or a blank rule).
 Choose the event, source, conditions, action, and target within that scope.
 The action sets differ:
 
 | Scope | Actions |
 |---|---|
 | Workflow | Resume job, Approve job, Reject job, Cancel job, Send notification. |
-| Phase | Send notification. |
+| Group | Send notification. |
 | Step | Retry step, Send notification. |
 
 An enabled matching `Approve job` rule makes an automated approval decision;
@@ -251,8 +231,7 @@ approval service. Missing or stale gate identity does not authorize a new gate,
 and the gate's allowed actions still apply. Do not use Resume job as a universal
 replacement for an ordinary approval decision.
 
-A phase's auto-approve gate setting is separate from an event-based Automation
-rule. Review both before enabling automation. Start with a disabled rule and
+Review every rule before enabling automation. Start with a disabled rule and
 synthetic inputs, then inspect one controlled matching event and its decision
 before allowing timed work, notifications, or other external effects.
 
@@ -271,19 +250,17 @@ Typical export and import flow:
 
 1. Build or update the workflow in the source environment.
 2. Validate it and run at least one `Test Run`.
-3. Open the workflow header and choose `Export YAML` when full export is
-   available.
+3. In the builder choose **More › Export YAML**.
 4. Save the exported YAML bundle outside the source environment.
 5. Open the target environment.
-6. Open `Registry`.
-7. Open `Workflows`.
-8. Choose `Import`.
-9. Paste the YAML bundle into the import screen.
-10. Choose `Preflight`.
-11. Review dependency status before applying the import.
-12. Resolve missing or conflicting references.
-13. Choose `Import workflow`.
-14. Open the imported workflow and run validation/preflight while it remains
+6. Open **Workflows**.
+7. Choose **Import YAML**.
+8. Paste the YAML bundle into the import screen.
+9. Choose `Preflight`.
+10. Review dependency status before applying the import.
+11. Resolve missing or conflicting references.
+12. Choose `Import workflow`.
+13. Open the imported workflow and run validation/preflight while it remains
     disabled.
 
 The backend rejects an actual Test Run of a disabled workflow with HTTP 422.
@@ -351,27 +328,13 @@ Good contracts make explicit workflow launches, `Test Run`, MCP calls, and neste
 invocation safer because the UI can generate the right fields and the runtime
 can validate mappings earlier.
 
-## Phases
+## Groups, loops and hooks
 
-Phases group related steps and define the control points in a workflow.
-
-| Phase setting | Use it for |
-|---|---|
-| `display_name` | Human-readable phase label shown in the UI and job detail. |
-| `phase_kind` | Planning, implementation, review, approval, automation, or custom phase grouping. |
-| `expected_inputs` | Data that must be present before the phase runs. |
-| `required_outputs` | Data or artifacts the phase must produce before it can complete. |
-| `transitions_jsonb` | Allowed next phases and conditional routing. |
-| `retry_policy_jsonb` | Retry count, backoff, and retryable failure classes. |
-| `timeout_policy_jsonb` | Max runtime for the phase. |
-| `sla_policy_jsonb` | Operator-visible timing expectations. |
-| `form_config_jsonb` | UI form hints for phase inputs or approvals. |
-| `on_failure` | `retry_previous`, `escalate`, or `skip`, with target/retry/replan fields where supported. |
-| `gate` | Human approval, auto-approval, conditional approval, or no gate. |
-
-Human-in-the-loop phases should show the approval packet, the proposed decision,
-the data that produced the recommendation, and the consequences of approve or
-reject.
+There are no phases. Steps that belong together go into a **Group** (run once,
+one after another), work that can run side by side into **Parallel lanes**, and
+work per item into a **For each**. A **hook** is a place where each project adds
+its own steps. Each step or group can carry its own error policy and an
+**On error** route. See [Workflow Builder](workflow-builder).
 
 ## Data flow and variables
 
@@ -379,7 +342,7 @@ Workflow data moves through mappings rather than hidden shared state.
 
 | Surface | What it contains |
 |---|---|
-| `workflow_data` | The run-level state available to later phases and steps. |
+| `workflow_data` | The run-level state available to later steps. |
 | `state.*` | Named variables written by prior steps or initialized from inputs. |
 | `input_mapping_jsonb` | How a step reads workflow data into its local input contract. |
 | `output_mapping_jsonb` | How a step writes local outputs back to workflow data. |
@@ -403,14 +366,13 @@ object shape must match the selected step's current contract.
 
 ## Parallel lanes
 
-Use parallel lanes only when branches have no undeclared ordering dependency.
-Create the split, put independent steps in separate lanes, declare each lane's
-inputs/outputs, and join them in a phase that maps both results. A lane failure
-follows its configured policy; the join must not assume output from a skipped or
-failed lane exists. Validate the graph, save it, then inspect per-lane results
-and trace data in the job. Retired Git-worktree/parallel-merge records are not
-current diagnostic surfaces. A visual parallel toggle is not
-proof that the branches are data-independent or safely repeatable.
+Use **Parallel lanes** only when the lanes have no ordering dependency on each
+other. The group continues when all lanes finish. Each lane lands only the values
+it changed; when two lanes write the same field, the later lane in lane order
+wins. Lanes never read each other's results; the steps after the group read all
+of them. If, Switch, Approval, Wait and Stop steps are refused in a lane. Inspect
+per-lane results and trace data in the job. See
+[Workflow Builder › Parallel lanes](workflow-builder#parallel-lanes).
 
 ## Incoming webhooks
 
@@ -423,19 +385,21 @@ any system that should trigger a workflow automatically.
 Before creating the webhook:
 
 1. Confirm the workflow is enabled.
-2. Open `Workflow settings`.
-3. Open the workflow interface or contract settings.
-4. Add `Expected inputs` for every value the external system must provide.
-5. Make sure the workflow is bound to an enabled project.
+2. Open the workflow's **Smart setup** tab.
+3. Tick **Incoming Webhook** under **Trigger channels**.
+4. Add **Expected inputs** for every value the external system must provide,
+   then **Save workflow settings**.
+5. Make sure the workflow is linked to an enabled project.
 6. Confirm the deployment has a correct public base URL when callers are outside
    the local network.
 
 Create the webhook:
 
 1. Open the workflow.
-2. Open `Workflow settings`.
-3. Open `Triggers`.
-4. In `Incoming Webhook`, choose `New webhook draft`.
+2. Open the **Webhook** tab (it appears once the Incoming Webhook channel is
+   saved).
+3. Under **Incoming webhooks**, choose **New webhook**.
+4. Fill in the webhook form.
 5. Enable the webhook.
 6. Add a description that names the source system, such as `GitHub issue intake`
    or `PagerDuty incident trigger`.
