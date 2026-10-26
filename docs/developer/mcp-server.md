@@ -46,9 +46,13 @@ When adding or changing MCP tools:
 
 ## Tool categories
 
-The current server includes 40 tools: project discovery, workflow and authoring tools, job
-diagnostics, job controls, reports, and notifications. The canonical scope map
-and API route map contain the same 40 names.
+The current server includes 51 tools: project discovery, workflow discovery and
+launch, workflow authoring, workflow editing (definition, change sets, group
+conversion), workflow hooks and where-used, workflow export/import and run
+statistics, job diagnostics, job controls, reports, and notifications. The
+canonical scope map (`core/entrypoints/mcp/server_tool_scopes.py`) and the API
+route map (`core/entrypoints/mcp/server_api_client.py`) contain the same 51
+names.
 
 Use `workflow_trigger` with an explicit project and workflow, inspect its
 contract, and pass declared inputs in `payload`. Project-profile synchronization

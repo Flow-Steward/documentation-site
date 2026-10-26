@@ -54,6 +54,7 @@ const sidebars: SidebarsConfig = {
         'user/extensions',
         'user/registry-management',
         'user/trash-and-lifecycle',
+        'user/file-an-issue',
       ],
     },
     {
@@ -151,6 +152,7 @@ const sidebars: SidebarsConfig = {
         description: 'Develop Flow Steward itself and understand internal architecture, runtime, tests, and extension points.',
       },
       items: [
+        'developer/contributing',
         'developer/local-development',
         'developer/quality-and-testing',
         'developer/architecture',
@@ -161,6 +163,8 @@ const sidebars: SidebarsConfig = {
         'developer/cli-and-automation',
         'developer/documentation-site',
         'developer/contributing-documentation',
+        'developer/publish-extension',
+        'developer/publish-workflow',
       ],
     },
     {

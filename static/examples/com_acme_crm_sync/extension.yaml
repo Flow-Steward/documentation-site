@@ -22,4 +22,7 @@ health:
 ui_manifest: ui/ui_manifest.yaml
 query_manifest: ui/queries/queries.yaml
 action_manifest: ui/actions/actions.yaml
+runtime:
+  contract_version: extension_host_v2
+egress: {}
 python_requirements: []

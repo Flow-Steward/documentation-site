@@ -36,8 +36,61 @@ the UI; this page is the stored-name lookup for Flow Steward 0.7.27.
 | Stop · success | `stop_success` | End the run successfully and return the outputs. | Optional message. |
 | Stop · fail | `stop_fail` | End the run as failed. | Optional message. |
 
+These twenty kinds are the complete list. Validation refuses any other
+`step_kind` (`workflow.step.kind_unsupported`); a step stored without a kind is
+an `agent` step.
+
 `batch` only groups data; it does not run an operation per batch. To run steps
 per item or per batch, put them in a For each.
+
+### Builder entries that are not step kinds
+
+**Add step** also offers entries that are stored differently:
+
+| Builder name | Stored as | Use it for |
+|---|---|---|
+| For each | A `for_each` container | Run the steps inside once per item. |
+| Inline loop | A `for_each` container shown inside its card | Repeat a few simple steps per item. |
+| Group | A Group with a sequence body | Steps that belong together; can become a child workflow. |
+| Parallel lanes | A Group with a lanes body | Lanes that run side by side. |
+| Hook | An `invoke_workflow` step with a `hook` declaration | A place where a project adds its own steps (workflow authors only). |
+| Note | A canvas note | Text and images on the canvas; saved separately and never run. |
+
+## Custom code (code step)
+
+Flow Steward has no inline code step. n8n (**Code**), Zapier
+(**Code by Zapier**), Make (custom JavaScript) and similar tools let you type a
+script into a workflow step; Flow Steward deliberately does not.
+
+Custom logic belongs in an extension instead, because there:
+
+- the developer owns the code in a repository and can review every change;
+- it is covered by its own tests (`extensions test`) and passes the same
+  validation as any extension before it can be installed;
+- it is versioned and released, so a workflow run uses a known version and an
+  update is a deliberate install;
+- it runs out of process with its own pinned dependencies, not inside the
+  workflow engine.
+
+To add custom logic to a workflow:
+
+1. Generate an extension: `./flow-steward extensions create <extension_id>`,
+   or ask a coding agent with the
+   [Extension Authoring Skill](../integrations/extension-authoring-skill).
+   [Build An Extension](../integrations/build-an-extension) describes the
+   bundle.
+2. Write the logic as an action handler and expose it to workflows: mark the
+   action `workflow_visible: true` and declare an operation with the same id,
+   its inputs and outputs, in the extension's Contract v2 operation manifest.
+   See [Use An Action As A Workflow Step](../integrations/build-an-extension#use-an-action-as-a-workflow-step).
+3. Validate, test, bundle and install the extension.
+4. In the workflow, add an **Extension tools** step (`step_kind: connector`),
+   pick the extension and its operation, and map inputs from workflow state.
+   The operation's outputs land in state like any other step's.
+
+For small data changes you may not need code at all: **Set variable**,
+**Transform**, **Template**, **If** and **Switch** cover mapping, reshaping,
+text and branching.
 
 ## Outcomes
 

@@ -12,6 +12,12 @@ workflow schemas, extension validators, the canonical environment manifest, and
 the selected UI source as primary evidence. A README, historical audit, folder
 count, or source-present bundle is useful context but is not a release contract.
 
+Guides that live in the application repository (`README.md`, `docs/GUIDE.md`,
+`docs/standards/*`, ADRs) change in the same pull request as the code they
+describe; follow [Contributing Code](contributing) for that pull request. A
+documentation-only problem you cannot fix yourself is reported like any other
+issue: see [Report a Bug or Request a Feature](../user/file-an-issue).
+
 ## Small contribution loop
 
 1. State the reader and task the page enables.

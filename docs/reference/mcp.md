@@ -37,13 +37,16 @@ Knowledge Base tools are not part of the current built-in server.
 For workflow work:
 
 1. `workflow_list`
-2. `workflow_entrypoint_list`
-3. `workflow_validate`
-4. `workflow_contract`
-5. `workflow_suggestions`
-6. `workflow_trigger` or `trigger_workflow_entrypoint`
-7. `job_status`
-8. `job_logs`, `job_messages`, `job_errors`
+2. `workflow_validate`
+3. `workflow_contract`
+4. `workflow_suggestions`
+5. `workflow_trigger`
+6. `job_status`
+7. `job_logs`, `job_messages`, `job_errors`
+
+Published webhook entrypoints are not an MCP surface: external systems call
+`/webhook/workflows/{entry_key}`, and MCP clients launch a workflow directly by
+project and workflow ID with `workflow_trigger`.
 
 ## Project context boundary
 
@@ -69,13 +72,47 @@ current boundary.
 
 | Tool | Purpose |
 |---|---|
-| `workflow_list` | List workflows. |
-| `workflow_entrypoint_list` | List workflow entrypoints. |
-| `workflow_validate` | Validate a workflow. |
-| `workflow_contract` | Read workflow contract details. |
-| `workflow_suggestions` | Get workflow improvement suggestions. |
-| `workflow_trigger` | Start an explicit project/workflow with declared inputs in `payload`, or invoke a published `entry_key`. |
-| `trigger_workflow_entrypoint` | Trigger a named entrypoint. |
+| `workflow_list(project_name, enabled_only=true, include_validation=false)` | List workflows linked to a project. |
+| `workflow_validate(workflow_id, project_name="")` | Validate workflow readiness and contract issues. |
+| `workflow_contract(workflow_id, project_name)` | Read the normalized public workflow contract. |
+| `workflow_suggestions(workflow_id, project_name="")` | Get repair suggestions for one workflow. |
+| `workflow_trigger(project_name, workflow_id, payload=None, client_context=None, test_mode=false, files=None)` | Start a workflow in a concrete project. Pass declared inputs in `payload`. File inputs go in `files` (`input_name`, `filename`, `mime_type`, strict `content_base64`; up to 10 files, 1 MiB decoded in total). Returns `job_id`. |
+| `workflow_stats(project_name, workflow_id)` | Show run statistics of a workflow linked to the project. |
+
+### Workflow Editing
+
+`workflow_definition` needs `workflows.read` or a registry read scope. The
+two change tools need `admin:all`.
+
+| Tool signature | Purpose |
+|---|---|
+| `workflow_definition(workflow_id)` | Read the current steps, groups, execution graph and `revision`. |
+| `workflow_apply_changes(workflow_id, expected_revision, operations, dry_run=false)` | Apply one atomic change set of step, group and graph operations; `dry_run` judges it without saving. A stale `expected_revision` is refused. |
+| `workflow_convert_group(workflow_id, group_id, child_workflow_id, display_name, expected_revision, dry_run=true, preview_digest="")` | Preview extracting a group into a child workflow (the default); apply with `dry_run=false` and the current `preview_digest`. |
+
+### Workflow Hooks
+
+| Tool signature | Purpose |
+|---|---|
+| `workflow_hooks_list(project_name, workflow_id)` | List the hooks a workflow declares and their bindings in the project. |
+| `workflow_hook_get(project_name, workflow_id, hook_id)` | Show one hook's contract and binding. |
+| `workflow_hook_preview(...)` | Check a hook binding without saving it; returns every issue a save would refuse. Needs `admin:all`. |
+| `workflow_hook_bind(...)` | Connect a callable workflow to a hook (next binding revision). Needs `admin:all`. |
+| `workflow_hook_unbind(project_name, workflow_id, hook_id, expected_revision)` | Disconnect the hook's workflow; new runs pass the hook inputs through. Needs `admin:all`. |
+| `workflow_hook_create_and_bind(project_name, workflow_id, hook_id, expected_revision, child_workflow_id, display_name="")` | Create the empty workflow that holds a hook's steps and connect it. Needs `admin:all`. |
+| `workflow_where_used(project_name, workflow_id, locale="")` | List the Invoke steps and hook bindings in the account that call the workflow. |
+
+`workflow_hook_preview` and `workflow_hook_bind` take `project_name`,
+`workflow_id`, `hook_id`, `expected_revision`, `target_workflow_id`, and
+optional `input_mapping`, `output_mapping`, `hook_contract_version`,
+`hook_semantic_digest` and `release_id`; preview also accepts `sample`.
+
+### Workflow Export And Import
+
+| Tool signature | Purpose |
+|---|---|
+| `workflow_export(project_name, workflow_id, include_children=false)` | Export a workflow linked to the project as a YAML bundle, returned as `bundle_yaml` text. |
+| `workflow_import(project_name, bundle_yaml, target_workflow_id="", resolutions=None)` | Import a YAML bundle into the project as disabled draft workflows. Needs `admin:all`. |
 
 ### Workflow Authoring
 
@@ -169,7 +206,7 @@ Treat MCP tools as operational capabilities. Use read tools first, inspect
 context, then call write/control tools only when the role, scope, and expected
 effect are clear.
 
-The current server registers 40 tools, matching
+The current server registers 51 tools, matching
 `core/entrypoints/mcp/server_tool_scopes.py`. Discovery is request-local and filters
 tools by any-of token scopes before returning `tools/list`; the application API
 still enforces role, tenant, project, workflow, and capability policy on every

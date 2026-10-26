@@ -11,7 +11,8 @@ computer or VPS. It explains the actual question labels, what to enter, and
 where to find the values. Start with [Installation](installation) for obtaining
 the checkout; use [Installer Reference](../reference/installer) for automation
 flags. This guide describes application revision
-`62a95e3456d3a692092b5a04daecca504c3f97b1`, reviewed on 2026-10-04.
+`1a66a0490e` (version 0.7.27), reviewed against the installer source on
+2026-10-26.
 
 ## Before starting
 
@@ -30,18 +31,19 @@ docker --version
 docker compose version
 docker info
 git --version
-git lfs version
 git rev-parse HEAD
-git lfs status
+uname -m
 df -h .
 ```
 
 The Docker daemon must be running and accessible to that account. The installer
 uses the local Docker socket; a remote Docker context over SSH/TCP is not
-supported. Run it on the VPS itself. The source must be a real Git checkout with
-readable files and downloaded Git LFS objects, not an archive with unresolved
-LFS pointers. The preflight supports amd64/arm64 and requires at least 4 GiB
-free; that is a refusal threshold, not a production capacity recommendation.
+supported. Run it on the VPS itself. The source must be a real Git checkout
+(the installer records the checked-out commit), not a copied folder without
+`.git`. Git LFS is not needed. The preflight accepts only **amd64** (`x86_64`)
+and **arm64** (`aarch64`) hosts and stops with `unsupported_architecture` on
+anything else; `uname -m` shows yours. It also requires at least 4 GiB free;
+that is a refusal threshold, not a production capacity recommendation.
 Images, builds, artifacts, logs, database growth, and backups need additional
 space. A Bash/POSIX environment and common system utilities are required;
 on Windows use Git Bash or WSL rather than PowerShell to launch the script.
@@ -80,6 +82,68 @@ Production means the minimal runtime preset; it does not require a public domain
 **Development** is the contributor preset and must be paired with **Scalable
 multi-container runtime**. Compact requires Production.
 
+### Compact or Scalable
+
+| Pick | When |
+|---|---|
+| **Compact** (default) | One server, one team, and you want the fewest moving parts. The whole application (web, API, MCP, workers, control plane) runs in one runtime container next to PostgreSQL and RabbitMQ. You scale it by raising **Compact worker processes**. This is the right answer for most installations and for every first trial. |
+| **Scalable** | You need each role in its own container: separate worker containers you can add (`./flow-steward config set --worker-replicas N`), a separate MCP backend, and the full `./flow-steward stack` and `config` command set for changing an installed system. Pick it when you expect to grow the worker pool or change ingress/TLS/storage after installation without reinstalling. |
+
+You can switch later with `./install.sh --deployment-profile scalable` (or
+`compact`) on an installed system; take a complete backup first.
+
+### All questions at a glance
+
+The plain questionnaire asks these in this order. A question appears only when
+its "Shown when" condition holds. Press Enter to keep the default.
+
+| # | Question | Shown when | Default | What to pick |
+|---|---|---|---|---|
+| 1 | **Environment** | always | Production | Production. Development only for contributors, and only with Scalable. |
+| 2 | **Deployment profile** | always | Compact | Compact unless the table above says Scalable. |
+| 3 | **Compact runtime HTTP port** | Compact | `8080` | Keep `8080`; it is the runtime's internal listener, not a public port. |
+| 4 | **Ingress owner** | always | Bundled Traefik | Bundled Traefik unless Apache, Nginx, Traefik or a hosting platform already owns ports 80/443. |
+| 5 | **Compact worker processes** | Compact | `2` | Keep `2` to start; raise later with `./install.sh --worker-processes N`. |
+| 6 | **File storage** | always | Bundled self-hosted storage | Compact: Enter; Compact records Local persistent filesystem unless `--file-storage` is passed on the command line (see [File storage](#2-file-storage)). Scalable: Local persistent filesystem for one machine, Bundled for an S3-style store on the same host, External S3 for a provider bucket. |
+| 7–11 | **S3 endpoint**, **S3 bucket**, **S3 region**, **S3 credentials file**, **Allow insecure S3 HTTP** | External S3 | none, `flow-steward-artifacts`, `us-east-1`, none, No | Your provider's values; keep insecure HTTP at No. |
+| 12 | **Network and TLS** | always | Local/private generated certificate | Must match the ingress owner; see [the TLS table](#3-public-address-and-tls). |
+| 13 | **Public host (domain or IP)** | always | `localhost` | `localhost` for a trial on this computer; otherwise the real domain (or the server IP for a test). |
+| 14 | **Public port** | always | `8099` | `443` for a public site; `8099` for a local trial. |
+| 15 | **Plain-HTTP redirect port** | Bundled Traefik | `8080` | `80` with ACME; any free port otherwise. |
+| 16–17 | **Reverse-proxy backend host**, **Reverse-proxy backend port** | Existing reverse-proxy TLS | `127.0.0.1`, `18099` | Keep both unless `18099` is taken. |
+| 18 | **Reverse-proxy MCP port** | Existing reverse proxy | `18100` | Keep it (used by Scalable only). |
+| 19 | **Proxy placement** | Existing reverse proxy | Host | Where your Apache/Nginx runs: on the host or in Docker. |
+| 20 | **Proxy kind** | Existing reverse proxy | Nginx | Nginx or Apache, matching your proxy. |
+| 21 | **Trusted proxy CIDRs** | always | `127.0.0.1/32,::1/128` | Keep the default with Bundled Traefik; see [trusted proxy addresses](#discover-trusted-proxy-addresses) for an existing proxy. |
+| 22–24 | **Existing Traefik network**, **Traefik HTTPS entrypoint**, **Traefik HTTP entrypoint** | Existing Traefik | none, `websecure`, `web` | Names from your Traefik configuration. |
+| 25 | **Traefik certificate resolver** | Existing Traefik resolver | none | The resolver name from your Traefik configuration. |
+| 26 | **Existing proxy network** | Proxy placement is Docker network | none | The Docker network your proxy container is on. |
+| 27–28 | **ACME contact**, **ACME directory URL** | Bundled ACME certificate | none, none | A monitored email; `https://acme-v02.api.letsencrypt.org/directory`. |
+| 29 | **Extension installer origin** | always | `http://fs-extension-installer:8099` | Keep the default. |
+| 30–31 | **Certificate path**, **Private key path** | always | `.ssl/cert.pem`, `.ssl/key.pem` | Keep the defaults unless you chose Operator-provided certificate. |
+
+After the last question the installer prints **Review pending change:** with the
+final values and asks **Apply this change?** (default No).
+
+### What the installer does not ask
+
+The questionnaire covers only how the platform runs and is reached. These are
+set up later, in the browser or with `./flow-steward`:
+
+- **Administrator account.** No email or password is asked. The installer
+  prints a one-time setup link at the end; you create the first administrator
+  there. See [Review, install, and create the first administrator](#review-install-and-create-the-first-administrator).
+- **Outgoing email.** There is no SMTP question. After you sign in, install
+  the Outgoing Email extension and create a connection with your SMTP server;
+  password-reset and notification mail use it.
+- **AI provider, API key and model.** Not needed to install. After you sign in,
+  an administrator adds a provider account in the application.
+- **Database and broker passwords and internal secrets.** Generated by the
+  installer and kept in the installation's environment file; never typed.
+- **Memory or CPU size.** There is no memory profile question. Capacity is the
+  worker count: **Compact worker processes**, or worker containers on Scalable
+  after installation.
+
 ## How the questions work
 
 Run from the checkout directory:
@@ -103,13 +167,13 @@ incompatible choices. Choose the pair in the table above. The final
 defaults to No. Confirm only when the host, ports, storage and routing match
 your intended installation.
 
-The storage default has an important distinction: plain mode displays and
-accepts **Bundled self-hosted storage**. A non-interactive Compact install with
-no `--file-storage` uses `local_fs`. In the current full-screen implementation,
-a Compact storage selection can also be replaced by `local_fs` unless the field
-was supplied as a command-line option. Use plain mode, or pin the intended value
-with `--file-storage local_fs`, `--file-storage bundled`, or
-`--file-storage external_s3` when using `--tui`.
+**Compact storage caveat.** With Compact, the installer records **Local
+persistent filesystem** whatever you answer to **File storage**, in plain mode,
+in `--tui` and in a non-interactive run, unless `--file-storage` was given on
+the command line. The review screen shows the value that will be used. To get
+bundled or external S3 storage on Compact, start the installer with the option,
+for example `./install.sh --file-storage bundled`. Scalable keeps the answer you
+give.
 
 ### 1. Environment and runtime
 
@@ -117,9 +181,9 @@ with `--file-storage local_fs`, `--file-storage bundled`, or
 |---|---|---|
 | **Environment** | Production; always | Production for ordinary use, including a local trial. Development only for contributing/testing with Scalable. |
 | **Deployment profile** | Compact single-runtime deployment; always | Compact for the initial single-runtime setup. Scalable separates app services into containers and is appropriate when you deliberately need that topology. |
-| **Compact runtime HTTP port** | `8080`; Compact only, advanced | Usually keep `8080`. This is the runtime's internal HTTP listener, not your public HTTPS port. A Docker proxy must target this value. |
-| **Ingress owner** | Bundled Traefik; always | Choose the owner from the route table above. |
-| **Compact worker processes** | `2`; Compact only | Usually keep `2` initially. This is the number of queue workers inside the one runtime, not the number of runtime replicas. |
+| **Compact runtime HTTP port** | `8080`; Compact only, advanced | Usually keep `8080`. This is the runtime's internal HTTP listener, not your public HTTPS port. A Docker proxy must target this value. With **Hosting platform ingress** this port is published on the host for the platform's router. |
+| **Ingress owner** | Bundled Traefik; always | Choose the owner from the route table above. **Hosting platform ingress** is only for a Compact host that sits behind a provider's own HTTPS load balancer: it publishes the runtime's plain HTTP port on the host and starts no proxy. Do not choose it on an ordinary VPS. |
+| **Compact worker processes** | `2`; Compact only | Usually keep `2` initially. This is the number of queue workers inside the one runtime, not the number of runtime replicas. Raise it when jobs wait in the queue and the server has spare CPU and memory; change it later with `./install.sh --worker-processes N`. |
 
 Compact still needs PostgreSQL and RabbitMQ containers. Selecting bundled
 storage adds SeaweedFS. “Single runtime” does not mean the complete deployment
@@ -134,11 +198,18 @@ and broker as a way to scale it.
    Compact stores artifacts under `/data/artifacts` in its persistent data
    volume; Scalable uses its persistent artifacts directory. Include this data
    in backups.
-2. **Bundled self-hosted storage** (`bundled`, the plain prompt default): the
+2. **Bundled self-hosted storage** (`bundled`, the prompt default): the
    installer starts and configures SeaweedFS. You do not supply S3 credentials
    for this option. Its persistent data and generated credentials need backup.
 3. **External S3-compatible storage** (`external_s3`): bring an endpoint, bucket,
    region, and credentials from your storage administrator/provider.
+
+Recommendation: **Local persistent filesystem** for a single server (this is
+what Compact uses unless you pass `--file-storage`, see the caveat above).
+Choose **External S3-compatible storage** when files must live off the server,
+for example on a provider bucket with its own backups. **Bundled** adds a
+SeaweedFS container on the same host; it gives an S3 interface but not
+off-host safety.
 
 The following five questions appear only for **External S3-compatible storage**:
 
@@ -192,6 +263,13 @@ use `../` to escape the checkout. The remaining S3 questions are still asked.
 | **Existing Traefik resolver** (`external_resolver`) | Existing Traefik | Your Traefik already has a named certificate resolver. |
 | **Existing Traefik certificate** (`external_certificate`) | Existing Traefik | Your Traefik already has the matching certificate loaded. No resolver is selected. |
 | **Hosting platform TLS** (`platform_managed`) | Hosting platform ingress | The hosting platform terminates HTTPS for Compact. |
+
+Recommendation: on your own computer keep **Local/private generated
+certificate**. On a public VPS with a domain and nothing else on ports 80/443,
+pick **Bundled ACME certificate**. If you already have a certificate from your
+CA, pick **Operator-provided certificate**. If Apache, Nginx or Traefik already
+serves the domain, pick the matching "Existing" choice so the certificate stays
+where it is. **Hostname generated certificate** is for a temporary test by IP.
 
 **Public host (domain or IP)** defaults to `localhost`. Enter only the hostname
 or IP: `flow.example.com`, not `https://flow.example.com/`, a path, or a hostname
@@ -587,13 +665,14 @@ Verify from the checkout:
 ./flow-steward doctor
 ```
 
-Then verify **from your browser or another machine**, using your real public URL:
+`status` gives the short readiness summary; `doctor` lists every core check
+and separates optional warnings (for example, no AI provider yet) from real
+problems.
 
-```bash
-curl -I https://flow.example.com/
-curl --fail https://flow.example.com/health
-curl --fail https://flow.example.com/health/ready
-```
+Then check **from your browser on another machine**, using your real public
+URL: open `https://flow.example.com/` (the sign-in page should load without a
+certificate warning) and `https://flow.example.com/health/ready` (it should
+report ready).
 
 For local generated TLS, use your configured local certificate trust instead
 of treating an insecure certificate bypass as proof of production readiness.
@@ -612,11 +691,18 @@ chain, or firewall is correct. Complete those public checks yourself. Follow the
 
 Rerun `./install.sh` from the **same checkout** after a recoverable failure.
 The installer classifies the state before acting. A fresh installation asks
-questions; a resumable one uses its recorded configuration and checks each
-step's postconditions. An installed one verifies/reconciles the installation;
-on changed source it can also enter the update path. Rerunning is therefore
-not a read-only diagnostic—use `status` and `doctor` to inspect first. See
-[Installation and Updates](../user/installation-and-updates) before updating.
+questions; a resumable one uses its recorded configuration, asks nothing, and
+checks each step's postconditions. An installed one verifies the installation,
+starts stopped services and, when the checkout has moved to a newer commit,
+rebuilds and updates it (prints `Updated from <old> to <new>.`). Rerunning is
+therefore not a read-only diagnostic—use `status` and `doctor` to inspect first.
+See [Installation and Updates](../user/installation-and-updates#update-a-checkout-installation)
+before updating.
+
+A rerun does not ask the questions again and does not change your answers. On
+an installed Compact the only option it applies is `--worker-processes`; any
+other option that differs from the installed value stops with
+`installed_setting_not_applied` (`--deployment-profile` switches the profile).
 
 Do not remove `.flow-steward`, environment files, or Docker volumes to get past
 an error. Their relationship identifies your installation and its durable keys.
@@ -629,7 +715,12 @@ read the reported cause and use `./flow-steward doctor` before further action.
 | `remote_docker_unsupported` | Run on the host with its supported local Docker context. |
 | Port in use | Inspect `ss -ltnp` and Docker published ports. For bundled ingress check both Public port and Plain-HTTP redirect port; for a host proxy check private backend ports. |
 | `validation_failed` for ingress/TLS | Use a compatible pair from the route table; the TLS menu itself is not filtered. Compact also requires Production. |
-| `repository_lfs_objects_missing` | Materialize Git LFS files in the checkout (`git lfs install`, then `git lfs pull`) and retry. |
+| `unsupported_architecture` | The host is not amd64 or arm64. Use a supported server. |
+| `insufficient_disk_space` | Free at least 4 GiB in the checkout's file system and rerun. |
+| `cancelled` | You answered No at **Apply this change?**, or ran a fresh non-interactive install without `--confirm`. |
+| `installed_setting_not_applied` | You passed an option that a rerun does not change. Rerun without it; on Scalable use `./flow-steward config set` and `config apply --confirm`. |
+| `release_migration_required` | The update carries a database migration; follow [Update a checkout installation](../user/installation-and-updates#update-a-checkout-installation). |
+| `repository_unreadable` | Required files of the checkout are missing or unreadable; restore the checkout and rerun. |
 | `traefik_network_missing` / `traefik_network_unattached` | Verify the exact existing network and the running proxy's membership. An empty network cannot route the site. |
 | Traefik default certificate or no router | Recheck hostname, DNS, entrypoint spelling, Docker provider/constraints, network selection, and resolver or loaded certificate. |
 | S3 credential failure | Check file path/mount, regular-file status, private permissions, and installer JSON keys; do not print credentials in logs. |
@@ -648,19 +739,27 @@ Default operator-relevant paths, relative to the checkout, are:
 |---|---|
 | `.flow-steward/install-state.json` | Installer journal and completed/failed steps |
 | `.flow-steward/logs/install-*.log` | Owner-only installer logs; use the exact log path printed on failure |
-| `.flow-steward/stack.toml` | Active non-secret deployment settings |
+| `.flow-steward/stack.toml` | Active non-secret deployment settings (your answers) |
 | `.flow-steward/pending-config.json` | Pending configuration changes, when present |
-| `.flow-steward/compose.env` | Generated Compose values; can contain sensitive runtime settings |
-| `.env.prod` / `.env` | Production/development environment with installer-managed blocks |
+| `.flow-steward/compose.env` | Generated Compose values; rewritten on every run; can contain sensitive runtime settings |
+| `.env.prod` / `.env` | Production/development environment, created by the installer, including generated passwords and keys |
 | `.flow-steward/runtime/` | Runtime material, including bundled-storage/bootstrap state |
 | `.flow-steward/secret-output/bootstrap-token` | Private first-administrator setup token |
 | `.ssl/cert.pem` / `.ssl/key.pem` | Default local/provided certificate paths |
 
-A deliberately configured `FS_INSTALLER_STATE_DIR` changes the installer state
-root; follow the printed paths. Do not hand-edit managed blocks or include secret
-files in support messages. Share the error code, failed step, profile, ingress
-choice and a reviewed/redacted log excerpt.
+Do not edit these by hand. The installer rewrites the keys it owns in
+`.env.prod` (or `.env`) and regenerates `compose.env` on every run, so a manual
+change to them is lost or no longer matches the running containers. Change
+settings with `./flow-steward config set` and `config apply --confirm`
+(Scalable), `./install.sh --worker-processes N` (Compact), or a profile switch.
+Back up `.env.prod` together with the database: it holds the keys that decrypt
+stored secrets.
 
-This walkthrough was checked against source and proxy documentation. No fresh
-VPS installation, external proxy deployment, ACME issuance, or S3 service was
+A deliberately configured `FS_INSTALLER_STATE_DIR` changes the installer state
+root; follow the printed paths. Do not include secret files in support
+messages. Share the error code, failed step, profile, ingress choice and a
+reviewed/redacted log excerpt.
+
+This walkthrough was checked against the installer source. No fresh VPS
+installation, external proxy deployment, ACME issuance, or S3 service was
 operated during this documentation review.

@@ -113,28 +113,45 @@ publish it to everyone. Follow each repository's current submission instructions
 
 ### Contribute a workflow
 
-1. Give the workflow a readable title, meaningful description, and semantic version.
-2. Export its YAML, including invoked child workflows so the bundle is complete.
-   Remove real credentials or sensitive data before preparing the export.
-3. Select a category from the catalog repository and add the exported file under
-   `workflows/<category>/`.
-4. Open a pull request and address the submission checks. The repository generates
-   its index after merge; do not edit that index by hand.
-5. Publish a later version as a new exported file, preserving published artifacts.
+1. Give the workflow a readable title, a description of at least 40 characters,
+   and a semantic version.
+2. Export it from the workflow's **⋯** menu with **Export YAML**, or **Export
+   YAML with child workflows** when it calls other workflows, so the bundle is
+   complete. Read the file and remove private data in Flow Steward before
+   exporting again.
+3. Add the file to the catalog repository as
+   `workflows/<category>/<workflow_id>.yaml`, choosing a category from its
+   `categories.json`.
+4. Open a pull request and fix what the **Validate submission** check reports.
+   The repository rebuilds its index after the merge; do not edit the index.
+5. Publish a later version as a new file with a higher version; published files
+   never change.
 
-See the [official Workflow Catalog contribution instructions](https://github.com/Flow-Steward/workflows#share-a-workflow).
+Step-by-step guide: [Publish a Workflow Template](../developer/publish-workflow).
+The [official Workflow Catalog instructions](https://github.com/Flow-Steward/workflows#share-a-workflow)
+are the source of truth.
 
 ### Contribute an extension
 
-Keep the extension in its own public repository, validate it, and publish a
-versioned release archive. Submit its repository entry to the
+Keep the extension in its own public repository with `extension.yaml` at the
+root, an `icon.png` logo and `runtime.contract_version: extension_host_v2`.
+Validate it, then publish a GitHub Release tagged `v<version>` with the
+archive. For the first listing, open a pull request in the
 [official Extension Catalog](https://github.com/Flow-Steward/extensions#share-an-extension)
-through a pull request. Follow that repository's ownership, manifest, category,
-archive-layout, and release checks; its generated index and release records are
-not edited manually. Subsequent releases use the catalog's publication process.
+that adds one file, `extensions/<extension_id>.yaml`, holding your repository
+URL. Later versions need only a new tag: the catalog checks listed repositories
+every five minutes. Its generated index and release records are never edited by
+hand.
 
-Start with [Build An Extension](../integrations/build-an-extension) or the
-[Extension Authoring Skill](../integrations/extension-authoring-skill).
+Step-by-step guide: [Publish an Extension](../developer/publish-extension).
+Start building with [Build An Extension](../integrations/build-an-extension) or
+the [Extension Authoring Skill](../integrations/extension-authoring-skill).
+
+### Report a problem
+
+Found a bug in Flow Steward itself, or missing a feature? See
+[Report a Bug or Request a Feature](file-an-issue). To fix it yourself, see
+[Contributing Code](../developer/contributing).
 
 ## Configure a catalog or troubleshoot availability
 

@@ -6,7 +6,7 @@ description: The schema-driven public Flow Steward CLI and profile-specific oper
 
 # CLI Reference
 
-This reference covers the 101 public command specifications in
+This reference covers the 118 public command specifications in
 `core/application/management/command_specs/registry.py`, verified against the
 current application checkout. The installed version's help is the exact option
 contract. Run commands from the deployment host, as its owner:
@@ -59,7 +59,7 @@ findings; read the returned message rather than treating every nonzero exit alik
 | Users | `users list`, `create`, `set-password`, `force-reset`, `unlock`, `set-active`, `set-roles`, `issue-bootstrap-token` |
 | Extensions | `extensions list`, `show`, `health`, `install`, `uninstall`, `enable`, `disable`, `create`, `validate`, `test`, `bundle`, `lock-deps` |
 | Projects | `projects list`, `show`, `notification-routes`, `notification-deliveries`, `dispatch-notification` |
-| Workflows | `workflows list`, `entrypoints`, `validate`, `contract`, `suggestions` |
+| Workflows | `workflows list`, `entrypoints`, `validate`, `contract`, `suggestions`, `run`, `stats`, `definition`, `apply-changes`, `convert-group`, `hooks-list`, `hook-get`, `hook-preview`, `hook-bind`, `hook-unbind`, `hook-create-and-bind`, `where-used`, `authoring-schema`, `draft-validate`, `draft-save`, `export`, `import` |
 | Jobs | `jobs list`, `show`, `status`, `logs`, `messages`, `errors`, `approve`, `reject`, `ack`, `unack`, `cancel`, `restart`, `health-snapshot` |
 | Reports | `reports generate`, `get`, `diagnostics` |
 | Database | `database status`, `upgrade`, `bootstrap-seed`, `generate-migration`, `query-diagnostics`, `tune-env`, `restore-parity-capture`, `restore-parity-verify` |
@@ -67,9 +67,14 @@ findings; read the returned message rather than treating every nonzero exit alik
 | Quality | `quality verify`, `lint`, `check-ci-excludes`, `check-naming`, `release-gate`, `sonar-export-issues`, `sonar-ensure-rules`, `sonar-generate-backlog` |
 | Localization | `localization bootstrap-catalog`, `rebuild-pot`, `init-locale`, `update`, `compile`, `validate-keys` |
 
-There are no public task-submit, workflow-run, project code-index/reindex, or
-`setup-codex-mcp` commands. Start explicit runs through the API, MCP, or a
-configured trigger; use CLI workflow commands for discovery and validation.
+`workflows run --project-id <project> <workflow_id> --inputs '<json>'` starts
+one run of a linked workflow and returns its job ID; add `--idempotency-key`
+for a safe retry and `--test-mode` for a test run. `workflows apply-changes`
+applies one atomic change set (read the current `revision` with
+`workflows definition` first, and use `--dry-run` to check it). `workflows
+export` and `workflows import` move YAML bundles; imports arrive as disabled
+drafts. There are no public task-submit, project code-index/reindex, or
+`setup-codex-mcp` commands.
 The old `tooling db/ops/testing/quality/extensions/i18n` paths are not public
 commands; use the domains above.
 
@@ -114,11 +119,19 @@ Do not assume the retained `config` family is available on Compact.
 
 ## Installation diagnostic report
 
-From the deployment host, collect an installation report for a bug report:
+When you report a bug, attach the System Diagnostics report. Collect it on the
+deployment host:
 
 ```bash
 ./flow-steward reports diagnostics
 ```
+
+The report is redacted: it describes the version, images, profile, resources,
+services and their health, installed extensions, and which settings are
+customised, but it carries no logs, no job content and no secrets. An
+administrator can also download it in the UI under **Monitoring → Download
+diagnostics** (or from `GET /api/system/diagnostics/report`); that copy lacks
+the host, Docker and doctor facts that only the host launcher can add.
 
 This bare host-launcher call adds host/Docker/container and doctor facts to the
 runtime report and saves a successful result to

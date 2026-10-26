@@ -125,6 +125,10 @@ stored `step_kind` names and their key settings.
 | | Hook | A place where a project adds its own steps. Offered only to workflow authors, see [Hooks](#hooks). |
 | Canvas | Note | Text and images on the canvas. Saved separately from structure. |
 
+There is no code step. To run your own logic, build it as an extension action
+and call it with **Extension tools**; see
+[Custom code](../reference/workflow-step-kinds#custom-code-code-step).
+
 While a run waits at an Approval, a Wait timer or a child workflow it holds no
 worker. Every run uses the revision it pinned before its first step, so editing
 a workflow never changes a run in progress.

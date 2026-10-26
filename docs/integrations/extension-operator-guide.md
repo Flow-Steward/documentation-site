@@ -61,25 +61,28 @@ pass did not execute an update.
 
 ## Plan and confirm uninstall
 
-Disable the extension, then request the current plan:
+Disable the extension first. Then, in `Extensions > Installed`, click
+**Uninstall** on the extension's row (or on its detail panel). Flow Steward
+loads the current uninstall plan and shows it in the **Extension uninstall
+plan** dialog:
+
+- **Will be removed**: data deleted with the extension;
+- **Will remain but stop working**: dependent workflows, connections and
+  routes;
+- **Retained audit history**: records kept after removal.
+
+Resolve or explicitly accept every listed effect. To confirm, tick
+**I understand this can't be undone.** and click **Uninstall extension**. The
+dialog confirms the exact plan revision it showed you.
+
+On Scalable, an operator can do the same from the deployment host:
 
 ```bash
-curl --fail-with-body \
-  -H "Authorization: Bearer ${FLOW_STEWARD_TOKEN}" \
-  "${FLOW_STEWARD_URL}/api/extensions/${EXTENSION_ID}/uninstall-plan"
+./flow-steward extensions uninstall <extension_id>
 ```
 
-Review the returned dependents, retained/deleted data, connection and OAuth
-effects, shared runtime-package decision, and `revision`. Resolve or explicitly
-accept every listed effect. Confirm that exact plan revision:
-
-```bash
-curl --fail-with-body \
-  -H "Authorization: Bearer ${FLOW_STEWARD_TOKEN}" \
-  -H 'Content-Type: application/json' \
-  -d "{\"revision\":\"${UNINSTALL_REVISION}\"}" \
-  "${FLOW_STEWARD_URL}/api/extensions/${EXTENSION_ID}/uninstall"
-```
+The command prints the plan and asks you to type the extension ID to confirm.
+Compact does not run this command; use the UI there.
 
 The service locks and recomputes the plan during confirmation. If inventory or
 dependents changed, the revision is stale: fetch and review a new plan instead

@@ -19,13 +19,19 @@ or every later source candidate. Record fresh evidence for the version you deplo
 
 - The exact candidate SHA or immutable image set is recorded.
 - For a checkout installation, Docker and Compose are already installed and
-  available to the non-root operator. For provider Compact, the provider
-  deployment/volume contract is verified separately.
+  available to the non-root operator on an amd64 or arm64 host. For provider
+  Compact, the provider deployment/volume contract is verified separately.
 - The applicable installation procedure completed: checkout `./install.sh`
   completed/resumed without ambiguous/recovery-required state, or the provider
   procedure has independent candidate-specific evidence.
-- The selected environment, storage, TLS mode, public host, and public port are
-  recorded from installer-owned configuration.
+- The selected environment, profile, storage, TLS mode, public host, and public
+  port are recorded from installer-owned configuration (`./flow-steward config
+  show` on Scalable, or the installer's review output). On Compact, the file
+  storage actually in use is confirmed: without `--file-storage` on the command
+  line it is `local_fs`.
+- Installer-owned files (`.env.prod`, `.flow-steward/stack.toml`,
+  `.flow-steward/compose.env`) have not been edited by hand, and `.env.prod` is
+  included in the off-host backup set because it holds the generated keys.
 - Required ports are exposed only to approved networks. A host reverse proxy
   uses loopback backends; a Docker proxy uses a dedicated shared network.
   Public TLS, DNS and streaming are checked separately. Current Docker-proxy
@@ -59,7 +65,9 @@ than requiring separate app/worker/MCP images.
 ```
 
 On Scalable, also inspect `./flow-steward stack status`. Compact does not carry
-that retained CLI command. Check each selected profile separately.
+that retained CLI command. Check each selected profile separately. From a
+browser on another machine, open `https://<public-host>/health/ready` and the
+sign-in page and confirm both load without a certificate warning.
 
 - Core checks are green; optional AI warnings are classified separately.
   Doctor **NOT CHECKED** entries and provider `no_docker` output are recorded as
@@ -87,6 +95,10 @@ verify a supported account provider only before testing AI-dependent features.
   and external-system state have their own recovery plan.
 - A destructive restore was rehearsed only against a disposable target and its
   parity evidence was retained.
+- The update path is understood: for a checkout installation, check out the
+  new revision and rerun `./install.sh`; it stops with
+  `release_migration_required` before restarting anything when a database
+  migration is needed.
 - Upgrade and rollback procedures keep Maintenance Mode enabled until health
   and preservation checks pass.
 - A server move uses the [Clone migration procedure](diagnostics-and-migration),

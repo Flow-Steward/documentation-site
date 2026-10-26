@@ -10,14 +10,22 @@ This page describes how Flow Steward loads, validates, renders, and invokes
 extensions. For an authoring walkthrough, start with
 [Build An Extension](../integrations/build-an-extension).
 
-Core does not bundle a showcase extension. Use the current manifest standard,
-compiler, and runtime consumers for the target release. The authoring guide
-includes a small downloadable provider-free example; its scope is deliberately
-narrower than a production provider. The
+Core does not bundle any extension. The authoring guide includes a small
+provider-free example, and the
+[Example Showcase extension](../integrations/build-an-extension#example-showcase-extension)
+(`flowsteward.example-showcase`, in the Extension Catalog and at
+[github.com/Flow-Steward/ext-example-showcase](https://github.com/Flow-Steward/ext-example-showcase))
+demonstrates every feature on this page in one bundle. The
 [Extension Authoring Skill](../integrations/extension-authoring-skill) helps coding
 agents follow these contracts and report actual validation evidence.
 
 ## Runtime Boundary
+
+Every release declares `runtime.contract_version: extension_host_v2` in
+`extension.yaml`. Validation, install and invocation refuse a missing or
+different value; there is no fallback to an older contract. Every request
+envelope carries that version and the four execution-scope keys `group_id`,
+`for_each_id`, `step_id` and `step_execution_id`.
 
 Publisher identity and catalog verification carry no privilege tier. Host access
 comes from supported scopes and extension-owned `runtime_grants`, validated
@@ -98,6 +106,8 @@ runtime invocation paths consume.
 Compile flow:
 
 1. Resolve the bundle root and locate `extension.yaml` or `extension.yml`.
+   `icon.png` next to it is checked separately by `validate`, `bundle` and
+   install.
 2. Reject YAML-only violations such as `extension.json`, `manifest.json`,
    `schemas/*.schema.json`, or JSON files under `ui/actions`, `ui/queries`,
    `ui/pages`, and `ui/components`.
@@ -116,7 +126,9 @@ Compile flow:
     and kind-specific feature rules.
 13. Validate the runtime boundary for private `core.*` imports and `sys.path`
     mutation.
-14. Return a lifecycle-aware result with compile errors, validation errors,
+14. Check `runtime.contract_version` against the host contract
+    (`extension_host_v2`), the optional `egress` declaration and `locales/`.
+15. Return a lifecycle-aware result with compile errors, validation errors,
     warnings, preview details, and enablement readiness.
 
 Compiled manifest fields are intentionally restricted. The compiler only keeps
@@ -165,6 +177,10 @@ Common validation failures:
 | `python_requirement_*` | Missing hashes, undeclared wheels, hash mismatch, or incomplete dependency closure. |
 | `extension_private_core_import` | Runtime code imports private `core.*` modules. |
 | `extension_sys_path_manipulation` | Runtime code mutates `sys.path` instead of using SDK/dependencies. |
+| `missing_host_contract`, `unsupported_host_contract` | `runtime.contract_version` is absent or not `extension_host_v2`. |
+| `extension_icon_missing`, `extension_icon_invalid` | `icon.png` is absent, not a square PNG of 32–512 px, or over 100 KB. |
+| `egress_undeclared` (warning) | No `egress` block; declare the hosts or `egress: {}`. |
+| `missing_python_requirement_wheel`, `undeclared_python_requirement_wheel`, `python_requirement_wheel_hash_missing` | A requirement has no bundled wheel with a listed hash, a wheel is not declared, or its hash is not listed. |
 
 ## Runtime Manifest V2
 
@@ -213,27 +229,31 @@ The validator normalizes and enforces:
 | Wheels only | Bundled artifacts under `wheels/` must be `.whl` files. |
 | Offline default | With `FS_EXTENSION_DEPS_FETCH=off`, every declared requirement must have a matching bundled wheel and hash. |
 
-`extensions lock-deps` reads direct requirements, downloads wheels for
-the target platforms, computes hashes, and writes the full lock into
-`extension.yaml`. `extensions bundle --with-wheels` downloads the
-matching wheels into `wheels/` before writing the zip archive.
+`extensions lock-deps` resolves `requirements.in` with binary wheels for each
+target platform (default `manylinux2014_x86_64,manylinux2014_aarch64`) and
+writes the full closure with every wheel hash into `extension.yaml`.
+`extensions bundle --with-wheels` downloads each locked requirement for each
+platform into `wheels/` with `--require-hashes` and stops when a platform has no
+wheel whose hash is locked. The tooling interpreter (Python 3.12 in the
+Development tool runtime) sets the Python version and ABI; the server runtime is
+CPython 3.12 on Debian (glibc 2.36), amd64 or arm64.
 
-Distributable Python extensions must support **both Linux AMD64 and ARM64**,
-including the complete transitive dependency closure and hashes. The default
-lock/download targets are `manylinux2014_x86_64,manylinux2014_aarch64`.
-`bundle --with-wheels` prepares both automatically when no platform override is
-given; bare `bundle` does not download missing dependencies. A universal
-`py3-none-any.whl` can satisfy both targets, but compiled dependencies need
-compatible wheels for each target and the runtime Python version/ABI.
+What each stage enforces about architectures:
 
-Docker on Apple Silicon and ARM Linux servers uses Linux ARM64 wheels, not
-macOS wheels; Windows Docker deployments likewise use Linux containers.
-`--platforms active` means the current **tool runtime**, not necessarily the host
-OS, and is only for local development output. Do not publish it as portable.
-If either target cannot be resolved, fix the dependency pins or provide compatible
-prebuilt wheels; do not silently omit that target or build dependencies during
-installation. Native executables require separate `linux-amd64` and `linux-arm64`
-archives via `--runtime-target`; wheel targeting does not cross-compile binaries.
+| Stage | Checks |
+| --- | --- |
+| `lock-deps`, `bundle --with-wheels` | Every requirement resolves/downloads for every platform passed (both by default). `--platforms active` checks only the tool runtime's own architecture. |
+| `extensions validate` | Files in `wheels/` are declared wheels with listed hashes, the closure is complete, and each requirement has at least one bundled wheel. It does **not** check that both x86_64 and aarch64 wheels are present. |
+| Install and update | A wheel compatible with the server's own Python and architecture exists for every requirement; otherwise `No compatible wheel for python requirement …`. |
+
+Archives are limited to 50 MiB zipped and 150 MiB unpacked (packager and
+installer). `bundle --runtime-target linux-amd64|linux-arm64` writes a
+per-architecture archive that keeps only that architecture's wheels and records
+the target in `.fs-package.yaml`; a server refuses an archive for the other
+target. Native executables under `bin/<runtime-target>/` always need these two
+archives. Step-by-step instructions, including vendoring with plain
+`pip download`, are in
+[Python Dependencies And Wheel Distribution](../integrations/build-an-extension#python-dependencies-and-wheel-distribution).
 
 During install or update, Flow Steward materializes selected compatible wheels
 into:
@@ -421,12 +441,18 @@ but must not import private `core.*` modules.
 
 Public SDK surface:
 
+The package is `flowsteward-extension-sdk` 0.4.0.
+
 | Module area | Exports |
 | --- | --- |
-| Runtime context | `RuntimeContext`, `runtime_context_from_payload` |
-| Safe HTTP | `assert_safe_remote_http_url`, `resolve_pinned_ips`, `build_pinned_opener`, `open_pinned_url`, `Request`, `PinnedPeerError` |
-| Artifact access | `read_artifact_bytes`, `write_artifact_bytes`, `find_artifact_descriptor`, `artifact_descriptors_from_payload`, `ArtifactAccessError` |
-| Artifact/dataset plane | `ArtifactDatasetPlane`, `ArtifactHandle`, `DatasetHandle`, `create_storage_adapter`, storage adapters |
+| Runtime context | `RuntimeContext`, `RuntimeResources`, `runtime_context_from_payload`, `HOST_CONTRACT_VERSION`, `EXECUTION_SCOPE_FIELDS` |
+| Safe HTTP | `assert_safe_remote_http_url`, `assert_safe_remote_https_url`, `resolve_pinned_ips`, `build_pinned_opener`, `open_pinned_url`, `parse_retry_after`, `Request`, `PinnedPeerError` |
+| Artifact and dataset access | `read_artifact_bytes`, `write_artifact_bytes`, `stream_artifact_bytes`, `write_artifact_stream`, `artifact_to_local_path`, `read_dataset_bytes`, `write_dataset_bytes`, `stream_dataset_bytes`, `write_dataset_stream`, `dataset_to_local_path`, `find_artifact_descriptor`, `find_dataset_descriptor`, `artifact_descriptors_from_payload`, `dataset_descriptors_from_payload`, `ArtifactAccessError` |
+| Artifact/dataset plane | `ArtifactDatasetPlane`, `ArtifactHandle`, `DatasetHandle`, `artifact_plane_from_payload`, `create_storage_adapter`, `LocalFilesystemStorageAdapter`, `InMemoryObjectStorage`, `S3ObjectStorageAdapter` |
+| Progress | `report_progress` (message and `done`/`total` on the running step in Job Details) |
+| Host mutations and migrations | `host_mutation`, `MigrationEnvelope`, `migration_result` |
+| Remote runtimes | `handshake_result` |
+| Testing | `ExtensionWorkflowHarness`, `resolve_integration_contract`, `IntegrationManifest`, `IntegrationOperation` |
 
 Example:
 
@@ -525,12 +551,12 @@ There are three event layers developers should keep separate:
 
 | Layer | Examples | Purpose |
 | --- | --- | --- |
-| Workflow reaction events | `job.completed`, `job.step_failed`, `job.gate_waiting` | Built-in workflow lifecycle signals. |
+| Workflow reaction events | `job.completed`, `job.step_failed`, `job.group_completed`, `job.approval_waiting` | Built-in workflow lifecycle signals. |
 | Contract v2 canonical events | `notification.requested`, `approval.received`, `interaction.received` | Builder-facing event vocabulary. |
 | Provider external events | `external.comment.received`, `external.task.created` | Extension-owned provider events. |
 
 Runtime event envelopes can carry event id, type, correlation id, occurrence
-time, account id, severity, summary, payload, project/workflow/job/phase/step
+time, account id, severity, summary, payload, project/workflow/job/group/For each/step
 scope, source, aggregate id, actor, URLs, and metadata.
 
 Emitted events must match the compiler-derived `supported_events` projection.
@@ -578,6 +604,7 @@ Use a `callback_setup` component to expose setup and status in the extension UI.
 Main extension endpoints:
 
 ```text
+GET  /api/extensions/capabilities/archive-lifecycle
 POST /api/extensions/install
 POST /api/extensions/scan
 GET  /api/extensions/{extension_id}/preview
@@ -602,12 +629,15 @@ POST /api/extensions/descriptors/import/url
 
 These descriptor routes accept JSON, not an extension manifest or archive upload. Validation accepts `source_type` (`file`, `url`, `builtin`, or `payload`). File/URL/payload modes use the corresponding `descriptor_path`, `descriptor_url`, or `descriptor_payload`; builtin mode uses a descriptor payload or path with optional `source_root`, not a promise of a bundled showcase. File import takes a server-visible `descriptor_path`; URL import takes `descriptor_url`. Import requests may include `install_after_import`, `runtime_mode` and `remote_base_url` under the supported request schema. All remain subject to caller authorization and source policy.
 
-Archive installation is `POST /api/extensions/install` with `multipart/form-data`, required `file`, and optional `approved_browser_authority_impact_hash` for a reviewed authority impact. Manifest compilation and ZIP bundling are authoring tooling operations, not bare `/api/extensions/validate`, `/build`, or `/import` endpoints. Descriptor validation does not replace compiler validation.
+Archive installation is `POST /api/extensions/install` with `multipart/form-data`, required `file`, and optional `approved_browser_authority_impact_hash` for a reviewed authority impact. The same request updates an installed extension when the archive has a higher version; the same version or a lower one is refused. The UI's **Install extension from file** uses this endpoint. On Compact the application forwards the archive to its installer service, which owns the extensions folder, so the UI and this API are the install paths there; `GET /api/extensions/capabilities/archive-lifecycle` reports whether archive install is available. Manifest compilation and ZIP bundling are authoring tooling operations, not bare `/api/extensions/validate`, `/build`, or `/import` endpoints. Descriptor validation does not replace compiler validation.
 
 Marketplace and installation endpoints:
 
 ```text
 GET  /api/extensions
+GET  /api/extensions/catalog
+GET  /api/extensions/catalog/availability
+POST /api/extensions/catalog/install
 GET  /api/extensions/marketplace
 GET  /api/extensions/{extension_id}
 GET  /api/extensions/installs/{install_id}
@@ -630,11 +660,27 @@ Authoring commands:
 ./flow-steward extensions bundle <extension_id> --with-wheels
 ```
 
+Operator commands (Development and Scalable; on Compact use the UI or the
+install API):
+
+```bash
+./flow-steward extensions list
+./flow-steward extensions show <extension_id>
+./flow-steward extensions install --archive <path.zip>
+./flow-steward extensions enable <extension_id> --extension-version <version>
+./flow-steward extensions health <extension_id>
+./flow-steward extensions disable <extension_id> --extension-version <version>
+./flow-steward extensions uninstall <extension_id>
+```
+
+`extensions install --archive` also updates an installed extension to a higher
+version.
+
 For noninteractive authoring, explicitly confirm local changes with `--confirm` on `create`, `lock-deps` and `bundle`. The reviewed native CLI returns review exit `10` for unconfirmed changes and `0` for success; installed launcher dispatch can have different confirmation/error boundaries. Record the actual context and status rather than treating any nonzero code as success.
 
 Use the explicit `validate → test → bundle` sequence, running each command separately and stopping after any nonzero exit. Bundling is packaging, not full compiler validation: an invalid manifest can still be packaged. Validate the unpacked final archive as well when verifying a published deliverable. `validate --marketplace` checks manifest vendor/listing/scopes/machine-auth/account-scope metadata, not descriptor-schema validity; ordinary validation also checks some descriptor-referenced artifact modules.
 
-Default testing requires `requirements-dev.txt`, validates the manifest and runs smoke/local pytest targets in an environment inheriting the tooling interpreter's packages. Development dependency installation is offline (`--no-index`, `dev-wheels`/`wheels`); missing requirements or unavailable dependencies fail. The generated zero-dependency scaffold uses a comment-only requirements file and runs three tests without either wheel directory. Missing pytest targets fail by default; `--allow-no-pytest` permits their absence explicitly, and `--skip-pytest` skips them. Neither proves regression coverage. Internal test tooling returns `1` for failed checks and `2` for a missing bundle or unavailable dedicated test runtime; the public CLI wraps those failures as exit `3` with `validation_failed`. `extensions test` has no `--confirm`. Do not substitute private tooling modules or a host interpreter for the supported Development launcher.
+Default testing requires `requirements-dev.txt`, validates the manifest and runs smoke/local pytest targets in an environment inheriting the tooling interpreter's packages. Development dependency installation is offline (`--no-index`, `dev-wheels`/`wheels`); missing requirements or unavailable dependencies fail. The generated scaffold has a comment-only `requirements-dev.txt` and one pytest file, and needs neither wheel directory. Missing pytest targets fail by default; `--allow-no-pytest` permits their absence explicitly, and `--skip-pytest` skips them. Neither proves regression coverage. Internal test tooling returns `1` for failed checks and `2` for a missing bundle or unavailable dedicated test runtime; the public CLI wraps those failures as exit `3` with `validation_failed`. `extensions test` has no `--confirm`. Do not substitute private tooling modules or a host interpreter for the supported Development launcher.
 
 Useful options:
 
@@ -648,6 +694,7 @@ Useful options:
 ./flow-steward extensions bundle <extension_id> --extension-version 0.2.0
 ./flow-steward extensions bundle <extension_id> --with-wheels
 ./flow-steward extensions bundle <extension_id> --with-wheels --platforms manylinux2014_x86_64,manylinux2014_aarch64
+./flow-steward extensions bundle <extension_id> --runtime-target linux-arm64
 ```
 
 For a bundle that actually includes a distribution descriptor, descriptor
@@ -682,7 +729,8 @@ regress during platform or extension changes.
 
 When an extension does not compile or render correctly:
 
-1. Confirm the folder name matches the normalized `extension_id`.
+1. Confirm the folder name matches the normalized `extension_id`, `icon.png`
+   is present and `runtime.contract_version` is `extension_host_v2`.
 2. Run validation with `--json` and inspect issue codes.
 3. Check for forbidden JSON authoring files.
 4. Confirm every ref is relative, YAML, inside the bundle, and present.
@@ -693,7 +741,8 @@ When an extension does not compile or render correctly:
    `core.*` modules.
 9. Confirm runtime files do not mutate `sys.path`.
 10. If `python_requirements` is present, confirm `wheels/` contains matching
-    hashes for every requirement.
+    hashes for every requirement, with an `_x86_64` and an `_aarch64` wheel (or
+    one `any` wheel) for each.
 11. Confirm response envelopes include `ok`.
 12. Confirm authoring uses `event_subscriptions` and emitted events match the
     compiled `supported_events` projection.

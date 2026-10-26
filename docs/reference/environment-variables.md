@@ -55,6 +55,28 @@ how to discover proxy names, networks, entrypoints, and certificate resolvers.
 | `FS_REVERSE_PROXY_BACKEND_PORT`, `FS_REVERSE_PROXY_MCP_PORT` | Host-facing backend ports for applicable existing-proxy topology; Docker proxy placement uses the internal service network instead. |
 | `FS_PUBLIC_HOST`, `FS_PUBLIC_BASE_URL` | The public hostname/origin. Keep DNS, TLS, auth origins, callbacks, and proxy routes consistent. |
 
+The installer writes these values from its answers into
+`.flow-steward/compose.env`, which it regenerates on every run, and derives
+`FS_PUBLIC_BASE_URL` in `.env.prod`. Do not edit them by hand; change the
+answer instead (see [Installer Reference](installer.md#rerunning-on-an-installed-system)).
+
+| Installer question (option) | Variable |
+|---|---|
+| Deployment profile (`--deployment-profile`) | `FS_DEPLOYMENT_PROFILE` |
+| Compact runtime HTTP port (`--runtime-http-port`) | `FS_RUNTIME_HTTP_PORT` |
+| Compact worker processes (`--worker-processes`) | `FS_WORKER_PROCESSES` |
+| Ingress owner (`--ingress-mode`) | `FS_INGRESS_MODE` |
+| File storage (`--file-storage`) | `FS_FILE_STORAGE` |
+| Public host (`--public-host`), Public port (`--public-port`) | `FS_PUBLIC_HOST`; both form `FS_PUBLIC_BASE_URL` |
+| Plain-HTTP redirect port (`--redirect-http-port`) | `HTTP_PORT` |
+| Reverse-proxy backend port / MCP port | `FS_REVERSE_PROXY_BACKEND_PORT`, `FS_REVERSE_PROXY_MCP_PORT` |
+| Proxy placement, Proxy kind, Existing proxy network | `FS_PROXY_PLACEMENT`, `FS_PROXY_KIND`, `FS_PROXY_NETWORK` |
+| Trusted proxy CIDRs | `FS_PROXY_TRUSTED_IPS` |
+| Existing Traefik network, entrypoints, certificate resolver | `FS_TRAEFIK_NETWORK`, `FS_TRAEFIK_HTTPS_ENTRYPOINT`, `FS_TRAEFIK_HTTP_ENTRYPOINT`, `FS_TRAEFIK_CERT_RESOLVER` |
+| ACME contact, ACME directory URL | `FS_ACME_CONTACT`, `FS_ACME_DIRECTORY_URL` |
+| Extension installer origin | `FS_EXTENSION_INSTALLER_ORIGIN` |
+| Certificate path, Private key path | `FS_TLS_CERTIFICATE_PATH`, `FS_TLS_PRIVATE_KEY_PATH` |
+
 ### Compact supervisor budgets
 
 Read by `core/infrastructure/config/compact_runtime.py` before child creation.
@@ -179,11 +201,9 @@ Typical local start:
 cp .env.example .env
 ```
 
-Typical production start:
-
-```bash
-cp .env.example.prod .env.prod
-```
+For production, do not copy `.env.example.prod` by hand: `./install.sh`
+creates `.env.prod` itself, generates its passwords and keys, and rewrites the
+keys it owns on every run.
 
 Use `./install.sh` for a fresh or resumable installation. After installation,
 on Scalable use `./flow-steward config show`, `config validate`, `config set`, and

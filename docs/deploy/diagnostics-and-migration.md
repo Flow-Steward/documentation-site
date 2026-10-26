@@ -70,6 +70,35 @@ Launcher/bootstrap failures can occur before this controller; use their printed
 cause and exit status. A nonzero diagnosis is evidence to investigate, not a
 reason to delete state or regenerate keys.
 
+### Attach a diagnostic report to a bug report
+
+When you report a problem, attach the **System Diagnostics** report. It is one
+JSON file (`flow-steward.system-diagnostic-report.v1`) that says what is
+installed and how it runs: version and images, Compact or Scalable, CPU
+architecture and resources, database and broker versions, services and their
+health, installed extensions, and which settings are customised. It is
+redacted: it carries no logs, no job content, and no configured secret; apart
+from a short list of topology settings, it reports a setting only as
+customised, without its value.
+
+Get it in one of these ways:
+
+- In the UI, as an administrator: **Monitoring → Download diagnostics**.
+- On the deployment host:
+
+  ```bash
+  ./flow-steward reports diagnostics
+  ```
+
+  The launcher adds host, Docker, container and `doctor` facts and saves the
+  file to `.flow-steward/diagnostics/flow-steward-diagnostics-<UTC>.json`
+  (under the configured installer-state directory if you changed it).
+- Through the API: `GET /api/system/diagnostics/report` with an administrator
+  token.
+
+The host command gives the most complete report, because only the host can see
+Docker and the containers. Read the file before you send it.
+
 ### Docker host versus a provider console
 
 Run the full installation doctor on the **Docker host** through
@@ -342,14 +371,11 @@ shared object storage and all copied external credentials before permitting
 work. Maintenance is not a substitute for reviewing those external effects.
 
 If the public domain is moving unchanged, validate the target before switching
-DNS, for example with a private hosts-file mapping or:
-
-```bash
-curl --resolve flow.example.com:443:TARGET_IP --fail https://flow.example.com/health/ready
-```
-
-Replace `TARGET_IP` with the target's address. This preserves the domain/TLS
-name while reaching the selected server. Use a browser mapping for login tests.
+DNS. On your own workstation, add a temporary hosts-file entry that maps
+`flow.example.com` to `TARGET_IP` (the target's address), then open
+`https://flow.example.com/health/ready` in a browser. This preserves the
+domain/TLS name while reaching the selected server. Use the same mapping for
+login tests, and remove it afterwards.
 Clone does not change DNS or routing.
 
 If the target has a different domain, that target domain remains in place.

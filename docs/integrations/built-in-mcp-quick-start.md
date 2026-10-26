@@ -37,53 +37,46 @@ Client UIs may express the same server as:
 Adapt field names only when your client documents a different configuration
 schema. There is no public `setup-codex-mcp` CLI command.
 
-## Discover protocol support
+## Connect and discover protocol support
 
-```bash
-curl --fail-with-body \
-  -H "Authorization: Bearer ${FLOW_STEWARD_TOKEN}" \
-  -H 'Content-Type: application/json' \
-  -H 'Accept: application/json, text/event-stream' \
-  -H 'MCP-Protocol-Version: 2026-07-28' \
-  -H 'Mcp-Method: server/discover' \
-  -d '{"jsonrpc":"2.0","id":1,"method":"server/discover","params":{"_meta":{"io.modelcontextprotocol/protocolVersion":"2026-07-28","io.modelcontextprotocol/clientInfo":{"name":"docs-smoke","version":"1.0.0"},"io.modelcontextprotocol/clientCapabilities":{}}}}' \
-  "${FLOW_STEWARD_URL}/mcp"
-```
-
-The result advertises `2026-07-28` under `supportedVersions` and includes
+Add the server to your client and connect. The client sends `server/discover`
+first. The result advertises `2026-07-28` under `supportedVersions` and includes
 server capabilities. Modern requests are stateless and do not require an MCP
 session ID.
 
-## List allowed tools
+If you write your own client, every request is an HTTP `POST` to `/mcp` with
+these headers:
 
-```bash
-curl --fail-with-body \
-  -H "Authorization: Bearer ${FLOW_STEWARD_TOKEN}" \
-  -H 'Content-Type: application/json' \
-  -H 'Accept: application/json, text/event-stream' \
-  -H 'MCP-Protocol-Version: 2026-07-28' \
-  -H 'Mcp-Method: tools/list' \
-  -d '{"jsonrpc":"2.0","id":2,"method":"tools/list","params":{"_meta":{"io.modelcontextprotocol/protocolVersion":"2026-07-28","io.modelcontextprotocol/clientInfo":{"name":"docs-smoke","version":"1.0.0"},"io.modelcontextprotocol/clientCapabilities":{}}}}' \
-  "${FLOW_STEWARD_URL}/mcp"
+```http
+POST /mcp
+Authorization: Bearer <FLOW_STEWARD_TOKEN>
+Content-Type: application/json
+Accept: application/json, text/event-stream
+MCP-Protocol-Version: 2026-07-28
+Mcp-Method: server/discover
+
+{"jsonrpc": "2.0", "id": 1, "method": "server/discover",
+ "params": {"_meta": {
+   "io.modelcontextprotocol/protocolVersion": "2026-07-28",
+   "io.modelcontextprotocol/clientInfo": {"name": "docs-smoke", "version": "1.0.0"},
+   "io.modelcontextprotocol/clientCapabilities": {}}}}
 ```
 
-`tools/list` is request-local and scope filtered. It is normal for a
-`projects.read` token to see fewer than the canonical 40 tools.
+For `tools/list` and `tools/call`, change `Mcp-Method` and `method` to match;
+a `tools/call` request also sends the tool name in an `Mcp-Name` header.
+
+## List allowed tools
+
+Open the client's tool list for the `flow-steward` server (the client calls
+`tools/list`). The list is request-local and scope filtered. It is normal for a
+`projects.read` token to see fewer than the 51 tools the server registers.
 
 ## Call `project_list`
 
-`project_list` takes an empty argument object:
+Ask the client to call `project_list`. It takes an empty argument object:
 
-```bash
-curl --fail-with-body \
-  -H "Authorization: Bearer ${FLOW_STEWARD_TOKEN}" \
-  -H 'Content-Type: application/json' \
-  -H 'Accept: application/json, text/event-stream' \
-  -H 'MCP-Protocol-Version: 2026-07-28' \
-  -H 'Mcp-Method: tools/call' \
-  -H 'Mcp-Name: project_list' \
-  -d '{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"project_list","arguments":{},"_meta":{"io.modelcontextprotocol/protocolVersion":"2026-07-28","io.modelcontextprotocol/clientInfo":{"name":"docs-smoke","version":"1.0.0"},"io.modelcontextprotocol/clientCapabilities":{}}}}' \
-  "${FLOW_STEWARD_URL}/mcp"
+```json
+{"name": "project_list", "arguments": {}}
 ```
 
 A successful JSON-RPC result contains MCP `content` carrying only projects the

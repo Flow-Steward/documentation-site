@@ -10,7 +10,39 @@ Use the Flow Steward application repository for these commands.
 
 This page is for contributors changing Flow Steward code. Operators installing
 or updating a stack should use
-[Installation And Updates](../user/installation-and-updates).
+[Installation And Updates](../user/installation-and-updates). For the whole
+contribution sequence, from the issue to a merged pull request, see
+[Contributing Code](contributing).
+
+## Install the Development environment
+
+Develop on a Development installation, never on a production one. From a full
+clone of the application repository:
+
+```bash
+./install.sh --environment development --file-storage bundled
+./flow-steward status
+./flow-steward doctor
+```
+
+Development is one complete preset: the core plus the frontend, and the
+`fs-test-runner` and `fs-audit` containers kept ready for tests and quality
+gates. Mailpit and SonarQube are available on demand. Docker with Compose v2 is
+the only host requirement; the quality gates and tests run in containers.
+
+Check or change the installed environment with:
+
+```bash
+./flow-steward environment show
+./flow-steward environment switch development
+```
+
+Install the pre-commit hook once per clone; it runs the Tier 2 gate before each
+commit:
+
+```bash
+pre-commit install --hook-type pre-commit
+```
 
 ## Installer vs development Compose
 
@@ -102,12 +134,14 @@ npm run test:e2e
 ## Test runner
 
 Run focused regression, owner, and consumer tests through the registered Tier 1
-Docker check. Select paths that own or consume the code you changed; do not copy
-a historical E2E filename from documentation.
+Docker check. `auto` selects tests from your diff against `main` (`auto:<ref>`
+for another base); add by path what the import graph cannot see. Do not copy a
+historical E2E filename from documentation.
 
 ```bash
 ./core/entrypoints/cli/scripts/lint.sh --checks targeted-tests \
-  --test-paths 'tests/unit/<owning-test>.py tests/integration/<consumer-test>.py'
+  --test-paths 'auto tests/unit/<regression-test>.py'
+./core/entrypoints/cli/scripts/lint.sh --checks frontend-targeted-tests --test-paths auto
 ```
 
 For a long current E2E or UI pack, use the dedicated `fs-test-runner` wrapper
@@ -125,7 +159,7 @@ Tier 1 focused fix loop:
 
 ```bash
 ./core/entrypoints/cli/scripts/lint.sh --checks targeted-tests \
-  --test-paths 'tests/unit/<owning-test>.py tests/integration/<consumer-test>.py'
+  --test-paths 'auto tests/unit/<regression-test>.py'
 ```
 
 Tier 2 intermediate gate:

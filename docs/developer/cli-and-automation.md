@@ -15,9 +15,10 @@ Use the CLI for:
 - bootstrap and database operations;
 - user and role management;
 - project inspection and notifications;
-- workflow validation and contracts;
+- workflow validation, contracts, runs, change sets, hooks, and YAML export/import;
 - job diagnostics and controls;
-- operational report generation/retrieval and installation diagnostic reports;
+- operational report generation/retrieval and the installation diagnostic report
+  (`reports diagnostics`), the file to attach to a bug report;
 - release checks and upgrades;
 - extension scaffolding and validation;
 - test and quality gates.

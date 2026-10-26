@@ -31,7 +31,15 @@ and the target checkout's instructions.
 
 Decide which provider to integrate, what the extension should do, and which
 Flow Steward version it must support. Start with mocked provider responses;
-keep live credentials out of prompts and committed fixtures.
+keep live credentials out of prompts and committed fixtures. The
+[Example Showcase extension](build-an-extension#example-showcase-extension) is a
+good reference to point the agent at: it implements every extension feature in
+one bundle.
+
+The skill is also how you add custom logic to workflows: Flow Steward has no
+inline code step, so ask the agent for an extension whose action you then call
+with the **Extension tools** step (see
+[Custom code](../reference/workflow-step-kinds#custom-code-code-step)).
 
 ## Install in your coding agent
 
@@ -103,7 +111,11 @@ missing tests, and operator-instruction gaps.
   what remains unverified. Packaging/wheel coverage alone does not prove successful
   installation on both architectures or a live provider integration.
 
-Follow [Python Dependencies And Wheel Distribution](build-an-extension#python-dependencies-and-wheel-distribution)
+Check the delivered `wheels/` folder yourself: every requirement needs an
+`_x86_64` and an `_aarch64` wheel, or one `py3-none-any` wheel.
+`extensions validate` passes a bundle that has only one architecture; only
+`lock-deps` and `bundle --with-wheels` run for both. Follow
+[Python Dependencies And Wheel Distribution](build-an-extension#python-dependencies-and-wheel-distribution)
 for locks, platform defaults and missing-wheel handling, and
 [Bundle And Install](build-an-extension#bundle-and-install) for
 separate native runtime targets.
