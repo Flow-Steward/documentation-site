@@ -27,8 +27,8 @@ or every later source candidate. Record fresh evidence for the version you deplo
 - The selected environment, profile, storage, TLS mode, public host, and public
   port are recorded from installer-owned configuration (`./flow-steward config
   show` on Scalable, or the installer's review output). On Compact, the file
-  storage actually in use is confirmed: without `--file-storage` on the command
-  line it is `local_fs`.
+  storage actually in use is confirmed on the review screen: `local_fs` unless
+  External S3 was chosen or `--file-storage bundled` was passed.
 - Installer-owned files (`.env.prod`, `.flow-steward/stack.toml`,
   `.flow-steward/compose.env`) have not been edited by hand, and `.env.prod` is
   included in the off-host backup set because it holds the generated keys.

@@ -89,7 +89,11 @@ contents). Check log excerpts and screenshots too. Replace a value with
 ## 5. Open the issue
 
 Use a title that says what is wrong and where, for example "Workflow import
-fails when a child workflow uses a Wait step". Paste this template:
+fails when a child workflow uses a Wait step". On GitHub, open
+[New issue](https://github.com/Flow-Steward/flow-steward-app/issues/new/choose)
+and pick **Bug report**: its form has a required field for the diagnostics
+file and one field per section below. If you file from the command line with
+`gh issue create`, paste this text instead:
 
 ```markdown
 ## What happened

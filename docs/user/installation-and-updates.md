@@ -92,8 +92,9 @@ sequence and each choice. The installer asks for:
 - `compact` (default) or `scalable` deployment profile;
 - on Compact, its internal HTTP port and the number of worker processes;
 - ingress owner: bundled/external Traefik, external proxy, or hosting platform;
-- `local_fs`, `bundled`, or `external_s3` artifact storage (Compact uses
-  `local_fs` unless `--file-storage` is passed on the command line);
+- `local_fs`, `bundled`, or `external_s3` artifact storage (on Compact the
+  `bundled` default becomes `local_fs`; choose External S3 or pass
+  `--file-storage bundled` for the others);
 - a TLS mode compatible with the ingress/profile; see [Installer Reference](../reference/installer);
 - public host and port, plus mode-specific file or backend details.
 

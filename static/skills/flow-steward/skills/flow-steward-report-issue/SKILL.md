@@ -144,7 +144,9 @@ comment in the browser. GitHub accepts `.json` attachments; if their browser
 refuses, they can zip the file first.
 
 Without `gh`, open
-`https://github.com/Flow-Steward/flow-steward-app/issues/new`, paste the draft,
-attach the files and submit — the user does the final click.
+`https://github.com/Flow-Steward/flow-steward-app/issues/new/choose` and pick
+**Bug report** (or **Feature request**). The bug form has a required System
+Diagnostics field: the user drags the JSON there. Copy each section of the
+draft into its field, attach screenshots, and let the user do the final click.
 
 Report the issue URL back. Do not open more than one issue for one problem.

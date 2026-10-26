@@ -98,12 +98,13 @@ full-screen form; it does not hide the question in plain mode.
 | Certificate path | `--certificate-path` | `.ssl/cert.pem` | Always; advanced |
 | Private key path | `--private-key-path` | `.ssl/key.pem` | Always; advanced |
 
-Compact storage: whenever `--file-storage` is **not** given on the command
-line, a Compact installation is normalized to `local_fs`. This applies to plain
-mode, `--tui` and non-interactive runs alike, and replaces the answer typed at
-the **File storage** prompt (the review shows the final value). Pass
-`--file-storage bundled` or `--file-storage external_s3` on the command line to
-use those backends with Compact. Scalable keeps the prompted or supplied value.
+Compact storage: the **File storage** default, `bundled`, is the Scalable
+default. On Compact, that default becomes `local_fs` unless `--file-storage` is
+given on the command line. An answer of **Local persistent filesystem** or
+**External S3-compatible storage** (with its S3 settings) is kept, in plain
+mode, `--tui` and non-interactive runs alike; the review shows the final value.
+For bundled storage on Compact pass `--file-storage bundled`. Scalable keeps the
+prompted or supplied value.
 
 Ports must be 1–65535. Compact worker processes must be at least 1 (the source
 upper bound is 56336, not a recommended operating value). Public host is a bare
@@ -143,7 +144,7 @@ prerequisites. Local/generated TLS is not a publicly trusted certificate.
 
 Every question has an option, so an installation can run without prompts. A
 fresh installation needs `--confirm`; omitted fields take the defaults in the
-table above (Compact storage becomes `local_fs`).
+table above (on Compact, the `bundled` storage default becomes `local_fs`).
 
 Local trial with all defaults (Compact, `https://localhost:8099`):
 

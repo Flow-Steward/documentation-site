@@ -83,8 +83,9 @@ containers. The wizard also asks who owns ingress and TLS, the public hostname,
 artifact storage, and worker capacity; the
 [Installer Walkthrough](installer-walkthrough#all-questions-at-a-glance) lists
 every question with a recommended answer. Compact uses the local persistent
-filesystem for files unless you start the installer with `--file-storage
-bundled` or `--file-storage external_s3`; Scalable uses the storage you choose.
+filesystem for files unless you choose External S3-compatible storage or start
+the installer with `--file-storage bundled`; Scalable uses the storage you
+choose.
 The installer does not ask for an administrator account, email (SMTP) settings
 or an AI provider: you set those up in the browser after installation.
 For a first local trial, the default local certificate and `localhost:8099`

@@ -104,7 +104,7 @@ its "Shown when" condition holds. Press Enter to keep the default.
 | 3 | **Compact runtime HTTP port** | Compact | `8080` | Keep `8080`; it is the runtime's internal listener, not a public port. |
 | 4 | **Ingress owner** | always | Bundled Traefik | Bundled Traefik unless Apache, Nginx, Traefik or a hosting platform already owns ports 80/443. |
 | 5 | **Compact worker processes** | Compact | `2` | Keep `2` to start; raise later with `./install.sh --worker-processes N`. |
-| 6 | **File storage** | always | Bundled self-hosted storage | Compact: Enter; Compact records Local persistent filesystem unless `--file-storage` is passed on the command line (see [File storage](#2-file-storage)). Scalable: Local persistent filesystem for one machine, Bundled for an S3-style store on the same host, External S3 for a provider bucket. |
+| 6 | **File storage** | always | Bundled self-hosted storage | Compact: Enter for Local persistent filesystem, or External S3 for a provider bucket; Bundled needs `--file-storage bundled` (see [File storage](#2-file-storage)). Scalable: Local persistent filesystem for one machine, Bundled for an S3-style store on the same host, External S3 for a provider bucket. |
 | 7–11 | **S3 endpoint**, **S3 bucket**, **S3 region**, **S3 credentials file**, **Allow insecure S3 HTTP** | External S3 | none, `flow-steward-artifacts`, `us-east-1`, none, No | Your provider's values; keep insecure HTTP at No. |
 | 12 | **Network and TLS** | always | Local/private generated certificate | Must match the ingress owner; see [the TLS table](#3-public-address-and-tls). |
 | 13 | **Public host (domain or IP)** | always | `localhost` | `localhost` for a trial on this computer; otherwise the real domain (or the server IP for a test). |
@@ -167,13 +167,13 @@ incompatible choices. Choose the pair in the table above. The final
 defaults to No. Confirm only when the host, ports, storage and routing match
 your intended installation.
 
-**Compact storage caveat.** With Compact, the installer records **Local
-persistent filesystem** whatever you answer to **File storage**, in plain mode,
-in `--tui` and in a non-interactive run, unless `--file-storage` was given on
-the command line. The review screen shows the value that will be used. To get
-bundled or external S3 storage on Compact, start the installer with the option,
-for example `./install.sh --file-storage bundled`. Scalable keeps the answer you
-give.
+**Compact storage.** The **File storage** question proposes **Bundled
+self-hosted storage**, the Scalable default. On Compact that default is
+recorded as **Local persistent filesystem**. Answering **Local persistent
+filesystem** or **External S3-compatible storage** keeps your answer and its S3
+settings. For bundled storage on Compact, start the installer with
+`./install.sh --file-storage bundled`. The review screen shows the value that
+will be used. Scalable keeps the answer you give.
 
 ### 1. Environment and runtime
 
@@ -205,7 +205,7 @@ and broker as a way to scale it.
    region, and credentials from your storage administrator/provider.
 
 Recommendation: **Local persistent filesystem** for a single server (this is
-what Compact uses unless you pass `--file-storage`, see the caveat above).
+what Compact uses by default, see the note above).
 Choose **External S3-compatible storage** when files must live off the server,
 for example on a provider bucket with its own backups. **Bundled** adds a
 SeaweedFS container on the same host; it gives an S3 interface but not
