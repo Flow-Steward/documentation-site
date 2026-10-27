@@ -10,7 +10,7 @@ repository: [Flow-Steward/flow-steward-app issues](https://github.com/Flow-Stewa
 A good report lets a maintainer reproduce the problem without asking you
 anything else. This page shows what to collect and how to send it.
 
-:::danger Security problems are not public issues
+:::danger[Security problems are not public issues]
 If the problem lets someone read, change or run something they should not,
 do not open an issue. Email `security@flow-steward.org` with the subject prefix
 `[SECURITY]`, as the repository's `SECURITY.md` describes.
@@ -58,7 +58,7 @@ but it still names your host, your extensions and which settings you changed.
 See [Diagnose, Repair, and Move a Server](../deploy/diagnostics-and-migration#attach-a-diagnostic-report-to-a-bug-report)
 for the full description.
 
-:::warning The job's "Download full report" is different
+:::warning[The job's "Download full report" is different]
 A job page also offers **Download full report**. Secrets are redacted in it,
 but it contains the job's messages, logs, events and step data, which is often
 customer data. Do not attach it to a public issue. Say that you have it; a
