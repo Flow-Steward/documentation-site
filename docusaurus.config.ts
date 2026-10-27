@@ -85,6 +85,13 @@ const config: Config = {
         {to: '/docs/deploy/deployment-checklist', label: 'Deploy & Run', position: 'left'},
         {to: '/docs/integrations/built-in-mcp-quick-start', label: 'Integrations', position: 'left'},
         {to: '/docs/reference/cli', label: 'Reference', position: 'left'},
+        {
+          href: 'https://github.com/Flow-Steward/flow-steward-app',
+          label: 'GitHub',
+          position: 'right',
+          className: 'navbar-github-link',
+          'aria-label': 'Flow Steward source code on GitHub',
+        },
       ],
     },
     footer: {
