@@ -7,8 +7,8 @@ description: Install, verify, manage, and update a self-hosted Flow Steward stac
 # Installation And Updates
 
 This guide follows the current source contracts. The documentation and repository
-are being prepared for their first public release; the planned documentation
-origin is https://flowsteward.org. A local build does not establish live deployment
+are being prepared for their first public release; the official documentation
+origin is https://docs.flowsteward.org. A local build does not establish live deployment
 verification.
 
 Use this page for a checkout-based Docker installation. For prebuilt images on

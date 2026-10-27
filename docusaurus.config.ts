@@ -3,7 +3,7 @@ import type {Config} from '@docusaurus/types';
 import type * as Preset from '@docusaurus/preset-classic';
 
 // This runs in Node.js - Don't use client-side code here (browser APIs, JSX...)
-const siteUrl = process.env.SITE_URL ?? 'https://flowsteward.org';
+const siteUrl = process.env.SITE_URL ?? 'https://docs.flowsteward.org';
 const baseUrl = process.env.BASE_URL ?? '/';
 
 const config: Config = {
