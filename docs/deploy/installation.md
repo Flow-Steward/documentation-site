@@ -299,7 +299,7 @@ POSTGRES_PASSWORD=<new strong random password>
 `PGDATA` must be a subdirectory of the volume because a new Railway volume can
 contain `lost+found`, which PostgreSQL refuses as its data directory. Use the
 published **Flow Steward PostgreSQL 17 image with Apache AGE and pgvector**,
-`ghcr.io/vasily-piksis/fs-postgres-extended@sha256:47a10afb648b55a29e0422f7944a5eb8f12f99f4fecfbb5a2af721fe42196ce8`
+`ghcr.io/flow-steward/fs-postgres-extended@sha256:47a10afb648b55a29e0422f7944a5eb8f12f99f4fecfbb5a2af721fe42196ce8`
 for the 2026-09-28 evaluated deployment.
 Railway's standard managed PostgreSQL image does not supply the required AGE
 extension. Wait until its logs say the database is ready to accept connections.
@@ -347,7 +347,7 @@ deployment overlap, and at least 180 seconds of draining time. Compact is a
 single-runtime profile; overlapping two live copies against the same database
 and broker is unsupported. Finally connect the 2026-09-28 evaluated Compact
 image
-`ghcr.io/vasily-piksis/flow-steward-compact@sha256:dee794207e38a4828cadd659cb41cbeaf65a1bdfedd6e4532bcb2a89c77681b1`
+`ghcr.io/flow-steward/flow-steward-compact@sha256:dee794207e38a4828cadd659cb41cbeaf65a1bdfedd6e4532bcb2a89c77681b1`
 from source commit `367d5ff885a5b7557cdb0fb712fe754539fa4d09`.
 Wait for Railway deployment status **Success** and HTTP readiness. A successful
 image upload or a running PostgreSQL service alone does not prove the app is
