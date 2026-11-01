@@ -304,6 +304,22 @@ immutable image set. Do not substitute another release or floating images. Keep 
 until database, storage, queues, runtime health, and preservation checks are
 green.
 
+### Notes for 0.9.7 and later
+
+- Use `release check` to see the latest release and pass that version to
+  `--target-version`.
+- Release 0.9.7 adds the AI agents page, cloud AI app connections over OAuth
+  and extension update notices. Cloud AI apps need five new OAuth tables. A
+  fresh 0.9.7 installation creates them, but an upgrade to 0.9.7 does not add
+  them to an existing database: an installation upgraded from an earlier
+  release gets them with the regular `release upgrade` to 0.9.8 or later. Until
+  then **Settings → Security** reports **The database is missing the OAuth
+  tables**. Personal access tokens, the AI agents page for local clients and
+  everything else work on 0.9.7.
+- Cloud AI apps stay off after the upgrade until an administrator turns them on
+  in **Settings → Security**. See
+  [Connect AI Agents](../integrations/connect-ai-agents).
+
 Installation, upgrade, and restore have not been executed as part of this
 documentation pass. Treat them as externally unverified until the final
 candidate completes a disposable-environment walkthrough.

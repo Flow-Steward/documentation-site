@@ -87,7 +87,9 @@ For a newer catalog release, the listing shows **Update available** and the entr
 offers **Update to X**. Review additional permissions and data migrations before
 updating. Updates require administrator authority; they are not automatic. A
 disabled extension stays disabled after an update. Same-version reinstallation
-and downgrades through the catalog are refused. See [Extensions](extensions) and
+and downgrades through the catalog are refused. Installed extensions also show
+[update notices](extensions#update-notices) on the Installed tab, on their own
+page and as a counter in the menu. See [Extensions](extensions) and
 the [Extension Operator Guide](../integrations/extension-operator-guide).
 
 ## Connect an MCP server from the catalog

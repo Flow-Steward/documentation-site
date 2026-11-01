@@ -15,12 +15,12 @@ project, or the deployment. Most changes still require an admin.
 | Page | Use it for |
 |---|---|
 | General | General platform options. |
-| Account | Current user's profile, timezone, and email settings. |
+| Account | Current user's profile, timezone, email and sign-in settings, personal tokens with **Connected AI apps**, and the **AI agents** connection page. |
 | Users | Human user accounts, roles, lockout, and password reset. |
 | Model Providers | Model provider configuration and model catalog settings. |
 | Service Accounts | Automation identities and scoped machine tokens. |
 | Extensions | Installed or available extension bundles. Older builds may still label this page as `Packs`. |
-| Security | Security policy and project security aliases. |
+| Security | Security policy, project security aliases, and the **Cloud AI apps (OAuth)** switch that lets Claude.ai, Cowork and ChatGPT connect. |
 | Retention | Data retention and cleanup policy. |
 | Notifications | Project notification routes and provider routing. |
 

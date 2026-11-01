@@ -137,7 +137,7 @@ how you work around it now. Diagnostics are optional for a feature request.
 
 ## Let an AI agent do it
 
-The [Flow Steward agent plugin](../integrations/agent-plugin) includes the
+Both [Flow Steward skill packages](../integrations/agent-plugin) include the
 `flow-steward-report-issue` skill. Ask your agent "Report this as a Flow
 Steward bug": it searches existing issues, asks you for the diagnostics file,
 drafts the issue for your review, and files it only after you agree.

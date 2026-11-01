@@ -129,6 +129,7 @@ const sidebars: SidebarsConfig = {
       items: [
         'integrations/incoming-workflow-webhooks',
         'integrations/external-mcp-catalogs',
+        'integrations/connect-ai-agents',
         'integrations/built-in-mcp-quick-start',
         'integrations/agent-plugin',
         'integrations/public-api-quick-start',

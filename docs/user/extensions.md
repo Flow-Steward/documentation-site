@@ -87,6 +87,36 @@ Same-version reinstallation and downgrades through the catalog are refused.
 See [Workflow and Extension Catalogs](workflow-and-extension-catalogs) for catalog
 browsing, installation, troubleshooting, and contribution instructions.
 
+## Update notices
+
+Since 0.9.7, Flow Steward checks the extension catalog for newer releases of
+the extensions you have installed and tells you where you work, not only in the
+Marketplace:
+
+- **Menu counter.** The **Extensions** item in the navigation shows the number
+  of installed extensions with an update, for example "2 updates available".
+- **Installed tab.** Under the extension's row a notice says **There is a new
+  version of \<name\> available.**, with a **View version X details** link to
+  the release notes and, for administrators, an **Update to vX** button.
+- **Extension page.** The same notice appears at the top of the extension's
+  own page, together with any permissions the new release adds ("This version
+  also asks for: …").
+- **Does not work with this server.** When the newer release needs a different
+  Flow Steward version or runtime, the notice reads **There is a new version of
+  \<name\> available, but it does not work with this server.** and names what
+  it needs. It has no Update button: upgrade Flow Steward first, or keep the
+  installed version.
+
+The release notes link opens the extension's GitHub release when the catalog
+entry comes from one, otherwise the catalog entry. Only administrators can
+update; other users see the notice without the button. An update uses the same
+verified installer as **Update to X** in the Marketplace, and a disabled
+extension stays disabled.
+
+The check reuses the catalog's answer for up to an hour. When the catalog
+cannot be reached, the Installed tab shows **Couldn't check for extension
+updates.** with a **Check again** button; installed extensions keep working.
+
 Before uninstalling an LLM provider, review dependent project defaults,
 per-agent overrides, workflows, and project/agent model selections in the uninstall
 plan. Removing and reinstalling a provider can create a new provider identity;

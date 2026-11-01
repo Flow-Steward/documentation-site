@@ -113,6 +113,6 @@ removed by the pull request that adds its v2 export under a new name.
 
 ## With an AI agent
 
-The [Flow Steward agent plugin](../integrations/agent-plugin) includes the
+The [Flow Steward Operator package](../integrations/agent-plugin) includes the
 `flow-steward-publish-workflow` skill, which follows this page and reviews the
 export for private data with you before it opens the pull request.

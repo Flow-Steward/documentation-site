@@ -66,8 +66,9 @@ documentation assistant to answer from Flow Steward docs.
 
 ## Integrations & Extensions
 
-- [Flow Steward Agent Plugin](docs/integrations/agent-plugin): One plugin for user workflow/operations and developer extension skills; install, verify and update with an existing MCP connection.
-- [Extension Authoring Skill](docs/integrations/extension-authoring-skill): Developer task guide and optional individual canonical skill download.
+- [Connect AI Agents](docs/integrations/connect-ai-agents): Settings → Account → AI agents wizard, supported clients, access presets and expiry, cloud AI apps over OAuth, connected apps, package downloads and checksums.
+- [Agent Skill Packages](docs/integrations/agent-plugin): Operator and Developer skill packages, their skills, example requests, updates and individual skill installation.
+- [Extension Authoring Skill](docs/integrations/extension-authoring-skill): Developer task guide; the skill ships in the Developer package.
 
 - [Incoming Workflow Webhooks](docs/integrations/incoming-workflow-webhooks): Receive external events and start workflows.
 - [External MCP Catalogs](docs/integrations/external-mcp-catalogs): Register external MCP servers as tool catalogs.

@@ -1,138 +1,104 @@
 ---
-title: Flow Steward Agent Plugin
-description: Install one portable plugin with skills for workflows and operations, bug reports, catalog publishing, extension authoring and code contributions.
+title: Agent Skill Packages
+description: The Flow Steward Operator and Developer skill packages for AI agents, their skills, example requests, updates and individual skill installation.
 ---
 
-import useBaseUrl from '@docusaurus/useBaseUrl';
+# Agent Skill Packages
 
-# Flow Steward Agent Plugin
+Since Flow Steward 0.9.7 the agent skills come as two packages. Install either
+one or both; neither needs the other.
 
-[Download the complete plugin ZIP](/skills/flow-steward-plugin.zip), or
-<a href={useBaseUrl('/skills/flow-steward/README.md')}>read the packaged README</a>.
-The archive extracts to one installable `flow-steward/` root with both manifests
-and six canonical skills (plugin version 1.1.0).
+- **Flow Steward Operator** (`flow-steward-operator`) is for people who build
+  and run automations by talking to an AI agent. The agent works through your
+  installation's MCP server, so it needs access: a personal access token, or
+  OAuth sign-in for cloud apps.
+- **Flow Steward Developer** (`flow-steward-developer`) is for developers who
+  build extensions or change the core code. It works in a terminal with the
+  Flow Steward CLI, the extension SDK, Git and Docker, and needs no MCP
+  connection and no token.
 
-The workflow skill uses your already configured authenticated Flow Steward MCP
-connection. The other skills work from a terminal with `git`, the GitHub CLI
-`gh` or a browser and, for development, a Flow Steward application checkout.
+Both are version 1.0.0, first released with Flow Steward 0.9.7. They replace the single
+`flow-steward` plugin (1.1.0) that earlier documentation offered for download.
+Remove that plugin before installing the new packages so the client does not
+see the same skills twice.
 
-| Skill | Audience and use | Page |
-| --- | --- | --- |
-| `flow-steward-workflow-authoring` | End users: reuse/compose local workflows, inspect runs, errors and approvals, request operational reports, export or import a workflow. | [Tools And MCP](../user/tools-and-mcp) |
-| `flow-steward-report-issue` | End users and their agents: report a bug or request a feature on GitHub, with the redacted System Diagnostics report attached. | [Report a Bug](../user/file-an-issue) |
-| `flow-steward-publish-workflow` | Workflow authors: share a workflow template in the public workflow catalog. | [Publish a Workflow Template](../developer/publish-workflow) |
-| `flow-steward-extension-authoring` | Developers: build extensions against current manifests, SDK and supported CLI lifecycle. | [Extension Authoring Skill](extension-authoring-skill) |
-| `flow-steward-publish-extension` | Developers: publish an extension and its later versions to the public extension catalog. | [Publish an Extension](../developer/publish-extension) |
-| `flow-steward-contribute-code` | Contributors: fix a bug or propose an improvement in the core repository, from the issue to a reviewed pull request. | [Contributing Code](../developer/contributing) |
+Downloads, checksums, supported clients and installation steps are on
+[Connect AI Agents](connect-ai-agents#download). Your installation's
+**Settings → Account → AI agents** page shows the same steps with your address
+filled in.
 
-The extracted `flow-steward/` directory is the actual plugin root. Root
-`plugin.json` targets Agent Plugins 1.0.0 for Codex and Cursor;
-`.claude-plugin/plugin.json` provides Claude Code metadata. Both discover the
-same `skills/` sources. This skills-only package contains no endpoint, token,
-server process, hooks or dependencies. Configure MCP separately using your
-installation's connection instructions. The workflow, issue and workflow
-publishing skills work without a platform checkout; extension work and code
-contributions use the target release's contracts and the supported Development
-environment.
+## Skills
 
-## Install and verify
+| Skill | Package | Use | Page |
+| --- | --- | --- | --- |
+| `flow-steward-workflow-authoring` | Operator | Find what exists, create skills and agents, compose, validate and save workflows as disabled drafts, enable and run them on request, change existing workflows, repair disabled objects, and answer questions about runs, errors, approvals and reports. | [Tools And MCP](../user/tools-and-mcp) |
+| `flow-steward-publish-workflow` | Operator | Share a workflow as a template in the public catalog `Flow-Steward/workflows`. | [Publish a Workflow Template](../developer/publish-workflow) |
+| `flow-steward-extension-authoring` | Developer | Build or change an extension against the target release's manifest, SDK and CLI lifecycle, and validate and test it. | [Extension Authoring Skill](extension-authoring-skill) |
+| `flow-steward-publish-extension` | Developer | Release an extension, and later versions, and list it in the public catalog `Flow-Steward/extensions`. | [Publish an Extension](../developer/publish-extension) |
+| `flow-steward-contribute-code` | Developer | Fix a bug or propose an improvement in `Flow-Steward/flow-steward-app`, from the issue to a reviewed pull request. | [Contributing Code](../developer/contributing) |
+| `flow-steward-report-issue` | Both | Report a bug or request a feature on GitHub with the System Diagnostics report, without changing anything. | [Report a Bug](../user/file-an-issue) |
 
-Review the package before installing. Extract an archive to obtain
-`flow-steward/plugin.json`, `flow-steward/.claude-plugin/plugin.json` and the six
-`flow-steward/skills/<name>/SKILL.md` files. Use the extracted `flow-steward`
-directory as the plugin root. Do not load only `.claude-plugin/` or install the
-whole application repository as a plugin. Inspect an existing installation before
-replacing files; keep a rollback copy of the version you use.
+The packages hold instructions only. They contain no address, no token, no
+hooks and no dependencies. Only the Claude Code manifest of the Operator
+package declares the Flow Steward MCP server, and it asks you for the address
+and the token; in every other client you add the server yourself. Updating a
+package never changes your connection.
 
-### Codex
+The token decides what the agent may do, not the package. Reading runs and
+reports needs the matching read scopes; creating, changing and enabling agents,
+skills and workflows needs an administrator user and a token with `admin:all`
+(**Full authoring** on the AI agents page). Reporting issues and publishing
+templates use GitHub through your client's GitHub tools or the `gh` CLI;
+without them the skills prepare the text and you submit it in the browser.
 
-Put the extracted directory at `plugins/flow-steward` inside a local marketplace
-root of your choosing. Create or extend `.agents/plugins/marketplace.json` there
-with this entry; preserve other entries:
+## Package layout
 
-```json
-{
-  "name": "flow-steward-local",
-  "plugins": [{
-    "name": "flow-steward",
-    "source": {"source": "local", "path": "./plugins/flow-steward"},
-    "policy": {"installation": "AVAILABLE", "authentication": "ON_INSTALL"},
-    "category": "Productivity"
-  }]
-}
-```
+Each package archive extracts to one plugin root:
 
-From that marketplace root, inspect your installed CLI's help, then:
+| File | Read by |
+| --- | --- |
+| `plugin.json` | Agent Plugins 1.0.0 clients and the OpenAI plugin directory |
+| `.claude-plugin/plugin.json` | Claude Code and Claude.ai |
+| `.cursor-plugin/plugin.json` | Cursor |
+| `gemini-extension.json` | Gemini CLI |
+| `skills/<name>/SKILL.md` | Every client |
 
-```bash
-codex plugin marketplace add .
-codex plugin list --marketplace flow-steward-local --available --json
-codex plugin add flow-steward@flow-steward-local
-```
+Install that root directory, not only `.claude-plugin/` and not the whole
+application repository. The marketplace archive
+`flow-steward-agent-skills-<version>.zip` holds both packages as a Claude Code
+marketplace named `flow-steward`.
 
-Restart the client and verify the six skills in its available skills listing.
-The local marketplace is private; this package is not listed in a public
-marketplace. [Codex packaging documentation](https://developers.openai.com/plugins/build/plugins)
-explains local sources and cache behavior.
+## Check that it works
 
-### Cursor
+For the Operator package:
 
-Copy the extracted root to `~/.cursor/plugins/local/flow-steward`, reload the
-window and inspect Customize for the six skills. Local imports must be allowed by
-your organization. A marketplace installation of the same name takes precedence;
-symlinks outside the local plugins directory are skipped. See
-[Cursor local plugins](https://cursor.com/docs/plugins).
+1. The client lists the three skills.
+2. The Flow Steward MCP server is connected and its tool list contains the
+   tools your token allows, for example `project_list` and `workflow_list`.
+3. Ask: "List my Flow Steward projects and their enabled workflows." The agent
+   should use the MCP tools and report a permission error as an error.
 
-### Claude Code
+For the Developer package, the client lists the four skills. Ask, in a Flow
+Steward application checkout: "Which checks does the extension quality gate
+run?" The agent should answer from the checkout's `docs/standards/` and
+`lint.sh` rather than from memory.
 
-For a session-local load, inspect `claude --help` and run:
+## Install individual skills
 
-```bash
-claude --plugin-dir /absolute/path/to/flow-steward
-```
+You can instead copy a whole folder from a package's `skills/` directory into
+the client's own skills directory: `~/.agents/skills/`, `~/.cursor/skills/` or
+`~/.claude/skills/`, or the project equivalents. Copy
+`flow-steward-workflow-authoring` together with its `references/` folder. Do
+not install the same skill both as a plugin and as a standalone skill.
 
-Verify the skills in the session's skill listing, for example
-`/flow-steward:flow-steward-workflow-authoring`,
-`/flow-steward:flow-steward-report-issue` and
-`/flow-steward:flow-steward-contribute-code`.
-`claude plugin validate /absolute/path/to/flow-steward` checks the manifest;
-it does not prove tool connectivity or successful use. Persistent installation
-uses a configured Claude marketplace and its normal plugin lifecycle. See
-[Claude plugin reference](https://code.claude.com/docs/en/plugins-reference).
+## Update
 
-### Optional individual skill installation
-
-Copy any complete leaf under `skills/` into one native skills directory:
-Codex `.agents/skills/` or `~/.agents/skills/`; Cursor `.agents/skills/`,
-`.cursor/skills/` or their user equivalents; Claude `.claude/skills/` or
-`~/.claude/skills/`. Use the same canonical bytes and keep the leaf name.
-Standalone names are `$flow-steward-workflow-authoring` /
-`$flow-steward-extension-authoring` in Codex and the corresponding `/` names
-in Claude; the other skills follow the same pattern with their leaf names. For plugin installs use the client's discovered names; Claude adds
-its plugin namespace. Avoid duplicate standalone and plugin installs.
-Native paths are documented for [Codex](https://developers.openai.com/codex/skills),
-[Cursor](https://cursor.com/docs/skills) and
-[Claude](https://code.claude.com/docs/en/skills).
-
-## Use and update
-
-After client discovery, confirm the configured MCP connects and `tools/list`
-returns the expected token-scoped tools. Try a requested scoped read, such as
-listing workflows or inspecting a known job; document permission errors as
-errors. For example: "Find my project's existing workflow for weekly summaries",
-"Show failed runs and pending approvals for this workflow", or "Report activity
-for this project for the last seven days". Anyone can ask "Report this error
-as a Flow Steward bug" or "Publish this workflow to the Flow Steward catalog".
-Developers can ask to build, validate and publish an extension, or to fix a
-core bug and open a pull request.
-
-On update, compare package version and hashes, replace the reviewed plugin root
-at the same source location, refresh/restart the client and verify skill discovery
-again. Codex loads a cached installed copy; confirm the refreshed install's bytes
-before claiming an update took effect. Session-local Claude loads use the new
-root on the next session. Cursor local copies need a reload. Marketplace-managed
-installs use that client's marketplace update lifecycle. Never overwrite MCP
-credentials while updating skills.
+Each release raises the package `version`. Replace the reviewed package files
+with the new release, run the client's update step (listed on
+[Connect AI Agents](connect-ai-agents#update-and-remove)), restart or reload the
+client, and check the skills listing again. Codex loads a cached installed copy:
+compare the installed files with the new ones before relying on the update.
+Never overwrite MCP credentials while updating skills.
 
 ## Choose a task
 
@@ -166,6 +132,18 @@ limitation. This example depends on your installed integrations; it does not
 establish that an attachment reader or Shopify operation is available. Validation
 is separate from execution; enablement and scheduling require their own supported,
 authorized path. See [workflow authoring](../reference/mcp#workflow-authoring).
+
+**Create a skill and an agent**
+
+> Create a skill "Summarise supplier email" that takes the email text and
+> returns a short summary, and an agent "Supplier assistant" that uses it.
+> Validate both and enable them only if validation passes.
+
+Expect the new skill and agent IDs, their validation results and enabled state,
+or a refusal you can act on. If the ID or display name is already taken, the
+agent shows the existing matches and a suggested free name instead of creating
+a duplicate. This needs an administrator token with `admin:all`. See
+[agents and skills tools](../reference/mcp#agents-skills-and-models).
 
 **Inspect failed runs and pending approvals**
 
@@ -231,17 +209,7 @@ The agent works in the Development environment, writes the failing regression
 test first, runs the `lint.sh` tiers, and opens a pull request with the
 evidence after you approve. See [Contributing Code](../developer/contributing).
 
-### Individual skill downloads
-
-The optional individual ZIPs copy the same canonical leaves; they are not
-separate instruction editions:
-[workflow authoring](/skills/flow-steward-workflow-authoring.zip),
-[report an issue](/skills/flow-steward-report-issue.zip),
-[publish a workflow](/skills/flow-steward-publish-workflow.zip),
-[extension authoring](/skills/flow-steward-extension-authoring.zip),
-[publish an extension](/skills/flow-steward-publish-extension.zip) and
-[contribute code](/skills/flow-steward-contribute-code.zip). Installing a skill
-does not grant permissions. Draft save needs an admin user with `admin:all`;
-machine tokens remain operators. Report generation needs `reports.write` even
-with `persist=false`. Enablement, execution and approval remain deliberate
-authorized actions.
+Installing a skill does not grant permissions. Draft save and agent or skill
+changes need an administrator user with `admin:all`; machine tokens remain
+operators. Report generation needs `reports.write` even with `persist=false`.
+Enablement, execution and approval remain deliberate, authorized actions.

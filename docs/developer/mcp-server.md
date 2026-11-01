@@ -46,13 +46,19 @@ When adding or changing MCP tools:
 
 ## Tool categories
 
-The current server includes 51 tools: project discovery, workflow discovery and
+The current server includes 72 tools: project discovery, workflow discovery and
 launch, workflow authoring, workflow editing (definition, change sets, group
 conversion), workflow hooks and where-used, workflow export/import and run
-statistics, job diagnostics, job controls, reports, and notifications. The
-canonical scope map (`core/entrypoints/mcp/server_tool_scopes.py`) and the API
-route map (`core/entrypoints/mcp/server_api_client.py`) contain the same 51
-names.
+statistics, agents, skills and model options, job diagnostics, job controls,
+reports, and notifications. The canonical scope map
+(`core/entrypoints/mcp/server_tool_scopes.py`) and the API route map
+(`core/entrypoints/mcp/server_api_client.py`) contain the same 72 names.
+
+Every API-backed tool keeps the route's domain error code (for example
+`job_restart_active` or `registry_name_conflict`) and its error details in the
+tool error; see [MCP errors](../reference/mcp#errors). Cloud clients reach the
+same server with OAuth access tokens bound to `<origin>/mcp`; the application
+is the authorization server and `fs-mcp` validates the binding.
 
 Use `workflow_trigger` with an explicit project and workflow, inspect its
 contract, and pass declared inputs in `payload`. Project-profile synchronization
@@ -73,6 +79,5 @@ uses scoped deterministic contracts; validation is read-only; save creates a dis
 draft under existing creation policy. Job lists, pending approvals and workflow-filtered
 reports reuse their application-owned queries, authorization and scope predicates.
 The MCP server delegates persistence and orchestration to the application layer;
-the external agent owns planning. The optional [Flow Steward Agent Plugin](../integrations/agent-plugin)
-packages user workflow/operations and developer extension skills over this existing
-server. Installing instructions does not change tool authority or availability.
+the external agent owns planning. The optional [Operator and Developer skill packages](../integrations/agent-plugin)
+add workflow/operations and developer skills over this existing server. Installing instructions does not change tool authority or availability.

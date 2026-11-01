@@ -6,12 +6,25 @@ description: Make an exact first read-only call to the built-in MCP server.
 
 # Connect An AI Client With MCP
 
+:::tip[Use the AI agents page]
+Since 0.9.7, **Settings → Account → AI agents** sets up Claude Code, Codex,
+Cursor, Gemini CLI, Claude.ai, Cowork and ChatGPT for you, with your MCP address
+filled in and a token created when the client needs one. See
+[Connect AI Agents](connect-ai-agents). This page is the manual, protocol-level
+check.
+:::
+
 The production gateway exposes stateless streamable HTTP at
 `<public-base-url>/mcp`. The exact protocol example below uses the candidate's
 modern protocol version `2026-07-28`; live client execution was not performed
 for this documentation pass.
 
 ## Before you start
+
+This check uses a personal access token, as clients on your computer do. Cloud
+apps (Claude.ai, Cowork, ChatGPT) cannot send a token; they sign in through
+OAuth instead, as described in
+[Cloud AI apps](connect-ai-agents#cloud-ai-apps-claudeai-cowork-chatgpt).
 
 Set `FLOW_STEWARD_URL` and `FLOW_STEWARD_TOKEN`. The first tool requires any
 one project-read family scope: `projects.read`, `projects:*`, `read:*`, or
@@ -69,7 +82,7 @@ a `tools/call` request also sends the tool name in an `Mcp-Name` header.
 
 Open the client's tool list for the `flow-steward` server (the client calls
 `tools/list`). The list is request-local and scope filtered. It is normal for a
-`projects.read` token to see fewer than the 51 tools the server registers.
+`projects.read` token to see fewer than the 72 tools the server registers.
 
 ## Call `project_list`
 
@@ -93,14 +106,14 @@ Inspect `workflow_contract` before a deliberate launch through
 Project-profile and Knowledge Base tools are no longer exposed. Do not call
 `project_profile_get`, `project_profile_update`, `kb_search`, or `kb_write`.
 
-## Optional agent plugin
+## Optional skill package
 
-The [Flow Steward Agent Plugin](agent-plugin) supplies two skills for a connected
-client: workflows and operational reads for users, extension authoring for developers.
-Basic MCP discovery and calls work without a skill. The workflow skill needs no
-application checkout; extension implementation needs the target release’s contracts.
-Install the reviewed plugin, verify both skills, and reuse this authenticated MCP
-connection. The package does not configure credentials or start another server.
+The **Flow Steward Operator** package teaches a connected client how to work
+with Flow Steward: workflows, agents and skills, runs, approvals and reports.
+Basic MCP discovery and calls work without it. The package does not configure
+credentials or start another server; it reuses this authenticated connection.
+Download it and see the per-client steps in
+[Connect AI Agents](connect-ai-agents#download).
 
 ## Cleanup and troubleshooting
 
@@ -110,6 +123,7 @@ check. Keep configs containing tokens out of source control.
 - Empty discovery: confirm `projects.read` and token allowlists before widening
   credentials.
 - `403`: the tool or project needs a scope/allowlist the token does not hold.
+  The error's `code` names the reason; see [MCP errors](../reference/mcp#errors).
 - JSON-RPC invalid params: use `{}` for `project_list`; consult `tools/list`
   for the exact schema of every subsequent tool.
 - Protocol error: rediscover versions; do not silently reuse a version from a

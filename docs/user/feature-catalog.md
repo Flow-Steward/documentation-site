@@ -57,7 +57,8 @@ Each feature page should answer the same questions:
 | Watchdog | The watchdog detects stuck, orphaned, interrupted, or abandoned jobs and can mark or recover them according to runtime policy. |
 | Queue and Retry/DLQ | Queue controls help operators inspect pending work, retry failed items, and understand delivery failures. |
 | Extensions and Packs | External or self-hosted extensions add tools, notification providers, task providers, and reusable integration packs. |
-| MCP Server | The API-backed transport exposes 40 project, workflow, authoring, job, report, and notification tools. |
+| MCP Server | The API-backed transport exposes 72 project, workflow, authoring, agent and skill, job, report, and notification tools. |
+| AI agent connections | **Settings → Account → AI agents** connects Claude Code, Codex, Cursor, Gemini CLI, Claude.ai, Cowork and ChatGPT with the Operator or Developer skill package. See [Connect AI Agents](../integrations/connect-ai-agents). |
 | CLI | Plain by default; supports installation operations, doctor/repair, configuration, release checks/upgrades, encrypted Clone, product commands, and local quality tooling with profile-specific availability. |
 
 ## Supported entrypoints and runtime boundaries

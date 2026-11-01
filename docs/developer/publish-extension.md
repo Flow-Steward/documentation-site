@@ -163,6 +163,6 @@ Removing your entry keeps the extension listed as **deprecated**.
 
 ## With an AI agent
 
-The [Flow Steward agent plugin](../integrations/agent-plugin) includes the
+The [Flow Steward Developer package](../integrations/agent-plugin) includes the
 `flow-steward-publish-extension` skill, which follows this page. It asks before
 pushing a tag or opening the catalog pull request.

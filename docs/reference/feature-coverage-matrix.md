@@ -24,7 +24,7 @@ integration has been exercised in a live deployment.
 | Schedules | Existing schedule management in the project UI; provisioning through the internal API. | [Workflows](../user/workflows#manage-scheduled-runs) |
 | Agents and skills | Authored AI roles, instructions, contracts, tool access, and history. No implicit code-writing ability. | [Agents and skills](../user/agents-and-skills) |
 | Tools and outbound MCP | Project-scoped remote catalog discovery, auth, allowlisting, health, and execution. | [Tools and MCP](../user/tools-and-mcp) |
-| Built-in MCP | 40 project, workflow authoring/execution, job diagnostics/control, operational report, and notification tools; discovery is token filtered. | [MCP reference](mcp) |
+| Built-in MCP | 72 project, workflow authoring/execution, agent and skill management, job diagnostics/control, operational report, and notification tools; discovery is token filtered. Cloud apps connect through OAuth. | [MCP reference](mcp) |
 | Public API | Ten curated method/path operations; starts runs at `/api/workflow-runs`. | [API reference](api) |
 | Datasets and connections | Workspace sources, introspection, selected resources, project access, and scoped queries. | [Datasets](../user/datasets-and-data-connections) |
 | Extensions | Separately distributed releases, configured catalog, install/configure/enable/health, callbacks, actions, and uninstall plans. | [Extensions](../user/extensions) |

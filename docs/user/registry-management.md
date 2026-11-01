@@ -47,6 +47,19 @@ Most registry list pages follow the same pattern:
 7. Add contracts, assignments, history notes, or related records.
 8. Run a low-risk workflow or test action before relying on the object.
 
+## IDs and names must be unique
+
+Agents, skills and workflows keep the ID you enter. Since 0.9.7, Flow Steward
+refuses to create an agent or skill with an ID that is already taken, and to
+create or rename an agent, skill or workflow to a display name that another
+object of the same type already uses. Names are compared ignoring case and
+extra spaces. The refusal lists the existing objects you can see and suggests a
+free ID or name; nothing is renamed automatically and the suggestion is not
+reserved. The same rule applies in the UI, the HTTP API, workflow draft save,
+converting a group to a child workflow, and the MCP tools, so an AI
+agent gets the same answer (`registry_id_conflict` or `registry_name_conflict`).
+Open the listed match to reuse it, or choose another ID or name.
+
 ## Use the changelog
 
 Open `Registry > Changelog` when you need to understand why behavior changed.

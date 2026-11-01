@@ -176,7 +176,7 @@ A maintainer merges the pull request. Do not merge your own.
 
 ## With an AI agent
 
-The [Flow Steward agent plugin](../integrations/agent-plugin) includes the
+The [Flow Steward Developer package](../integrations/agent-plugin) includes the
 `flow-steward-contribute-code` skill. It follows this page: issue first,
 Development environment, regression test, the three tiers, and a pull request
 with evidence. The agent still needs your approval to push and to open the

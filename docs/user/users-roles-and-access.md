@@ -78,11 +78,37 @@ with a read-only request, then revoke the old token after rotation.
 
 *The token form opened, but the fixture also reported that its existing token list could not be loaded. No token was created and no secret was revealed.*
 
-For local Codex MCP sessions, export:
+To connect an AI agent, use **Settings → Account → AI agents** instead: it
+creates a token with a fitting access preset and expiry for the chosen client
+and fills it into that client's setup. See
+[Connect AI Agents](../integrations/connect-ai-agents).
 
-```bash
-export MCP_BEARER_TOKEN=<platform_pat_or_machine_token>
-```
+### A token cannot outlive the token that creates it
+
+A token can itself call the token routes when its scopes allow. Since 0.9.7, a
+personal access token or machine token that has an expiry can only create
+tokens that expire no later than itself; a request for a later expiry or for a
+token without expiry is refused with "Requested expiry exceeds the caller's
+token lifetime". The scopes of a new token are already limited to the caller's
+own. Tokens created from a signed-in browser session and tokens without an
+expiry are not affected.
+
+## Connected AI apps
+
+Cloud AI apps (Claude.ai, Cowork, ChatGPT) do not use personal tokens. They
+connect through OAuth: the user signs in to Flow Steward and approves an access
+level, projects and an expiry of 7, 30 or 90 days. The approved apps are listed
+under **Settings → Account → Personal tokens → Connected AI apps**, below the
+personal token list. Each row shows the app, its access and scopes, projects,
+created and expiry dates, last use and status. **Revoke access** removes access
+at once, including the app's refresh token. Users see only their own apps.
+
+An administrator controls this per account in **Settings → Security → Cloud AI
+apps (OAuth)**. The switch is off by default and works only on an installation
+with a public HTTPS address. Turning it off immediately rejects every OAuth
+token of the account; the granted access stays listed and can be revoked.
+Personal access tokens are not affected. See
+[Cloud AI apps](../integrations/connect-ai-agents#cloud-ai-apps-claudeai-cowork-chatgpt).
 
 ## Service accounts
 

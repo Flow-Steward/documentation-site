@@ -100,14 +100,20 @@ needs `projects.read`. Saving does not enable or execute the draft. The manual
 editor remains the place to inspect, adjust and deliberately enable the workflow
 before Test Run.
 
-Install the [Flow Steward Agent Plugin](../integrations/agent-plugin) for one
-package containing two skills: `flow-steward-workflow-authoring` for users and
-`flow-steward-extension-authoring` for developers. Use the client’s discovered
-skill name. The workflow skill works without an application checkout and uses
-the existing authenticated MCP connection; supporting source documentation is
-optional. Basic MCP calls also work without installing a skill. The individual
-[workflow skill ZIP](/skills/flow-steward-workflow-authoring.zip) remains available
-for native standalone skill installation, using the same canonical instructions.
+The agent can also create and change agents and skills, assign skills to
+agents, and enable or disable agents, skills and workflows through the
+[agents and skills tools](../reference/mcp#agents-skills-and-models). These
+need an administrator user and `admin:all`. An ID or display name that is
+already taken is refused with the existing matches; nothing is renamed
+automatically.
+
+Install the **Flow Steward Operator** package to teach the agent these steps:
+its `flow-steward-workflow-authoring` skill works through the existing
+authenticated MCP connection and needs no application checkout. Basic MCP calls
+also work without installing a skill. See
+[Connect AI Agents](../integrations/connect-ai-agents) for the
+**Settings → Account → AI agents** page, downloads and per-client setup, and
+[Agent Skill Packages](../integrations/agent-plugin) for what each skill does.
 
 ## Inspect runs and request operational reports
 
@@ -115,9 +121,12 @@ Ask the workflow skill to show failed runs or pending approvals for an exact
 project/workflow, inspect a known job’s errors, or report activity for a stated
 period. Inspection does not authorize an approval decision, restart or cancellation.
 
-`job_list(..., group_by="attention")` is a bounded triage snapshot; grouped
-results ignore pagination. For a complete inventory use ungrouped pages through
-`total_pages`. There are no date arguments on `job_list`: exact time intervals
+`job_list(..., group_by="attention")` groups runs for triage and pages like the
+plain list: `has_more=true` means the groups hold only the current page of
+`total` runs. A status group key selects its whole group, so `stuck` also lists
+`orphaned` runs and `failed` also lists `max_iterations` and `triage_needed`
+runs.
+For a complete inventory follow the pages through `total_pages`. There are no date arguments on `job_list`: exact time intervals
 require filtering returned timestamps locally and stating which timestamp was used.
 
 Operational `report_generate` supports project/workflow filters. `range="7d"`

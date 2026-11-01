@@ -3,8 +3,6 @@ title: Extension Authoring Skill
 description: Install a portable coding-agent skill for creating and reviewing Flow Steward extensions in Claude Code, Codex, or Cursor.
 ---
 
-import useBaseUrl from '@docusaurus/useBaseUrl';
-
 # Extension Authoring Skill
 
 Use the **Flow Steward Extension Authoring** skill when asking a coding agent to build or
@@ -12,14 +10,14 @@ review an extension. It guides the agent through the target application's
 schemas, provider runtime, tests, and packaging. It is separate from the
 [skills registered inside Flow Steward](../user/agents-and-skills).
 
-Install the [Flow Steward Agent Plugin](agent-plugin) to get this developer skill
-and the workflow/operations skill together. For an optional standalone installation,
-[download the individual skill ZIP](/skills/flow-steward-extension-authoring.zip), or
-<a href={useBaseUrl('/skills/flow-steward-extension-authoring/SKILL.md')}>read SKILL.md</a> before installing it.
-The ZIP contains the canonical `flow-steward-extension-authoring/` instructions.
-The individual download copies the same canonical leaf as the plugin and requires
-inspection of the actual target release's contracts. It does not contain credentials,
-install dependencies or deploy an extension automatically.
+The skill ships in the **Flow Steward Developer** package
+(`flow-steward-developer`), together with the skills for publishing an
+extension, contributing code and reporting an issue. Download it from the
+[latest Flow Steward release](https://github.com/Flow-Steward/flow-steward-app/releases/latest);
+see [Connect AI Agents](connect-ai-agents#download) for the files and
+checksums. The package contains no credentials, installs no dependencies and
+deploys nothing. The agent still has to inspect the actual target release's
+contracts.
 
 ## Before you start
 
@@ -43,11 +41,14 @@ with the **Extension tools** step (see
 
 ## Install in your coding agent
 
-For the complete plugin, follow [Install and verify](agent-plugin#install-and-verify)
-and use the client’s discovered skill names. Claude plugin installs expose
-`/flow-steward:flow-steward-extension-authoring`. For the individual ZIP, unzip
-the download. From the project directory your agent will use, create the
-appropriate skills directory and copy `flow-steward-extension-authoring/` into it:
+Install the Developer package in your client as described in
+[Connect AI Agents](connect-ai-agents#install-the-package-in-your-client) and
+use the client's discovered skill names. Claude Code plugin installs expose
+`/flow-steward-developer:flow-steward-extension-authoring`.
+
+To install only this skill, extract the package and copy its
+`skills/flow-steward-extension-authoring/` folder into the skills directory of
+the project your agent will use:
 
 | Agent | Project-local destination | Invoke |
 |---|---|---|
@@ -55,12 +56,13 @@ appropriate skills directory and copy `flow-steward-extension-authoring/` into i
 | Codex | `.agents/skills/flow-steward-extension-authoring/SKILL.md` | `$flow-steward-extension-authoring` followed by the task |
 | Cursor | `.cursor/skills/flow-steward-extension-authoring/SKILL.md` | Ask the agent to use `flow-steward-extension-authoring` for the task |
 
-For example, after extracting to your Downloads directory:
+For example, after extracting the package to
+`~/Downloads/flow-steward-developer`:
 
 ```bash
 # Run in the project where Codex will work.
 mkdir -p .agents/skills
-cp -R ~/Downloads/flow-steward-extension-authoring .agents/skills/
+cp -R ~/Downloads/flow-steward-developer/skills/flow-steward-extension-authoring .agents/skills/
 ```
 
 For Claude Code or Cursor, substitute the destination directory from the table.
@@ -128,9 +130,9 @@ and schema details, see [Extensions](../developer/extensions).
 
 ## Updating the skill
 
-Replace the installed folder with a reviewed new download when adopting a new
-Flow Steward release. Keep local changes under version control. The agent must
+Replace the installed package or folder with a reviewed new download when
+adopting a new Flow Steward release. Keep local changes under version control. The agent must
 still compare contracts with the target checkout: a skill update and an
-application release are independent artifacts. For a full plugin installation,
-follow the [plugin update steps](agent-plugin#use-and-update), refresh the client,
-and verify both discovered skills against the reviewed package.
+application release are independent artifacts. For a package installation,
+follow the [package update steps](agent-plugin#update), refresh the client,
+and verify the discovered skills against the reviewed package.
