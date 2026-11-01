@@ -13,7 +13,7 @@ function fixture(t) {
   return root;
 }
 const sha = 'a'.repeat(40);
-const proposal = () => ({summary: 'Document saved workflow behavior', evidence: ['core/application/workflows/example.py'], updates: [{path: 'docs/user/workflows.md', content: '# Updated workflows\n'}]});
+const proposal = () => ({status: 'completed', summary: 'Document saved workflow behavior', evidence: ['core/application/workflows/example.py'], updates: [{path: 'docs/user/workflows.md', content: '# Updated workflows\n'}]});
 
 test('produces UTF-8 blob changes and a deterministic source checkpoint', t => {
   const root = fixture(t);
@@ -62,4 +62,17 @@ test('checkpoint is absent on bootstrap and rejects foreign repositories or malf
   assert.throws(() => checkpoint(root), /checkpoint/);
   writeFileSync(join(root, '.automation/docs-source.json'), JSON.stringify({repository: 'Flow-Steward/flow-steward-app', revision: '--all'}));
   assert.throws(() => checkpoint(root), /checkpoint/);
+});
+
+for (const status of [undefined, 'failed', 'incomplete']) {
+  test(`an empty result with ${status} status cannot become a successful no-op`, t => {
+    const root = fixture(t), p = proposal();
+    p.status = status; p.updates = [];
+    assert.throws(() => validateProposal(p, root), /incomplete|failed/);
+  });
+}
+test('FAILED summary with nonempty evidence is rejected even if status claims completed', t => {
+  const root = fixture(t), p = proposal();
+  p.summary = 'FAILED: The required bootstrap review could not be completed'; p.updates = [];
+  assert.throws(() => validateProposal(p, root), /incomplete|failed/);
 });

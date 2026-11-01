@@ -1,12 +1,18 @@
 {
   "type": "object",
   "additionalProperties": false,
-  "required": ["summary", "evidence", "updates"],
+  "required": ["status", "task_id", "source_sha", "docs_sha", "reviewed_document", "summary", "evidence", "updates"],
   "properties": {
+    "status": {"type": "string", "enum": ["completed", "incomplete", "failed"]},
+    "task_id": {"type": "string"},
+    "source_sha": {"type": "string"},
+    "docs_sha": {"type": "string"},
+    "reviewed_document": {"type": "string"},
     "summary": {"type": "string"},
     "evidence": {"type": "array", "items": {"type": "string"}},
     "updates": {
       "type": "array",
+      "maxItems": 1,
       "items": {
         "type": "object",
         "additionalProperties": false,

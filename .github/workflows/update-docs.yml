@@ -23,6 +23,7 @@ jobs:
       source_sha: ${{ steps.context.outputs.source_sha }}
       docs_sha: ${{ steps.context.outputs.docs_sha }}
       needed: ${{ steps.context.outputs.needed }}
+      tasks: ${{ steps.context.outputs.tasks }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
@@ -50,14 +51,19 @@ jobs:
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: trusted-docs-context
-          path: ${{ runner.temp }}/automation-context/metadata.json
+          path: ${{ runner.temp }}/automation-context/
           retention-days: 7
           if-no-files-found: error
   generate:
     needs: prepare
     if: needs.prepare.outputs.needed == 'true'
     runs-on: ubuntu-24.04
-    timeout-minutes: 40
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      max-parallel: 3
+      matrix:
+        task: ${{ fromJSON(needs.prepare.outputs.tasks) }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
@@ -75,6 +81,11 @@ jobs:
         with:
           name: trusted-docs-context
           path: automation-context
+      - name: Select one planned documentation page
+        working-directory: docs-site
+        env:
+          REVIEW_TASK: ${{ matrix.task }}
+        run: node scripts/automation/run.mjs select-task "$REVIEW_TASK" ../automation-context/metadata.json
       - name: Generate a read-only documentation proposal
         uses: openai/codex-action@bdf19a4a223ec2549a3e2274a0cf61556bc07675 # v1
         with:
@@ -87,43 +98,69 @@ jobs:
           allow-bot-users: ${{ vars.DOCS_SYNC_ACTOR }}
           prompt-file: ${{ github.workspace }}/docs-site/.github/codex/documentation.md
           output-schema-file: ${{ github.workspace }}/docs-site/.github/codex/proposal.schema.json
-          output-file: ${{ runner.temp }}/proposal.json
+          output-file: ${{ runner.temp }}/proposal-${{ matrix.task }}.json
+      - name: Reject incomplete or failed page review
+        working-directory: docs-site
+        env:
+          REVIEW_TASK: ${{ matrix.task }}
+        run: node scripts/automation/run.mjs check-part "$RUNNER_TEMP/proposal-$REVIEW_TASK.json" ../automation-context/metadata.json ../product "$REVIEW_TASK"
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
         with:
-          name: docs-proposal
-          path: ${{ runner.temp }}/proposal.json
+          name: docs-proposal-${{ matrix.task }}
+          path: ${{ runner.temp }}/proposal-${{ matrix.task }}.json
           retention-days: 7
           if-no-files-found: error
   validate:
     needs: [prepare, generate]
     runs-on: ubuntu-24.04
     timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: docs-site
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           ref: ${{ needs.prepare.outputs.docs_sha }}
+          path: docs-site
+          persist-credentials: false
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          repository: Flow-Steward/flow-steward-app
+          ref: ${{ needs.prepare.outputs.source_sha }}
+          path: product
           persist-credentials: false
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: '22'
           cache: npm
+          cache-dependency-path: docs-site/package-lock.json
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
           name: trusted-docs-context
           path: ${{ runner.temp }}/context
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
-          name: docs-proposal
+          pattern: docs-proposal-page-*
+          merge-multiple: true
           path: ${{ runner.temp }}/proposal
+      - name: Require complete coverage before combining proposals
+        run: node scripts/automation/run.mjs combine "$RUNNER_TEMP/proposal" "$RUNNER_TEMP/context/metadata.json" ../product
       - run: node --test scripts/automation/*.test.mjs
       - name: Validate and apply proposed Markdown files
-        run: node scripts/automation/run.mjs apply "$RUNNER_TEMP/proposal/proposal.json" "$RUNNER_TEMP/context/metadata.json"
+        run: node scripts/automation/run.mjs apply "$RUNNER_TEMP/proposal/combined.json" "$RUNNER_TEMP/context/metadata.json"
       - run: npm ci
       - run: npm run typecheck
       - run: npm run build
         env:
           SITE_URL: https://docs.flowsteward.org
           BASE_URL: /
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: docs-proposal-combined
+          path: ${{ runner.temp }}/proposal/combined.json
+          retention-days: 7
+          if-no-files-found: error
   publish:
     needs: [prepare, validate]
     runs-on: ubuntu-24.04
@@ -142,7 +179,7 @@ jobs:
           path: ${{ runner.temp }}/context
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
-          name: docs-proposal
+          name: docs-proposal-combined
           path: ${{ runner.temp }}/proposal
       - name: Mint documentation-only PR token
         id: app
@@ -157,4 +194,4 @@ jobs:
       - name: Open or refresh reviewed documentation PR
         env:
           GH_TOKEN: ${{ steps.app.outputs.token }}
-        run: node scripts/automation/run.mjs publish "$RUNNER_TEMP/proposal/proposal.json" "$RUNNER_TEMP/context/metadata.json"
+        run: node scripts/automation/run.mjs publish "$RUNNER_TEMP/proposal/combined.json" "$RUNNER_TEMP/context/metadata.json"
