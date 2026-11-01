@@ -66,15 +66,18 @@ SITE_URL=https://flow-steward.github.io BASE_URL=/documentation-site/ npm run bu
 
 ## Publication
 
-The repository's GitHub Pages workflow builds and deploys on pushes to `main`.
-It explicitly uses `SITE_URL=https://flow-steward.github.io` and
-`BASE_URL=/documentation-site/`. A manual workflow dispatch uses the same path.
+The repository's server deployment workflow builds and publishes pushes to `main`
+to the existing `https://docs.flowsteward.org` host, with `BASE_URL=/`. A manual
+workflow dispatch from main uses the same destination. GitHub Pages is unused;
+there is no DNS or demo-stand migration.
 
-The default build uses `https://docs.flowsteward.org` and `/`, the official
-documentation origin; it is served as a static site on its own host. The root
-domain `flowsteward.org` is reserved for the product website. Configure the actual public origin and
-base path for the destination. A successful local build does not prove that a
-hosted deployment completed; inspect its deployment result after pushing.
+Build and typecheck complete before deployment. A dedicated forced-command SSH
+key can update only `/home/admin/docs-flowsteward/site`; it cannot open a shell or
+change the demo installation. The existing Nginx container continues serving the
+same bind-mounted directory. The workflow checks `deployment-revision.txt` over
+HTTPS after transfer. A local build alone does not prove hosted deployment.
+See the repository README for the restricted receiver, environment secret,
+reviewed host key and failure/retry setup.
 
 ## Content model
 
@@ -134,3 +137,25 @@ npm run preview -- --host 127.0.0.1 --port 3000
 ```
 
 Do not use `npm run dev` as the final search check.
+
+
+## AI documentation proposals
+
+Public product changes request an update through the documentation workflow.
+Codex compares the source with the last accepted checkpoint and proposes updates
+in one bot PR. The initial manual run also reconciles existing documentation gaps.
+AI can update existing Markdown pages; additions needing navigation changes remain
+separate reviewed work. The generated content is validated and built without
+publication credentials before a PR is opened.
+
+Review the source evidence and unreleased-versus-released wording before accepting
+the PR. Merging advances the accepted checkpoint and triggers server deployment;
+closing a PR does not accept its changes. Failed generation or builds leave the
+checkpoint unchanged. Human commits to the bot branch require manual review.
+
+For a missed dispatch or stale generation, run **Propose product documentation
+updates** manually on main. It covers all public source changes since acceptance,
+including events coalesced while an earlier run was active. See the repository
+README for GitHub App permissions, model/API setup, required secrets and retry
+instructions. Configure credentials through GitHub settings; never include them
+in documentation or PR content.
