@@ -75,3 +75,56 @@ and `BASE_URL` and serve the resulting `build/` directory.
 Local preview builds, verification environments and recovery snapshots under
 `.tmp/` are ignored by Git and retained locally. Historical audit runners are
 candidate-specific evidence, not the current application's test suite.
+
+## Automated documentation updates
+
+The public application repository dispatches changes on `main` to this site's
+`Propose product documentation updates` workflow. It compares the public source
+with the last accepted checkpoint and uses Codex to propose Markdown updates in
+one `codex/documentation-sync` PR. The first run also checks existing documentation
+gaps. A person reviews and merges the PR; the Pages workflow then publishes it.
+The bot never merges its own changes.
+
+Setup requires a GitHub App installed on `Flow-Steward/documentation-site` with
+Contents: write and Pull requests: write. Do not grant Workflows or Administration
+permissions. Set `DOCS_SYNC_APP_ID` as a repository variable and
+`DOCS_SYNC_APP_PRIVATE_KEY` as a repository secret in both the public application
+repository and this repository. The application uses a contents-only installation
+token for dispatch; this repository mints its PR write token only after validation.
+Set `DOCS_SYNC_ACTOR` here to the App's exact bot login (`<app-slug>[bot]`).
+Store `OPENAI_API_KEY` here as a repository secret and optionally set
+`DOCS_AI_MODEL` to an available model ID. API usage is billed to that key's
+project. Action and CLI versions are pinned in the workflow.
+
+Enable GitHub Actions and Pages with the GitHub Actions build source. Optionally
+require the `Validate documentation / build` PR check and human review in branch
+rules. `SITE_URL` and `BASE_URL` repository variables override the existing Pages
+URL defaults in both validation and deployment. Inspect Pages' custom-domain
+settings before changing these: a root-domain build requires `BASE_URL=/` and the
+actual HTTPS origin. Domain/DNS migration is a separate operation.
+
+Documentation main pushes also trigger catch-up, so acceptance or a concurrent
+manual docs edit cannot strand an in-flight source update. A cumulative no-op
+withdraws obsolete changes from any pending bot PR while preserving the accepted
+checkpoint.
+
+Run `Propose product documentation updates` manually on `main` for initial
+reconciliation or to catch up after a failed dispatch. Runs resolve current public
+main and include all changes since `.automation/docs-source.json` on documentation
+main. GitHub may coalesce pending events; the cumulative checkpoint prevents lost
+updates. A completed no-op records its reason in the run artifact and does not
+advance the accepted checkpoint. Generation/build failures do not advance it.
+
+Generation has no GitHub write or registry tokens. Its JSON output is validated
+on fresh runners; only existing Markdown/MDX pages may change, within 100 files
+and 1 MiB. New pages/navigation need a separate reviewed PR. AI-generated MDX is
+built without secrets before the PR is opened. Review claims, especially behavior
+that is on product main but has not yet been released.
+
+A stale documentation main/branch causes a failed run rather than overwriting
+changes: rerun against the current state. Human commits on the bot branch stop
+updates for manual review. Reopen a manually closed bot PR to resume review;
+closure is not acceptance. Do not manually edit checkpoint metadata to suppress
+unreviewed changes. Artifacts retain the proposal and trusted context for 7 days.
+
+Automation tests: `node --test scripts/automation/*.test.mjs`.
