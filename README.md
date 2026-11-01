@@ -66,11 +66,11 @@ The first source of truth for product behavior is still the Flow Steward
 application repository. Public-facing release docs should be published in this
 site when they are stable enough for users and contributors.
 
-The GitHub Pages workflow automatically builds and publishes pushes to `main`.
-It uses `https://flow-steward.github.io/documentation-site/`. Run typecheck and
-verify both root-domain and project-path builds before pushing; inspect the
-workflow result to confirm hosted publication. For other hosting, set `SITE_URL`
-and `BASE_URL` and serve the resulting `build/` directory.
+The server deployment workflow builds accepted changes on `main` and updates the
+existing Nginx site at `https://docs.flowsteward.org`. It uses `SITE_URL` set to
+that origin and `BASE_URL=/`. GitHub Pages and DNS changes are not required.
+Run typecheck and production build before pushing; inspect the deployment result
+and published revision marker to confirm that the server was updated.
 
 Local preview builds, verification environments and recovery snapshots under
 `.tmp/` are ignored by Git and retained locally. Historical audit runners are
@@ -82,7 +82,7 @@ The public application repository dispatches changes on `main` to this site's
 `Propose product documentation updates` workflow. It compares the public source
 with the last accepted checkpoint and uses Codex to propose Markdown updates in
 one `codex/documentation-sync` PR. The first run also checks existing documentation
-gaps. A person reviews and merges the PR; the Pages workflow then publishes it.
+gaps. A person reviews and merges the PR; the server deployment workflow then publishes it.
 The bot never merges its own changes.
 
 Setup requires a GitHub App installed on `Flow-Steward/documentation-site` with
@@ -96,12 +96,10 @@ Store `OPENAI_API_KEY` here as a repository secret and optionally set
 `DOCS_AI_MODEL` to an available model ID. API usage is billed to that key's
 project. Action and CLI versions are pinned in the workflow.
 
-Enable GitHub Actions and Pages with the GitHub Actions build source. Optionally
-require the `Validate documentation / build` PR check and human review in branch
-rules. `SITE_URL` and `BASE_URL` repository variables override the existing Pages
-URL defaults in both validation and deployment. Inspect Pages' custom-domain
-settings before changing these: a root-domain build requires `BASE_URL=/` and the
-actual HTTPS origin. Domain/DNS migration is a separate operation.
+Enable GitHub Actions. Optionally require the `Validate documentation / build`
+PR check and human review in branch rules. The production deployment environment
+is `documentation-production`; restrict it to `main`. Build and PR-validation
+jobs have no deployment credentials. See server setup below.
 
 Documentation main pushes also trigger catch-up, so acceptance or a concurrent
 manual docs edit cannot strand an in-flight source update. A cumulative no-op
@@ -128,3 +126,52 @@ closure is not acceptance. Do not manually edit checkpoint metadata to suppress
 unreviewed changes. Artifacts retain the proposal and trusted context for 7 days.
 
 Automation tests: `node --test scripts/automation/*.test.mjs`.
+
+
+## Existing server deployment setup
+
+The existing server is `admin@162.55.214.63`, alongside the demo installation.
+The `docs-flowsteward` Nginx container binds
+`/home/admin/docs-flowsteward/site` read-only as its document root. The server
+already has `/usr/bin/rsync` and `/usr/bin/rrsync`. No container restart, demo
+update, package installation or DNS migration is part of each documentation deploy.
+
+1. Generate a dedicated ED25519 deploy key, separate from an administrator key.
+2. Install `scripts/automation/server-receiver.sh` as
+   `/home/admin/docs-flowsteward/automation/server-receiver.sh`, mode 0755,
+   owned by admin and outside the writable `site` directory.
+3. Add only its public key to admin's `authorized_keys` with this forced command
+   and restrictions (replace the public-key placeholder):
+
+   ```text
+   restrict,command="/home/admin/docs-flowsteward/automation/server-receiver.sh" ssh-ed25519 <public-key> flow-steward-docs-ci
+   ```
+
+4. Store the matching private key only in the `DOCS_DEPLOY_SSH_KEY` Actions secret
+   for this repository's `documentation-production` environment. Do not reuse the
+   administrator SSH key, commit a private key or print it in deployment logs.
+5. The reviewed `.github/deploy_known_hosts` pins the server's existing ED25519
+   key. Verify a host-key rotation out of band and update that file through review;
+   never disable strict checking or learn a key automatically during deployment.
+
+Before transferring files, the client requires the forced receiver to identify
+its exact restricted target. A normal administrator key fails that handshake,
+so a setup mistake cannot turn the relative rsync destination into a home-directory
+update. The receiver permits only this handshake and write-only rrsync rooted at
+the documentation directory, with server-side symlink munging; it permits no
+shell, forwarding or demo access. The server must not have a `/rsyncd-munged/`
+directory, which would make rsync's deliberately broken symlink prefix usable.
+
+Accepted main changes are built first, then transferred with checksums and delayed
+file updates. Removed pages are deleted only inside the restricted site directory;
+existing hashed assets are retained for browsers with cached HTML. Asset cleanup
+is a separate maintenance operation. The workflow checks the public
+`deployment-revision.txt` against the exact documentation commit after transfer.
+A failed transfer or mismatched public revision fails the job. Temporary key files
+are removed on success and failure. These are per-file staged updates, not a
+transaction across every site file.
+
+After installing the restricted key, run `Deploy documentation to server` manually from main to validate a
+real accepted build. AI generation additionally needs the App and OpenAI secrets
+listed above. Do not merge or activate these workflows before credentials and
+review rules are configured.

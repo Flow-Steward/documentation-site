@@ -1,0 +1,58 @@
+name: Deploy documentation to server
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: documentation-production
+  cancel-in-progress: false
+jobs:
+  build:
+    if: github.repository == 'Flow-Steward/documentation-site' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: node --test scripts/automation/*.test.mjs
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run build
+        env:
+          SITE_URL: https://docs.flowsteward.org
+          BASE_URL: /
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: documentation-site
+          path: build/
+          retention-days: 7
+          if-no-files-found: error
+  deploy:
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    environment:
+      name: documentation-production
+      url: https://docs.flowsteward.org
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: documentation-site
+          path: ${{ runner.temp }}/documentation-site
+      - name: Update only the existing Nginx documentation directory
+        env:
+          DOCS_DEPLOY_HOST: '162.55.214.63'
+          DOCS_DEPLOY_USER: admin
+          DOCS_DEPLOY_SSH_KEY: ${{ secrets.DOCS_DEPLOY_SSH_KEY }}
+          DOCS_REVISION: ${{ github.sha }}
+        run: bash scripts/automation/deploy-site.sh "$RUNNER_TEMP/documentation-site" "$DOCS_REVISION" .github/deploy_known_hosts

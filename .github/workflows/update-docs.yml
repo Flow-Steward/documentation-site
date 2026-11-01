@@ -122,8 +122,8 @@ jobs:
       - run: npm run typecheck
       - run: npm run build
         env:
-          SITE_URL: ${{ vars.SITE_URL || 'https://flow-steward.github.io' }}
-          BASE_URL: ${{ vars.BASE_URL || '/documentation-site/' }}
+          SITE_URL: https://docs.flowsteward.org
+          BASE_URL: /
   publish:
     needs: [prepare, validate]
     runs-on: ubuntu-24.04
