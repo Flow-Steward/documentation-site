@@ -57,7 +57,7 @@ The site reads these environment variables at build time:
 Examples:
 
 ```bash
-SITE_URL=https://flowsteward.org BASE_URL=/ npm run build
+SITE_URL=https://docs.flowsteward.org BASE_URL=/ npm run build
 ```
 
 ```bash
@@ -70,8 +70,9 @@ The repository's GitHub Pages workflow builds and deploys on pushes to `main`.
 It explicitly uses `SITE_URL=https://flow-steward.github.io` and
 `BASE_URL=/documentation-site/`. A manual workflow dispatch uses the same path.
 
-The default root-domain build uses `https://flowsteward.org` and `/`; a different
-host must serve that build separately. Configure the actual public origin and
+The default build uses `https://docs.flowsteward.org` and `/`, the official
+documentation origin; it is served as a static site on its own host. The root
+domain `flowsteward.org` is reserved for the product website. Configure the actual public origin and
 base path for the destination. A successful local build does not prove that a
 hosted deployment completed; inspect its deployment result after pushing.
 

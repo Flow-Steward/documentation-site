@@ -7,8 +7,8 @@ description: Exact installation options, defaults, visibility, and resume behavi
 # Installer Reference
 
 For help choosing each answer, use [Answer the Installer Questions](../deploy/installer-walkthrough).
-This reference is checked against application revision
-`62a95e3456d3a692092b5a04daecca504c3f97b1` on 2026-10-04. The field contract is
+This reference is checked against application revision `1a66a0490e`
+(version 0.7.27) on 2026-10-26. The field contract is
 `core/application/installer/spec.py`; the private adapter is
 `core/entrypoints/cli/installer.py`.
 
@@ -31,20 +31,25 @@ The normal launcher builds a pinned installer image, mounts the checkout and
 local Docker socket, mounts explicitly supplied external input files read-only,
 and runs the private controller. A remote Docker endpoint is unsupported.
 Use `FS_INSTALLER_USE_HOST_PYTHON=1` only as a local-development fallback.
-The checkout must have a resolvable Git revision and materialized Git LFS files.
-The host preflight supports amd64/arm64 and rejects less than 4 GiB free space;
-that minimum is not a production sizing recommendation.
+The checkout must be a Git checkout with a resolvable revision; Git LFS is not
+used. The installer refuses to run as root (exit 4) and refuses subcommands
+such as `./install.sh up` (exit 2). The host preflight accepts only amd64
+(`x86_64`) and arm64 (`aarch64`) hosts (`unsupported_architecture` otherwise)
+and rejects less than 4 GiB free space (`insufficient_disk_space`); that minimum
+is not a production sizing recommendation. Linux servers, Docker Desktop on
+macOS, and Windows through WSL or Git Bash are the supported launch
+environments.
 
 ## Global options
 
 | Option | Meaning |
 |---|---|
-| `--json` | Emit one JSON document and do not prompt. Fresh installation still needs `--confirm`. The live setup link is printed separately to stderr. |
+| `--json` | Emit one JSON document and do not prompt (implies `--non-interactive`). Fresh installation still needs `--confirm`. The live setup link is printed separately to stderr. |
 | `--plain` | Use line-oriented interaction, also the default without `--tui`. |
 | `--tui` | Opt into the full-screen form; advanced fields are behind **Show advanced**. |
 | `--no-color` | Disable color. |
 | `--verbose` | Request redacted technical output; ordinary non-JSON installation also streams progress/technical output. |
-| `--non-interactive` | Never prompt. A fresh install requires `--confirm`. |
+| `--non-interactive` | Never prompt; every field not given as an option takes its default. A fresh install requires `--confirm`. Without a terminal on stdin the installer never prompts either. |
 | `--confirm` | Confirm the fresh-install plan. |
 | `-h`, `--help` | Show launcher/private installer help. |
 
@@ -93,12 +98,13 @@ full-screen form; it does not hide the question in plain mode.
 | Certificate path | `--certificate-path` | `.ssl/cert.pem` | Always; advanced |
 | Private key path | `--private-key-path` | `.ssl/key.pem` | Always; advanced |
 
-The effective Compact storage default differs by interface: plain mode accepts
-its displayed `bundled` answer; non-interactive Compact with no supplied
-`--file-storage` normalizes to `local_fs`. The current full-screen path also
-normalizes Compact storage against the original CLI-supplied keys, so pin
-`--file-storage` explicitly when using `--tui` to avoid replacing a form choice.
-The local trial in the walkthrough deliberately chooses local storage.
+Compact storage: the **File storage** default, `bundled`, is the Scalable
+default. On Compact, that default becomes `local_fs` unless `--file-storage` is
+given on the command line. An answer of **Local persistent filesystem** or
+**External S3-compatible storage** (with its S3 settings) is kept, in plain
+mode, `--tui` and non-interactive runs alike; the review shows the final value.
+For bundled storage on Compact pass `--file-storage bundled`. Scalable keeps the
+prompted or supplied value.
 
 Ports must be 1–65535. Compact worker processes must be at least 1 (the source
 upper bound is 56336, not a recommended operating value). Public host is a bare
@@ -133,6 +139,42 @@ For public bundled ACME, set the real hostname, public port `443`, redirect
 port `80`, contact email and CA directory URL explicitly. The source uses
 HTTP-01. DNS, public reachability and certificate issuance remain operator
 prerequisites. Local/generated TLS is not a publicly trusted certificate.
+
+## Non-interactive examples
+
+Every question has an option, so an installation can run without prompts. A
+fresh installation needs `--confirm`; omitted fields take the defaults in the
+table above (on Compact, the `bundled` storage default becomes `local_fs`).
+
+Local trial with all defaults (Compact, `https://localhost:8099`):
+
+```bash
+./install.sh --non-interactive --confirm
+```
+
+Public VPS, Compact, bundled Traefik with a Let's Encrypt certificate:
+
+```bash
+./install.sh --non-interactive --confirm \
+  --deployment-profile compact \
+  --ingress-mode bundled_traefik --tls-mode acme \
+  --public-host flow.example.com --public-port 443 --redirect-http-port 80 \
+  --acme-contact ops@example.com \
+  --acme-directory-url https://acme-v02.api.letsencrypt.org/directory
+```
+
+Nginx already on the host terminates HTTPS (the ingress owner is inferred
+from `--tls-mode reverse_proxy` when `--ingress-mode` is omitted):
+
+```bash
+./install.sh --non-interactive --confirm \
+  --tls-mode reverse_proxy --proxy-kind nginx \
+  --public-host flow.example.com --public-port 443
+```
+
+Then print the routes to add to your Nginx site with
+`./flow-steward proxy-fragment`. Add `--json` to any of these to get one JSON
+result document on stdout; the setup link still goes to stderr.
 
 ## File and credential input contract
 
@@ -184,7 +226,7 @@ DNS or firewall correctness.
 |---|---|
 | `fresh` | Collect/review configuration and start a journaled operation. |
 | `resumable` | Reuse journaled configuration and rerun steps whose postconditions do not hold. |
-| `installed` | Verify/reconcile the recorded installation; changed source can enter the image/update path. Rerunning the installer is not a read-only health check. |
+| `installed` | Verify/reconcile the recorded installation; changed source enters the image/update path. Asks no questions. Rerunning the installer is not a read-only health check. |
 | `ambiguous` | Preserve detected resources and refuse mutation until the reported identity, journal, secret, or configuration issue is resolved. |
 
 Journaled steps cover preflight, configuration, durable secrets, TLS, images,
@@ -196,6 +238,70 @@ and `./flow-steward doctor` before retrying. Never delete state/volumes to bypas
 the guard. See [Installation and Updates](../user/installation-and-updates) for
 update behavior and supported deployment changes.
 
+## Rerunning on an installed system
+
+`./install.sh` on a completed installation reads the applied configuration
+(`.flow-steward/stack.toml`), not the spec defaults, and asks nothing. It then:
+
+1. Finishes an interrupted profile switch, or switches profile when
+   `--deployment-profile` names the other profile.
+2. On Compact, applies `--worker-processes N` when it differs (prints
+   `Compact worker processes: <old> -> <new>.`). This is the only setting a
+   rerun changes. Any other option whose value differs from the installed one
+   stops with `installed_setting_not_applied` (exit 7) before anything changes.
+   On Scalable the message names `./flow-steward config set ...` and
+   `config apply --confirm` as the way to change it.
+3. Compares the checkout's commit with the revision the running images were
+   built from. When they differ it runs the update steps: preflight, image
+   build, a migration check against the database, core start, schema check,
+   worker identity, runtime, health and CLI runtime. The output says
+   `Updated from <old> to <new>.`
+4. Otherwise starts stopped services, verifies health, storage, the public
+   route and bootstrap, and prints `Flow Steward is already installed.` An
+   expired first-administrator link is reissued while no administrator exists.
+
+If the update carries a database migration, step 3 stops with
+`release_migration_required` (exit 8) before any running service is restarted.
+Image variables such as `FS_COMPACT_IMAGE` or `FS_APP_IMAGE` set in the shell
+mark those images as yours: they are not rebuilt, and the run warns that the
+runtime is behind the checkout.
+
+## Environment variables read by the launcher
+
+`./install.sh` forwards only these variables from your shell into the installer
+container. Everything else is an answer or option above.
+
+| Variable | Effect |
+|---|---|
+| `FS_COMPOSE_PROJECT_NAME` | Docker Compose project name for a new installation (default `flow-steward`). Use a unique name for a second installation on the same host; it is recorded and reused. |
+| `HTTP_PORT`, `POSTGRES_HOST_PORT`, `RABBITMQ_AMQP_HOST_PORT`, `RABBITMQ_MANAGEMENT_HOST_PORT`, `SEAWEEDFS_S3_HOST_PORT`, `SEAWEEDFS_MASTER_HOST_PORT`, `MCP_HOST_PORT`, `FRONTEND_HOST_PORT`, `MAILPIT_*_PORT`, `SONAR_PORT` | Host port overrides for the Compose services that publish one. Prefer `--redirect-http-port` over `HTTP_PORT`. |
+| `FS_COMPACT_IMAGE`, `FS_APP_IMAGE`, `FS_WORKER_IMAGE`, `FS_CONTROL_IMAGE`, `FS_CLI_IMAGE`, `FS_FRONTEND_IMAGE`, `MCP_IMAGE`, `POSTGRES_IMAGE` and `FS_COMPACT_IMAGE_REGISTRY_REF`, `FS_COMPACT_IMAGE_REVISION`, `FS_COMPACT_IMAGE_PLATFORM` | Use these existing images instead of building them. Leave unset for a normal checkout installation. |
+| `FS_RELEASE_REPOSITORY`, `FS_RELEASE_REGISTRIES` | Where official releases and their images are looked up. |
+| `AWS_CA_BUNDLE` | Extra CA bundle for an external S3 endpoint. |
+| `NO_COLOR`, `TERM` | Terminal output. |
+
+Read by `install.sh` itself: `FS_INSTALLER_IMAGE` (installer image tag, or an
+exact `sha256:` image to reuse), `FS_INSTALLER_STATE_DIR` (state root, default
+`.flow-steward`), `FS_INSTALLER_HEARTBEAT_SECONDS` (progress heartbeat while the
+installer image builds, default 5), and `FS_INSTALLER_USE_HOST_PYTHON=1` with
+`PYTHON_BIN` (development fallback without the installer container).
+
+## Exit codes
+
+| Code | Meaning |
+|---|---|
+| `0` | Installed, updated, or already installed and verified. |
+| `2` | Invalid usage, such as a subcommand. |
+| `3` | Validation failed: an invalid value or ingress/TLS pair, or a bad file path. |
+| `4` | Precondition failed: run as root, port in use, not enough disk. |
+| `5` | A required file or repository path is unreadable. |
+| `7` | Docker, Compose or another dependency is unavailable, the host is unsupported, or a setting cannot be applied by a rerun. |
+| `8` | A step failed after it started, such as a health or schema check. |
+| `9` | Recovery required: the installation state needs inspection before a retry. |
+| `10` | Cancelled or interrupted, including a fresh non-interactive run without `--confirm`. |
+| `70` | Unexpected internal error; read the printed log path. |
+| `127` | The Docker CLI or a required POSIX utility (`awk`, `sed`, `stat`, ...) is not on `PATH`. |
+
 ## Generated state and first administrator
 
 Default paths are relative to the checkout:
@@ -204,15 +310,25 @@ Default paths are relative to the checkout:
 - `.flow-steward/logs/install-*.log`: owner-only operation logs.
 - `.flow-steward/stack.toml`, `pending-config.json`, and `compose.env`: active,
   pending and generated deployment state.
-- `.env.prod` or `.env`: managed runtime environment blocks.
+- `.env.prod` or `.env`: runtime environment created by the installer, with
+  generated passwords and keys. Keys the installer owns are rewritten on every
+  run; other lines are kept.
 - `.flow-steward/runtime/`: runtime material including bundled-storage
   credentials and bootstrap-token state.
 - `.flow-steward/secret-output/bootstrap-token`: owner-only setup-token output.
 - The initial preservation manifest and release/pending-release records under
   installer-managed state.
 
+On Linux with systemd and the system Docker daemon, a successful Compact
+installation also asks for sudo and installs
+`flow-steward-<compose-project>.service` to start the installation after a
+reboot; see [Linux VPS automatic startup](../deploy/installation#linux-vps-automatic-startup).
+
 An explicit `FS_INSTALLER_STATE_DIR` relocates the installer state root; use the
-printed paths. Do not hand-edit managed blocks, credentials, journals, or locks.
+printed paths. Do not hand-edit installer-owned environment keys, `stack.toml`,
+`compose.env`, credentials, journals, or locks: the next run rewrites or
+rejects them. Change an installed configuration with the commands in
+[Rerunning on an installed system](#rerunning-on-an-installed-system).
 
 A normal checkout installation, including loopback, prints a private
 `/bootstrap#setup-token=...` link valid for **60 minutes**. Open it to create the
@@ -226,7 +342,9 @@ with a 15-minute lifetime. No AI-provider credential is required to install core
 ## Verification boundary
 
 This is a source review, not a new installation acceptance run. Docker-proxy
-readiness and full-screen Compact storage behavior have the limitations named
+readiness and Compact storage normalization have the limitations named
 above. No live VPS, external proxy, ACME CA, or S3 service was changed or tested
-for this documentation pass. Use the walkthrough's public health, browser,
-WebSocket and MCP checks before treating a deployment as ready.
+for this documentation pass. Run `./flow-steward status` and
+`./flow-steward doctor`, open `https://<host>/health/ready` in a browser, and
+use the walkthrough's browser, WebSocket and MCP checks before treating a
+deployment as ready.

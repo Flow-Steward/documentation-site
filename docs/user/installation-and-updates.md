@@ -7,8 +7,8 @@ description: Install, verify, manage, and update a self-hosted Flow Steward stac
 # Installation And Updates
 
 This guide follows the current source contracts. The documentation and repository
-are being prepared for their first public release; the planned documentation
-origin is https://flowsteward.org. A local build does not establish live deployment
+are being prepared for their first public release; the official documentation
+origin is https://docs.flowsteward.org. A local build does not establish live deployment
 verification.
 
 Use this page for a checkout-based Docker installation. For prebuilt images on
@@ -39,7 +39,10 @@ These requirements apply on the Docker host, including a remote VPS or Droplet.
 - A Linux, macOS or Windows host with a running Docker engine using Linux
   containers and Docker Compose v2. On Windows, use Git Bash or WSL for the shell
   entrypoints; a PowerShell/cmd prompt does not directly run `./install.sh`.
-- A source checkout or release bundle for the intended candidate.
+- An amd64 (`x86_64`) or arm64 (`aarch64`) host with at least 4 GiB free
+  disk; the installer refuses other architectures.
+- A full Git clone of the intended release (not a copied folder without
+  `.git`). Git LFS is not needed.
 - Free local ports and durable storage appropriate to the selected topology.
 - For `external_s3`, an existing bucket endpoint and an owner-only JSON file
   containing `access_key` and `secret_key`.
@@ -87,10 +90,18 @@ sequence and each choice. The installer asks for:
 
 - `production` (default) or `development` environment;
 - `compact` (default) or `scalable` deployment profile;
+- on Compact, its internal HTTP port and the number of worker processes;
 - ingress owner: bundled/external Traefik, external proxy, or hosting platform;
-- `local_fs`, `bundled`, or `external_s3` artifact storage;
+- `local_fs`, `bundled`, or `external_s3` artifact storage (on Compact the
+  `bundled` default becomes `local_fs`; choose External S3 or pass
+  `--file-storage bundled` for the others);
 - a TLS mode compatible with the ingress/profile; see [Installer Reference](../reference/installer);
 - public host and port, plus mode-specific file or backend details.
+
+The [walkthrough's question table](../deploy/installer-walkthrough#all-questions-at-a-glance)
+gives the default and a recommended answer for each. The installer does not ask
+for an administrator account, outgoing email (SMTP) or an AI provider; those
+are set up in the browser after installation.
 
 Use your public domain or IP during installation, not just afterward. The
 installer derives `FS_PUBLIC_BASE_URL` from these supported fields. For local
@@ -144,17 +155,17 @@ migrations, follow the applicable release procedure and run the supported
 
 ## Create the first administrator
 
-Open the bootstrap URL printed by the installer. On a local default install it
-is normally:
+At the end of a successful installation the installer prints a block headed
+**NEXT STEP: CREATE THE FIRST ADMINISTRATOR** with a one-time link of the form
+`https://<host>:<port>/bootstrap#setup-token=...` (on a default local install,
+`https://localhost:8099/bootstrap#setup-token=...`). Open the complete link in
+your browser and create the administrator's email and password there. The link
+is also saved to the owner-only `.flow-steward/secret-output/bootstrap-token`.
 
-```bash
-open https://localhost:8099
-```
-
-For a non-loopback install, the installer can print an owner-only setup-token
-path and a bootstrap URL. Keep the token out of query strings and logs. Treat the printed setup link as a secret: it includes a token in the URL fragment.
-If its 60-minute window expires before first-user creation, rerun `./install.sh`
-for a new link on either profile. Scalable also supports:
+Treat the link as a secret: the token is in the URL fragment. Keep it out of
+query strings, logs and screenshots. If its 60-minute window expires before
+the first user is created, rerun `./install.sh` for a new link on either
+profile. Scalable also supports:
 
 ```bash
 ./flow-steward users issue-bootstrap-token --confirm
@@ -184,30 +195,55 @@ for a supported configuration change:
 ./flow-steward config apply --confirm
 ```
 
+On Compact the `stack` and `config` commands are refused, and a rerun of
+`./install.sh` changes only the worker-process count or the profile. Choose
+the public host, ingress/TLS and file storage carefully at installation.
+
 ## Update a checkout installation
 
-For images built and owned by the installer, update the checkout to the intended
-reviewed tag or commit, pull its Git LFS files, and rerun the installer:
+For images built and owned by the installer, the update path is the installer
+itself. Take a backup, move the checkout to the intended reviewed tag or commit,
+and rerun the installer:
 
 ```bash
+./flow-steward backup create
 git fetch
 git checkout <reviewed-tag-or-commit>
-git lfs pull
 ./install.sh
 ./flow-steward status
 ./flow-steward doctor
 ```
 
-The installer compares source, recorded images, and running containers. If its
-own images are older, it rebuilds them and checks schema compatibility before
-restarting the runtime. It preserves installed configuration, secrets, TLS,
-and persistent data. A code-only update can complete without a database
-migration. Operator-pinned images are preserved, not silently rebuilt.
+On a completed installation `./install.sh` asks no questions and reuses the
+recorded answers. It compares the checkout's commit with the revision the
+running images were built from. If they differ, it rebuilds the images, checks
+the release's migrations against the database, restarts the services and
+verifies health, then prints `Updated from <old> to <new>.` If nothing changed
+it prints `Flow Steward is already installed.` after verifying the
+installation. It preserves installed configuration, secrets, TLS, and
+persistent data. A code-only update can complete without a database migration.
+Images you pinned yourself with variables such as `FS_COMPACT_IMAGE` are left
+in place, not rebuilt; the run warns that the runtime is behind the checkout.
+
+Do not pass changed installation options on an update run: apart from
+`--worker-processes` (Compact) and `--deployment-profile` (profile switch), a
+differing option stops with `installed_setting_not_applied` and nothing is
+changed.
 
 If the schema check stops with `release_migration_required`, the previous runtime
-remains running. Review the release instructions, enable maintenance, create and
-verify a backup, then run `./flow-steward database upgrade --maintenance-confirmed --confirm`
-before retrying the supported release/installer update. Do not run a raw Compose
+remains running. Review the release instructions, then:
+
+```bash
+./flow-steward maintenance enable --confirm
+./flow-steward backup create
+./flow-steward database upgrade --maintenance-confirmed --confirm
+./install.sh
+./flow-steward doctor
+./flow-steward maintenance disable --confirm
+```
+
+Verify the backup (`./flow-steward backup verify <file>`) before the database
+upgrade. Do not run a raw Compose
 start in that interval: the durable environment may already name the new image
 while the running image is still the old one. Keep maintenance enabled until
 post-update verification passes. See [Upgrade Reference](../reference/upgrade)

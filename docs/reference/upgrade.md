@@ -17,6 +17,13 @@ can report `transition_available`. A reviewed, confirmed `release upgrade`
 explicitly transitions to the selected exact official release through the same
 installer contract. It does not upgrade implicitly during installation or Clone.
 
+To update a checkout installation to a newer commit or tag of the same source,
+you do not need `release upgrade`: check out the new revision and rerun
+`./install.sh`. A completed installation asks no questions, rebuilds the images
+it owns, checks migrations before restarting anything, and prints
+`Updated from <old> to <new>.` See
+[Update a checkout installation](../user/installation-and-updates#update-a-checkout-installation).
+
 ## Commands
 
 | Command | Effect |

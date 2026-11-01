@@ -41,8 +41,9 @@ still require the owning extension's configuration and health/verification gates
 *The Extensions hub from the reviewed application revision. No bundle was installed, enabled, or invoked during capture.*
 
 1. Open `Extensions`.
-2. Open **Marketplace**, review a catalog entry, and choose **Install**, or
-   select a reviewed release bundle for installation from file.
+2. Open **Marketplace**, review a catalog entry, and choose **Install**. To
+   install a `.zip` archive you received or built, choose **Install extension
+   from file**, or drop the `.zip` on the extensions list.
 3. Review the install result and configure its required credentials and connections
    before enabling it.
 4. Check declared features, scopes, callbacks, and health endpoint.
@@ -57,8 +58,21 @@ the exact bundle version and provenance, then plan dependency removal before
 uninstall. Uninstall can be blocked by workflows, connections, routes, datasets,
 or artifacts; review its plan/revision rather than assuming disable is cleanup.
 
-Older UI builds may expose the same installation surface as `Settings > Packs`.
-That label means extension bundles; it is not a separate object type.
+Only administrators install, update and uninstall extensions. On a Compact
+installation, install archives through the UI (or the install API); copying a
+folder into the server is not an install.
+
+## Update an extension from a file
+
+Install a `.zip` of a **higher** version with **Install extension from file**.
+Flow Steward recognises the installed extension and updates it in place: it
+runs the release's data migrations, keeps the extension's configuration and
+connections, and keeps a disabled extension disabled. If the update fails, the
+previous version stays active. The same version or an older one is refused.
+
+An archive may be built for one server architecture (its name ends in
+`-linux-amd64` or `-linux-arm64`). Install the one that matches your server;
+the other is refused.
 
 ## Catalog installation and model dependencies
 
@@ -91,6 +105,14 @@ Use the extension page to answer:
 
 If an extension provides dataset connectors, those connectors appear in
 `Registry > Data Connections` and `Registry > Datasets`.
+
+## Custom logic in workflows
+
+Flow Steward has no step that runs code typed into a workflow. Custom logic is
+written as an extension, tested and versioned like other code, and then used in
+workflows through the **Extension tools** step. See
+[Custom code](../reference/workflow-step-kinds#custom-code-code-step) and
+[Build An Extension](../integrations/build-an-extension).
 
 ## Safe operating habits
 

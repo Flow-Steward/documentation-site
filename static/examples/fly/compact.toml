@@ -4,7 +4,7 @@ kill_signal = 'SIGTERM'
 kill_timeout = 180
 
 [build]
-image = 'ghcr.io/vasily-piksis/flow-steward-compact@sha256:dee794207e38a4828cadd659cb41cbeaf65a1bdfedd6e4532bcb2a89c77681b1'
+image = 'ghcr.io/flow-steward/flow-steward-compact@sha256:dee794207e38a4828cadd659cb41cbeaf65a1bdfedd6e4532bcb2a89c77681b1'
 
 [env]
 PORT = '8080'

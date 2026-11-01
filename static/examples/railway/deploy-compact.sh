@@ -5,9 +5,9 @@
 set -euo pipefail
 
 environment_name=production
-postgres_image=ghcr.io/vasily-piksis/fs-postgres-extended@sha256:47a10afb648b55a29e0422f7944a5eb8f12f99f4fecfbb5a2af721fe42196ce8
+postgres_image=ghcr.io/flow-steward/fs-postgres-extended@sha256:47a10afb648b55a29e0422f7944a5eb8f12f99f4fecfbb5a2af721fe42196ce8
 rabbitmq_image=rabbitmq@sha256:e582c0bc7766f3342496d8485efb5a1df782b5ce3886ad017e2eaae442311f69
-compact_image=ghcr.io/vasily-piksis/flow-steward-compact@sha256:dee794207e38a4828cadd659cb41cbeaf65a1bdfedd6e4532bcb2a89c77681b1
+compact_image=ghcr.io/flow-steward/flow-steward-compact@sha256:dee794207e38a4828cadd659cb41cbeaf65a1bdfedd6e4532bcb2a89c77681b1
 
 for command_name in railway jq openssl curl; do
   command -v "$command_name" >/dev/null || {

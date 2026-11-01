@@ -29,11 +29,14 @@ documented.
 ## Docker host prerequisites
 
 Before running `./install.sh`, install a running Docker Engine with Linux
-containers, Docker Compose v2, Git and Git LFS on the deployment host. Flow Steward
+containers, Docker Compose v2 and Git on the deployment host. Flow Steward
 does not install Docker. Use [Docker Engine](https://docs.docker.com/engine/install/)
 and the [Compose plugin](https://docs.docker.com/compose/install/linux/) on Linux,
 or [Docker Desktop](https://docs.docker.com/desktop/) for a local desktop trial.
 Windows shell launchers require Git Bash or WSL with Linux containers enabled.
+The host must be **amd64** (`x86_64`) or **arm64** (`aarch64`): an x86 or ARM
+Linux server, or a Mac with Docker Desktop. The installer stops with
+`unsupported_architecture` on anything else. It also needs at least 4 GiB of free disk to start.
 
 From the same non-root deployment account, check:
 
@@ -52,7 +55,7 @@ including Apache, Nginx and Traefik discovery, use the
 
 ## VPS: guided installation
 
-You need access to the Flow Steward Git repository, Git LFS, Docker Engine, and
+You need access to the Flow Steward Git repository, Docker Engine, and
 the Docker Compose v2 plugin. Run Docker as a regular deployment user, not
 `root`. On a Linux VPS with systemd, the user also needs sudo to set up automatic
 startup; the installer requests it after the runtime is ready. The host does not
@@ -63,24 +66,28 @@ pointing at the VPS and decide whether Flow Steward or an existing reverse proxy
 will own TLS.
 
 ```bash
-git clone <flow-steward-repository-url> flow-steward
+git clone https://github.com/Flow-Steward/flow-steward-app.git flow-steward
 cd flow-steward
-git lfs pull
 ./install.sh
 ```
 
-Use a full clone, without `--depth`, and retrieve its Git LFS files before
-installation. A fresh local installation uses the checked-out source; it does
-not require a published GitHub Release or a version tag. If the repository is private, configure
+Use a full clone, without `--depth`. Git LFS is not needed. A fresh local
+installation uses the checked-out source; it does not require a published
+GitHub Release or a version tag. If the repository is private, configure
 your normal Git authentication before cloning. The installer does not provision
 GitHub access for you.
 
 Select **Production**. Accept **Compact** for one runtime container, or select
 **Scalable** when app, workers, MCP, and control services need separate
 containers. The wizard also asks who owns ingress and TLS, the public hostname,
-artifact storage, and worker capacity. Select **Local filesystem** explicitly
-for local persistent storage; choosing bundled storage adds its own SeaweedFS
-service.
+artifact storage, and worker capacity; the
+[Installer Walkthrough](installer-walkthrough#all-questions-at-a-glance) lists
+every question with a recommended answer. Compact uses the local persistent
+filesystem for files unless you choose External S3-compatible storage or start
+the installer with `--file-storage bundled`; Scalable uses the storage you
+choose.
+The installer does not ask for an administrator account, email (SMTP) settings
+or an AI provider: you set those up in the browser after installation.
 For a first local trial, the default local certificate and `localhost:8099`
 are enough. For a public VPS, choose the TLS/ingress option that matches the
 actual network: bundled ACME with working DNS and ports 80/443, or the existing
@@ -89,16 +96,15 @@ the localhost default for a public domain.
 
 For a temporary test by IP, select **Bundled Traefik**, **Hostname generated
 certificate**, and enter the server IP in **Public host**. Set an unused
-**Public port**, for example `18599`. Expand **Show advanced** to set an unused
-**Plain-HTTP redirect port**, for example `18598`. Open
+**Public port**, for example `18599`, and an unused **Plain-HTTP redirect
+port**, for example `18598`. Open
 `https://<server-ip>:18599`. The generated certificate is self-signed, so a
 browser will warn about its trust; a production public site should use a DNS
 name and a trusted certificate. Database, broker, and storage ports remain
 private to Docker.
 
-The normal interactive form lets you edit these fields. The line-oriented
-`--plain` mode currently prompts for choices but keeps defaults for optional
-text and numeric fields. Supply the address and ports explicitly in that mode:
+The default line-oriented questionnaire asks each of these in turn. You can
+also pass them as options, which skips those questions:
 
 ```bash
 ./install.sh --plain --public-host <server-ip> \
@@ -120,12 +126,19 @@ Then check the result:
 ./flow-steward doctor
 ```
 
-Run `./flow-steward` without arguments to see the available commands.
+`status` gives the short readiness summary and `doctor` the detailed checks.
+You can also open `https://<your-host>/health/ready` in a browser. Run `./flow-steward` without
+arguments to see the available commands.
+
+To update later, bring the checkout to the new release and run `./install.sh`
+again; it rebuilds and restarts only what changed and keeps your answers,
+secrets and data. See
+[Update a checkout installation](../user/installation-and-updates#update-a-checkout-installation).
 
 ### DigitalOcean Droplet
 
-A Droplet follows the VPS procedure above: prepare Docker Engine, Compose and
-Git LFS, clone the repository as your deployment user, and run `./install.sh`.
+A Droplet follows the VPS procedure above: prepare Docker Engine and Compose,
+clone the repository as your deployment user, and run `./install.sh`.
 It does not use an App Platform `app.yaml` or a separate application image.
 
 The guided Compact installation was checked on an Ubuntu 24.04 x64 Droplet
@@ -218,7 +231,7 @@ provider settings; a successful installation does not configure those services.
 
 The guided path does **not** currently configure your DNS, an external proxy,
 or off-host backups. Those remain operator steps. The installer also requires
-the repository and Git LFS content to be accessible from that host. Before
+the repository content to be accessible from that host. Before
 holding real data, verify backups and a restore procedure for your installation.
 
 ## Railway: Compact in dependency order
@@ -286,7 +299,7 @@ POSTGRES_PASSWORD=<new strong random password>
 `PGDATA` must be a subdirectory of the volume because a new Railway volume can
 contain `lost+found`, which PostgreSQL refuses as its data directory. Use the
 published **Flow Steward PostgreSQL 17 image with Apache AGE and pgvector**,
-`ghcr.io/vasily-piksis/fs-postgres-extended@sha256:47a10afb648b55a29e0422f7944a5eb8f12f99f4fecfbb5a2af721fe42196ce8`
+`ghcr.io/flow-steward/fs-postgres-extended@sha256:47a10afb648b55a29e0422f7944a5eb8f12f99f4fecfbb5a2af721fe42196ce8`
 for the 2026-09-28 evaluated deployment.
 Railway's standard managed PostgreSQL image does not supply the required AGE
 extension. Wait until its logs say the database is ready to accept connections.
@@ -334,7 +347,7 @@ deployment overlap, and at least 180 seconds of draining time. Compact is a
 single-runtime profile; overlapping two live copies against the same database
 and broker is unsupported. Finally connect the 2026-09-28 evaluated Compact
 image
-`ghcr.io/vasily-piksis/flow-steward-compact@sha256:dee794207e38a4828cadd659cb41cbeaf65a1bdfedd6e4532bcb2a89c77681b1`
+`ghcr.io/flow-steward/flow-steward-compact@sha256:dee794207e38a4828cadd659cb41cbeaf65a1bdfedd6e4532bcb2a89c77681b1`
 from source commit `367d5ff885a5b7557cdb0fb712fe754539fa4d09`.
 Wait for Railway deployment status **Success** and HTTP readiness. A successful
 image upload or a running PostgreSQL service alone does not prove the app is

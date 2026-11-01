@@ -18,7 +18,7 @@ pins; it is not a deployment of every later source revision.
 | Fly.io | [Guided installer and TOML examples](installation#flyio-compact-with-persistent-volumes) | Fly CLI, `jq`, `openssl`, `curl`, authorized account access |
 | Render | [Public Compact Blueprint](render) | Dashboard access and registry image access |
 | Elestio | [Compact Compose template](elestio) | Provider account and registry image access |
-| DigitalOcean Droplet | [Docker-host procedure and recorded checks](installation#digitalocean-droplet) | SSH, Git, Git LFS, Docker Engine and Compose v2 on the Droplet |
+| DigitalOcean Droplet | [Docker-host procedure and recorded checks](installation#digitalocean-droplet) | SSH, Git, Docker Engine and Compose v2 on the Droplet (amd64 or arm64) |
 
 A prebuilt image deployment on Railway, Fly.io or Render needs no local Docker
 daemon. Building the image locally does. On a Droplet, Docker runs on the
@@ -146,9 +146,10 @@ and [run](https://docs.railway.com/cli/run) references.
 
 ## Fly.io
 
-There is no Fly deployment script or complete `fly.toml` in the checked
-repositories. Configure three apps or equivalent isolated services manually:
-extended PostgreSQL, RabbitMQ, and the Compact runtime. Keep their private
+For a new installation use the
+[guided Fly installer and its three TOML files](installation#flyio-compact-with-persistent-volumes).
+To configure it by hand instead, create three apps or equivalent isolated
+services: extended PostgreSQL, RabbitMQ, and the Compact runtime. Keep their private
 addresses and durable stores separate, then apply the shared settings above.
 
 Create a volume for each service in the chosen region. Mount Compact's volume

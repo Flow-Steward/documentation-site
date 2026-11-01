@@ -28,13 +28,33 @@ Disable either requirement only for trusted local documentation review.
 | Auth and admin API | users, accounts, PATs, service accounts, password reset |
 | Projects API | CRUD, rules, schedules, connections, jobs |
 | Jobs API | status, logs, messages, errors, approvals, cancel, restart, cost, trace |
-| Workflow API | triggers, entrypoints, reactions, workflow operations |
+| Workflow API | triggers, entrypoints, reactions, change sets (`POST /api/workflows/{workflow_id}/changes`), hooks, where-used, YAML export/import, run statistics |
 | Registry/admin API | agents, skills, tools, workflows, guardrails, datasets, workspaces |
 | Extensions API | install, scan, enable, preview, invoke, callbacks |
 | Workflow authoring API | scoped component discovery, contracts, bundle validation, disabled draft creation |
 | Settings/model API | providers, model catalog, retention, verified model selection |
-| Webhooks | `/webhook/providers/{provider_key}` |
+| System and monitoring API | `/api/system/maintenance`, `/api/system/monitoring/summary`, `/api/system/monitoring/storage`, `/api/system/diagnostics/report` |
+| Webhooks | `POST /webhook/workflows/{entry_key}`, `POST /webhook/providers/{provider_key}`, extension callbacks under `/webhook/extensions/{extension_id}/{callback_id}/{callback_token}` |
 | WebSockets | `/ws/jobs/{job_id}` |
+
+## Installation diagnostic report
+
+`GET /api/system/diagnostics/report` returns the redacted System Diagnostics
+report (`flow-steward.system-diagnostic-report.v1`) as a JSON download. It
+requires an administrator. This is the file to attach to a bug report. It
+describes the version, images, profile, resources, service health, installed
+extensions and which settings are customised. It carries no logs, no job
+content and no secrets.
+
+```http
+GET /api/system/diagnostics/report
+Authorization: Bearer <administrator token>
+```
+
+The same report is available in the UI under **Monitoring → Download
+diagnostics**, and on the deployment host with
+`./flow-steward reports diagnostics`, which also adds host, Docker and doctor
+facts. See [CLI Reference](cli#installation-diagnostic-report).
 
 ## Workspace and project scope routes
 

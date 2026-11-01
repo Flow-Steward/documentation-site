@@ -1,6 +1,6 @@
 ---
 name: flow-steward-workflow-authoring
-description: Use when a Flow Steward user wants to find, adapt, or compose workflows, inspect runs or pending approvals, or request operational reports through an existing MCP connection.
+description: Use when a Flow Steward user wants to find, adapt, compose, or change workflows, inspect runs or pending approvals, or request operational reports through an existing MCP connection.
 ---
 
 # Flow Steward Workflows and Operations
@@ -34,7 +34,12 @@ Read failures remain failures, never an empty successful result.
 - Use `job_approvals_pending` to find accessible pending gates, then constrain
   the returned results to the requested project/workflow. Read `job_approval`
   for a known job and `job_approvals` for its history. Do not infer an actionable
-  approval solely from a status label.
+  approval solely from a status label. `awaiting_timer` (a Wait step) and
+  `awaiting_child` (a parent waiting for a child workflow) are not approvals: a
+  parent's pending decision lives on the child job it links to, and a decision
+  must use that child job's `thread_id` and `approval_id`. Read
+  `allowed_actions`: an exhausted rework budget offers `approve` and `abort`
+  only.
 - Inspect known jobs with `job_status`, `job_result`, `job_errors`,
   `job_incident`, `job_trace`, `job_logs` or `job_events` as needed. Preserve
   pagination/cursor limits and distinguish current status from a final result.
@@ -89,9 +94,16 @@ report ID when persisted, and limitations alongside the observed results.
    local knowledge, not marketplace workflows or extensions.
 4. Get `workflow_authoring_schema`, including relevant `step_kind` guidance.
    Start from `minimal_bundle_yaml` or a permitted export. Author exactly one
-   workflow in `platform.workflow_bundle.v1` with an explicit stable
-   `workflow_id`. Use the returned persisted field locations and schemas for
-   configuration/mappings; adaptation creates a new draft.
+   workflow in `platform.workflow_bundle.v2` with an explicit stable
+   `workflow_id`: its `steps` (a step in a loop or parallel group names its
+   `group_id`, and in a lanes body its `lane_id`), its `groups`, and one
+   `execution_graph` with an `entry` and edges `source → outcome → target`.
+   There are no phases; route every outcome (`success`, `true`/`false`, a
+   switch `case` by `case_id` plus `default`, `approved`/`rejected`) to exactly
+   one target and end root paths at `stop_success` or `stop_fail`. A phase-based
+   v1 bundle or export is refused, not converted. Use the returned persisted
+   field locations and schemas for configuration/mappings; adaptation creates a
+   new draft.
 5. Call `workflow_draft_validate(project_name, bundle_yaml, resolutions)`.
    Repair actual structural, reference, mapping and contract issues, keeping
    the ID. Only `use_existing`/`map_existing` resolutions are supported.
@@ -104,6 +116,48 @@ report ID when persisted, and limitations alongside the observed results.
    that scope. `workflows.write` permits launch, not draft creation.
    Read-only project-name resolution also needs `projects.read`. Report
    denial without changing credentials or treating it as successful creation.
+
+## Change an existing workflow
+
+Draft save never edits an existing workflow. When the user asks to change one
+and the token holds `admin:all`, use `workflow_apply_changes(workflow_id,
+expected_revision, operations)`: one atomic set of `create_step`,
+`create_group`, `update_step_config`, `change_step_kind`,
+`update_group_config`, `set_entry`, `connect`, `disconnect`,
+`insert_step_between`, `move_step`, `delete_step` and `delete_group`
+operations, using stable ids you assign so later operations can name new
+nodes. The set becomes one new revision or nothing is saved. Pass
+`dry_run=true` first to see the resulting issues, and which of them would
+refuse the set, without saving anything.
+
+- Read the workflow first with `workflow_definition(workflow_id)`: its steps,
+  groups, execution graph and `revision`. Pass that `revision` (or the one a
+  previous `workflow_apply_changes` returned) as `expected_revision`. A
+  `409 workflow_revision_conflict` means the workflow changed; it names the
+  current `revision`. Read the definition again and rebuild the set; never
+  retry the stale set blindly or overwrite.
+- An enabled workflow refuses a result with blocking issues and keeps running
+  its current revision; report the returned issues. Do not disable the workflow
+  to get a change through unless the user asked for that.
+- Every agent, child workflow, connection and extension install an operation
+  names must be usable by the workflow's account;
+  `workflow.change.reference_unavailable` does not say whether a foreign id
+  exists.
+- A moved step loses its edges, and a deleted step leaves no bypass: reconnect
+  explicitly in the same set. Report the new revision and remaining issues.
+
+## Export or import a workflow
+
+`workflow_export(project_name, workflow_id, include_children)` returns the
+workflow as `platform.workflow_bundle.v2` YAML (`bundle_yaml`); set
+`include_children=true` when it calls other workflows, so they travel in the
+same file. `workflow_import(project_name, bundle_yaml, target_workflow_id,
+resolutions)` creates disabled drafts and needs what draft save needs
+(`admin:all`). Exports leave secret values out; still read an export before
+sharing it outside the installation. To publish a workflow to the public
+catalog, use the `flow-steward-publish-workflow` skill.
+
+## Recover from an uncertain save
 
 For automatic recovery after a save timeout, keep the same ID and unchanged
 bundle/resolutions. A `workflow_id_conflict` by itself does not authorize a

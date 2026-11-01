@@ -45,7 +45,9 @@
 
 .navbar__title {
   font-weight: 800;
-}.navbar-github-link::before {
+}
+
+.navbar-github-link::before {
   content: '';
   display: inline-block;
   margin-right: 0.4rem;

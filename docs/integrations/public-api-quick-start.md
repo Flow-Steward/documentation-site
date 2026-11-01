@@ -32,33 +32,41 @@ admit its `mcp` trigger channel. The narrow minimum scope families are:
 Broader wildcard/read/command/admin scopes may also authorize these routes, but
 do not widen a token merely to make this tutorial pass.
 
+The requests below are written as plain HTTP: method, path relative to
+`FLOW_STEWARD_URL`, headers, and JSON body. Send them with your HTTP client or
+integration code. Every request carries `Authorization: Bearer <token>`.
+
+An operator on the deployment host can run the same steps with the CLI instead
+of the API: `./flow-steward workflows contract`, `./flow-steward workflows run`,
+`./flow-steward jobs show`, and `./flow-steward jobs approve`. See
+[CLI Reference](../reference/cli).
+
 ## Confirm the contract
 
-```bash
-curl --fail-with-body \
-  -H "Authorization: Bearer ${FLOW_STEWARD_TOKEN}" \
-  "${FLOW_STEWARD_URL}/api/projects/${PROJECT_ID}/workflows/${WORKFLOW_ID}/contract"
+```http
+GET /api/projects/{PROJECT_ID}/workflows/{WORKFLOW_ID}/contract
+Authorization: Bearer <FLOW_STEWARD_TOKEN>
 ```
 
 Confirm the required JSON input `payload` and required JSON output `normalized`.
 
 ## Submit and capture the job ID
 
-This example requires `jq` only to capture the returned identifier:
+```http
+POST /api/workflow-runs
+Authorization: Bearer <FLOW_STEWARD_TOKEN>
+Content-Type: application/json
+Idempotency-Key: docs-api-smoke-001
 
-```bash
-response_file=$(mktemp)
-curl --fail-with-body \
-  -H "Authorization: Bearer ${FLOW_STEWARD_TOKEN}" \
-  -H 'Content-Type: application/json' \
-  -H 'Idempotency-Key: docs-api-smoke-001' \
-  -d "{\"project_id\":\"${PROJECT_ID}\",\"workflow_id\":\"${WORKFLOW_ID}\",\"test_mode\":true,\"inputs\":{\"payload\":{\"message\":\"hello\"}}}" \
-  "${FLOW_STEWARD_URL}/api/workflow-runs" \
-  -o "${response_file}"
-
-JOB_ID=$(jq -er '.job_id' "${response_file}")
-rm "${response_file}"
+{
+  "project_id": "<PROJECT_ID>",
+  "workflow_id": "docs_deterministic_smoke_v1",
+  "test_mode": true,
+  "inputs": {"payload": {"message": "hello"}}
+}
 ```
+
+Keep the returned `job_id` for the next steps.
 
 HTTP 200 accepts this asynchronous launch; it does not mean execution has
 completed. The response supplies `project_id`, `job_id`, `status`, `queue`, and
@@ -71,10 +79,9 @@ the reviewed provider-free fixture.
 
 ## Observe the durable job
 
-```bash
-curl --fail-with-body \
-  -H "Authorization: Bearer ${FLOW_STEWARD_TOKEN}" \
-  "${FLOW_STEWARD_URL}/api/jobs/${JOB_ID}"
+```http
+GET /api/jobs/{JOB_ID}
+Authorization: Bearer <FLOW_STEWARD_TOKEN>
 ```
 
 Wait for a terminal state and inspect the returned outputs. The expected output
@@ -83,12 +90,13 @@ variable is `normalized: {"message":"hello"}`. Assert that value as well as
 
 For durable state events:
 
-```bash
-curl --no-buffer --fail-with-body \
-  -H "Authorization: Bearer ${FLOW_STEWARD_TOKEN}" \
-  -H 'Accept: text/event-stream' \
-  "${FLOW_STEWARD_URL}/api/events/stream?job_id=${JOB_ID}"
+```http
+GET /api/events/stream?job_id={JOB_ID}
+Authorization: Bearer <FLOW_STEWARD_TOKEN>
+Accept: text/event-stream
 ```
+
+Keep the connection open and read frames as they arrive.
 
 Representative frames include:
 
@@ -115,39 +123,31 @@ job detail and open a fresh stream from current state.
 The smoke fixture has no gate. For a different reviewed workflow that reaches
 an approval gate, discover the current gate before deciding:
 
-```bash
-curl --fail-with-body \
-  -H "Authorization: Bearer ${FLOW_STEWARD_TOKEN}" \
-  "${FLOW_STEWARD_URL}/api/jobs/${JOB_ID}/approval"
+```http
+GET /api/jobs/{JOB_ID}/approval
+Authorization: Bearer <FLOW_STEWARD_TOKEN>
 ```
 
-Capture the current gate identifiers; never substitute the job ID for the
-thread ID or reuse an approval ID from an older gate:
+From the response, take the current gate's `thread_id` and `approval_id`, and
+check that `allowed_actions` contains `approve`. Never substitute the job ID
+for the thread ID or reuse an approval ID from an older gate.
 
-```bash
-gate_file=$(mktemp)
-curl --fail-with-body \
-  -H "Authorization: Bearer ${FLOW_STEWARD_TOKEN}" \
-  "${FLOW_STEWARD_URL}/api/jobs/${JOB_ID}/approval" \
-  -o "${gate_file}"
-
-THREAD_ID=$(jq -er '.thread_id' "${gate_file}")
-APPROVAL_ID=$(jq -er '.approval_id' "${gate_file}")
-jq -e '.allowed_actions | index("approve") != null' "${gate_file}"
-rm "${gate_file}"
-```
-
-Continue only if both identifiers were returned and the action check succeeded.
+Continue only if both identifiers were returned and `approve` is offered.
 For a reviewed human-approval gate offering `approve`, send this explicit
 decision with a stable retry key:
 
-```bash
-curl --fail-with-body \
-  -H "Authorization: Bearer ${FLOW_STEWARD_TOKEN}" \
-  -H 'Content-Type: application/json' \
-  -H "Idempotency-Key: docs-approval-${APPROVAL_ID}" \
-  -d "{\"approval_id\":\"${APPROVAL_ID}\",\"approved\":true,\"action\":\"approve\",\"comment\":\"Reviewed for the documentation smoke run.\"}" \
-  "${FLOW_STEWARD_URL}/api/approvals/${THREAD_ID}"
+```http
+POST /api/approvals/{THREAD_ID}
+Authorization: Bearer <FLOW_STEWARD_TOKEN>
+Content-Type: application/json
+Idempotency-Key: docs-approval-{APPROVAL_ID}
+
+{
+  "approval_id": "<APPROVAL_ID>",
+  "approved": true,
+  "action": "approve",
+  "comment": "Reviewed for the documentation smoke run."
+}
 ```
 
 HTTP 202 means the decision and resume intent are durable; execution remains

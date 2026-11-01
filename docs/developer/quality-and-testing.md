@@ -8,7 +8,8 @@ description: Developer quality gates, test commands, security checks, and SonarQ
 
 This page is for developers changing Flow Steward itself. User-facing docs
 should explain how to run the product; this page explains how contributors prove
-that platform changes are safe.
+that platform changes are safe. [Contributing Code](contributing) shows where
+each tier fits in a pull request.
 
 ## Verification tiers and evidence reuse
 
@@ -24,7 +25,7 @@ identity, status, and trust level match.
 
 | Tier | Command or evidence | Owned work |
 |---|---|---|
-| 1 — iteration | Targeted regression/owner/consumer tests | `targeted-tests`; add specialized contract, database, security, frontend, workflow, or extension checks for the change. |
+| 1 — iteration | Targeted regression/owner/consumer tests | `targeted-tests`, `frontend-targeted-tests`; add specialized contract, database, security, frontend, workflow, or extension checks for the change. |
 | 2 — intermediate commit | `lint.sh --fast` | Dependency audits, secret/Semgrep checks, environment artifacts, Python static checks, repository boundaries, frontend lint/build, and frontend SQL. |
 | 3 — handoff/PR/merge | `lint.sh --full` | Refresh/validate exact-SHA Tier 2, then run the Tier 3 test delta and validate cumulative evidence; specialized Clone/runtime checks retain their registry contracts. |
 
@@ -41,6 +42,20 @@ evidence is never reusable as a pass.
 Use `--audit --with-sonar` only when local or external SonarQube is configured.
 Optional ZAP also requires `FS_ZAP_TARGET_URL`.
 
+## Format before testing
+
+After each coherent edit batch and before Tier 1 tests, format only the files
+you changed and inspect the diff. Do not run repository-wide formatting for a
+scoped change.
+
+```bash
+python -m ruff check --fix <changed-python-files>
+python -m ruff format <changed-python-files>
+
+cd assets/frontend
+npx --no-install eslint --fix <changed-ts-or-tsx-files>
+```
+
 ## Targeted checks
 
 Use targeted checks for short fix/verify loops:
@@ -52,10 +67,16 @@ Use targeted checks for short fix/verify loops:
 ./core/entrypoints/cli/scripts/lint.sh --checks frontend-workspace
 ```
 
-Supported check names include `ruff`, `ruff-format`, `mypy`, `bandit`,
-`pip-audit`, `semgrep`, `detect-secrets`, `ci-excludes`, `tests`,
-`frontend-lint`, `frontend-test-build`, `frontend-audit`, `vulture`, `deptry`, `pylint-dup`,
-`radon`, `xenon`, `frontend-sql`, `security-tests`, and `zap`.
+The registered checks and their owning tiers are listed in
+`infra/tooling/quality/check-registry.json`. Tier 1: `targeted-tests`,
+`frontend-targeted-tests`, `extension-static`, `extension-tests`. Tier 2:
+`pip-audit`, `frontend-audit`, `detect-secrets`, `semgrep`, `sonar-size`,
+`env-artifacts`, `ruff`, `ruff-format`, `mypy`, `bandit`, `ci-excludes`,
+`provider-neutral-core`, `repository-boundary`, `ui-i18n`, `frontend-lint`,
+`frontend-build`, `frontend-sql`. Tier 3: `backend-tests`, `frontend-tests`,
+`runtime-heartbeat-cross-profile`, `extension-oauth-browser`. Additional audit
+checks such as `vulture`, `deptry`, `pylint-dup`, `radon`, `xenon`,
+`security-tests` and `zap` can be selected explicitly with `--checks`.
 
 ## Git hooks and local gates
 
@@ -77,9 +98,15 @@ Run focused regression, owner, and consumer tests through the disposable
 `fs-audit` gate, not a host Python interpreter:
 
 ```bash
-./core/entrypoints/cli/scripts/lint.sh --checks targeted-tests \\
-  --test-paths 'tests/unit/<owning-test>.py tests/integration/<consumer-test>.py'
+./core/entrypoints/cli/scripts/lint.sh --checks targeted-tests \
+  --test-paths 'auto tests/unit/<regression-test>.py tests/integration/<consumer-test>.py'
 ```
+
+`auto` derives the impacted tests from the diff against `main` (`auto:<ref>`
+for another base): changed tests, tests that import a changed module or one of
+its direct importers, and tests that name a changed non-Python file. Add by
+path what the import graph cannot see, such as runtime, database or extension
+tests. A bug fix starts with a regression test that fails before the fix.
 
 The Tier 1 loop is fail-fast and collects no coverage. The full backend suite
 does not fail fast: retain all failures and group them by root cause before
@@ -93,13 +120,35 @@ under `logs/coverage/unit/`.
 The React product workspace lives under `assets/frontend/`. Use Docker checks:
 
 ```bash
+./core/entrypoints/cli/scripts/lint.sh --checks frontend-targeted-tests --test-paths auto
 ./core/entrypoints/cli/scripts/lint.sh --checks frontend-lint
-./core/entrypoints/cli/scripts/lint.sh --checks frontend-test-build
+./core/entrypoints/cli/scripts/lint.sh --checks frontend-build
 ```
+
+`frontend-targeted-tests` runs every vitest test that imports a changed
+frontend source.
 
 The full gate owns frontend tests; the fast gate owns frontend lint, build,
 and dependency audit.
 Do not install or run the frontend toolchain on the host for gate evidence.
+
+## Extension checkouts
+
+A standalone extension repository is checked by the same gate, from the
+application checkout, with an absolute path to the extension checkout:
+
+```bash
+./core/entrypoints/cli/scripts/lint.sh --checks extension-static,extension-tests \
+  --extension-root /abs/path/to/extension-checkout
+```
+
+`extension-static` runs compile, ruff, ruff format, mypy and bandit over the
+bundle's modules. `extension-tests` validates the manifest and runs the
+extension's tests in a virtual environment installed offline from its
+`dev-wheels/` and `wheels/`. The checkout is copied into the container, so
+commit first and cite that commit. `--fast` and `--full` never select these
+checks: a green core gate is not extension evidence. See
+[Publish an Extension](publish-extension).
 
 ## Isolated test runner
 
