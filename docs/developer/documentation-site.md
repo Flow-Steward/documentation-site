@@ -143,7 +143,15 @@ Do not use `npm run dev` as the final search check.
 
 Public product changes request an update through the documentation workflow.
 Codex compares the source with the last accepted checkpoint and proposes updates
-in one bot PR. The initial manual run also reconciles existing documentation gaps.
+in one bot PR. Each existing page has its own bounded review job (at most three
+concurrent jobs); the initial run checks the existing claims in every page.
+Incremental reviews search cumulative changed paths relevant to each page.
+All planned page receipts must report `completed` with matching source and docs
+revisions before any results are published. `incomplete`/`failed` results and
+failure summaries fail the run even when they contain no proposed edits. A green
+no-op means every page review completed, rather than the model abandoning a large
+repository review. The workflow does not claim an exhaustive audit of unrelated
+implementation files.
 AI can update existing Markdown pages; additions needing navigation changes remain
 separate reviewed work. The generated content is validated and built without
 publication credentials before a PR is opened.

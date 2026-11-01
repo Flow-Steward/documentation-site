@@ -82,7 +82,12 @@ The public application repository dispatches changes on `main` to this site's
 `Propose product documentation updates` workflow. It compares the public source
 with the last accepted checkpoint and uses Codex to propose Markdown updates in
 one `codex/documentation-sync` PR. The first run also checks existing documentation
-gaps. A person reviews and merges the PR; the server deployment workflow then publishes it.
+gaps. Each existing page is reviewed in a separate job, with at most three jobs
+running concurrently. A page is limited to 96 KiB and the plan to 200 pages;
+oversized pages/plans fail explicitly instead of silently dropping content.
+Each job searches only the public contracts relevant to its assigned page; it
+does not attempt a whole-repository audit in one model context. A person reviews
+and merges the PR; the server deployment workflow then publishes it.
 The bot never merges its own changes.
 
 Setup requires a GitHub App installed on `Flow-Steward/documentation-site` with
@@ -113,8 +118,18 @@ main. GitHub may coalesce pending events; the cumulative checkpoint prevents los
 updates. A completed no-op records its reason in the run artifact and does not
 advance the accepted checkpoint. Generation/build failures do not advance it.
 
+Each result must explicitly report `completed`, `incomplete`, or `failed`, and
+identify its planned page and both source/documentation revisions. Only
+`completed` results with source-file evidence are eligible for publication.
+`FAILED:` summaries, incomplete results, missing/duplicate receipts and updates
+to another task's page fail the run, including results with `updates: []`.
+A fresh runner verifies every planned page has exactly one completed receipt
+before combining results into a single proposal. Partial reviews cannot publish
+or advance the checkpoint. Per-page summaries and evidence remain in the combined
+proposal artifact; the individual receipts are retained even when a job fails.
+
 Generation has no GitHub write or registry tokens. Its JSON output is validated
-on fresh runners; only existing Markdown/MDX pages may change, within 100 files
+on fresh runners; only existing Markdown/MDX pages may change, within 200 files
 and 1 MiB. New pages/navigation need a separate reviewed PR. AI-generated MDX is
 built without secrets before the PR is opened. Review claims, especially behavior
 that is on product main but has not yet been released.

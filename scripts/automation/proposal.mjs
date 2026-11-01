@@ -14,9 +14,11 @@ export function checkpoint(root) {
 }
 
 export function validateProposal(proposal, root) {
-  if (!proposal || typeof proposal.summary !== 'string' || !proposal.summary.trim() || proposal.summary.length > 10000) throw new Error('invalid summary');
+  if (!proposal || proposal.status !== 'completed') throw new Error('documentation review is incomplete or failed');
+  if (typeof proposal.summary !== 'string' || !proposal.summary.trim() || proposal.summary.length > 10000) throw new Error('invalid summary');
+  if (/^\s*[*#>_-]*\s*(?:FAILED|INCOMPLETE|ABORTED|UNFINISHED)\b|could not (?:be )?(?:complete|finish)|review (?:is |remains |was )?(?:incomplete|unfinished|not completed)/i.test(proposal.summary)) throw new Error('summary reports an incomplete or failed review');
   if (!Array.isArray(proposal.evidence) || !proposal.evidence.length || proposal.evidence.some(p => typeof p !== 'string' || !p.trim() || p.length > 1000)) throw new Error('source evidence is required');
-  if (!Array.isArray(proposal.updates) || proposal.updates.length > 100) throw new Error('invalid updates size');
+  if (!Array.isArray(proposal.updates) || proposal.updates.length > 200) throw new Error('invalid updates size');
   const seen = new Set();
   let bytes = 0;
   return proposal.updates.filter(update => {
