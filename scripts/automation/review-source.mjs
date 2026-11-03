@@ -1,5 +1,4 @@
 // Read-only, bounded source retrieval for page reviewers. Never executes product code.
-import {execFileSync} from 'node:child_process';
 import {readFileSync, lstatSync, realpathSync} from 'node:fs';
 import {resolve, relative, extname} from 'node:path';
 
@@ -7,7 +6,9 @@ const root = realpathSync(resolve('../product'));
 const [command, query, start = '1'] = process.argv.slice(2);
 const extensions = new Set(['.py', '.ts', '.tsx', '.js', '.jsx', '.mjs', '.sql', '.md', '.mdx', '.sh', '.json', '.yml', '.yaml', '.toml', '.ini', '.conf', '.html', '.css']);
 const excluded = /(?:^|\/)(?:node_modules|vendor|vendors|dist|build|coverage|logs|backups|\.git)(?:\/|$)|(?:\.min\.(?:js|css)|(?:package-lock|pnpm-lock|yarn\.lock)|\.map)$/i;
-const files = execFileSync('git', ['ls-files', '-z'], {cwd: root, encoding: 'utf8', maxBuffer: 16 * 1024 * 1024}).split('\0').filter(path => path && !excluded.test(path) && (extensions.has(extname(path)) || /(?:^|\/)(?:Dockerfile|VERSION|Makefile|\.env\.example[^/]*|requirements[^/]*\.(?:txt|lock))$/.test(path))).sort();
+const inventory = JSON.parse(readFileSync('../automation-context/source-paths.json', 'utf8'));
+if (!Array.isArray(inventory) || inventory.length > 10000 || inventory.some(path => typeof path !== 'string' || path.startsWith('/') || path.split('/').some(part => !part || part === '..' || part === '.'))) throw new Error('invalid prepared source inventory');
+const files = inventory.filter(path => !excluded.test(path) && (extensions.has(extname(path)) || /(?:^|\/)(?:Dockerfile|VERSION|Makefile|\.env\.example[^/]*|requirements[^/]*\.(?:txt|lock))$/.test(path))).sort();
 function contents(path) {
   if (!files.includes(path)) throw new Error('path is outside the supported tracked source set');
   const absolute = resolve(root, path);
