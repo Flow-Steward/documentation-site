@@ -172,8 +172,9 @@ no version check: read the object right before changing it. A valid
 | `workflow_draft_validate(project_name, bundle_yaml, resolutions=None)` | Validate without persistence or execution. |
 | `workflow_draft_save(project_name, bundle_yaml, resolutions=None)` | Atomically create one disabled draft; never overwrite. |
 
-Use the existing `platform.workflow_bundle.v1` format with one explicit workflow ID
-and only `use_existing` or `map_existing` resolutions. Draft authoring rejects
+Use the current `platform.workflow_bundle.v2` format with one explicit workflow
+ID, an explicit execution graph, and only `use_existing` or `map_existing`
+resolutions. Draft authoring rejects
 bundles containing hook bindings; use workflow import to restore those bindings.
 Validation and save share
 application preparation and validation. Save requires administrator creation
@@ -186,8 +187,9 @@ matches. Drafts are inspected with
 `workflow_contract`, or the editor. Project-scoped `workflow_validate` and
 `workflow_suggestions` also accept accessible disabled drafts;
 `capability_describe` still hides disabled workflows.
-These tools do not install dependencies, enable or run drafts. Enable deliberately
-after human review before editor Test Run, which may cause external effects.
+These tools do not install dependencies, enable or run drafts. Review the draft
+before editor Test Run, which may cause external effects even while disabled.
+Enable it deliberately before normal execution.
 
 ### Job Diagnostics
 

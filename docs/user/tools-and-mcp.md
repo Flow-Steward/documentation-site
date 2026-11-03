@@ -120,8 +120,10 @@ Connect the client with the existing MCP quick start, then use the
 inspect contracts and validate a disabled draft. Save requires an admin user
 and `admin:all`; machine tokens remain operators. Project-name resolution also
 needs `projects.read`. Saving does not enable or execute the draft. Use the
-manual editor to inspect and adjust the workflow before deliberately enabling
-it and using Test Run.
+manual editor to inspect and adjust the workflow, then use a controlled Test Run
+while the reviewed draft remains disabled. Resolve execution-readiness issues
+first; Test Run can still cause external effects. Enable deliberately for normal
+execution after review.
 
 For an existing workflow, `workflow_definition` returns its current definition
 and revision. `workflow_apply_changes` applies an atomic set of step, group and

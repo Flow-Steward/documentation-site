@@ -6,9 +6,13 @@ description: Submit the documentation smoke workflow and follow its durable job.
 
 # Start And Observe A Workflow With The Public API
 
-Use the same provider-free fixture as [First Workflow](../user/first-workflow).
-An administrator must first import, bind, review, and enable
-`docs_deterministic_smoke_v1`. On 2026-10-05, the exact downloadable fixture
+Use the compatible provider-free workflow described in
+[First Workflow](../user/first-workflow). The linked legacy v1 download cannot
+be imported on current main. An administrator must recreate the equivalent in
+the builder, or import a reviewed v2 export with an explicit execution graph,
+then bind, review, and enable it for public API launch. Record its actual ID.
+
+On 2026-10-05, the legacy `docs_deterministic_smoke_v1` downloadable fixture
 completed through the API on a fresh disposable Compact installation at source
 commit `eb1626b05d06ca893a451560df2b5e95b972c47e`, returning the declared
 `normalized` output. A separate provider-free approval variant also completed
@@ -21,8 +25,8 @@ they do not establish that a release containing that behavior has been published
 ## Credentials and scopes
 
 Set `FLOW_STEWARD_URL`, `FLOW_STEWARD_TOKEN`, `PROJECT_ID`, and `WORKFLOW_ID`.
-Use `WORKFLOW_ID=docs_deterministic_smoke_v1` unless import conflict handling
-renamed it. `PROJECT_ID` must be the existing project UUID. The workflow must
+Use the actual recorded ID of the compatible workflow as `WORKFLOW_ID`, including
+any import conflict rename. `PROJECT_ID` must be the existing project UUID. The workflow must
 admit its `mcp` trigger channel. The narrow minimum scope families are:
 
 | Operation | Any accepted narrow scope |
@@ -63,7 +67,7 @@ Idempotency-Key: docs-api-smoke-001
 
 {
   "project_id": "<PROJECT_ID>",
-  "workflow_id": "docs_deterministic_smoke_v1",
+  "workflow_id": "<WORKFLOW_ID>",
   "test_mode": true,
   "inputs": {"payload": {"message": "hello"}}
 }

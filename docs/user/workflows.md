@@ -79,7 +79,7 @@ Use local workflows before composing new structure:
 
 1. Call `workflow_examples_search(project_name, query)` and inspect suitable workflows.
 2. Use `capability_search(project_name, query)` and `capability_describe(project_name, ref, operation_id)` to obtain live contracts and permitted connection readiness.
-3. Get `workflow_authoring_schema(step_kind)` and author exactly one explicit workflow ID in the existing `platform.workflow_bundle.v1` format.
+3. Get `workflow_authoring_schema(step_kind)` and author exactly one explicit workflow ID with an explicit execution graph in the current `platform.workflow_bundle.v2` format.
 4. Call `workflow_draft_validate(project_name, bundle_yaml, resolutions)`; only `use_existing` and `map_existing` resolutions are supported.
 5. When validation permits saving and the user requests a draft, call `workflow_draft_save` with the same bundle and ID.
 

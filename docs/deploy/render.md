@@ -27,6 +27,15 @@ URLs are absent. Confirm that the Blueprint supplies those settings and mounts
 writable persistent storage; the dated installation did not require a local
 shell script, manual disk-permission changes or manual password copying.
 
+Current main defaults to verified RabbitMQ TLS (`amqps://`), including certificate
+and hostname verification. Before selecting an image with this contract, confirm
+that the broker, linked-service URL and port, certificate trust, and broker
+hostname satisfy it. The dependency-wait flag does not provision broker TLS,
+and a provider-private hostname alone does not permit plaintext AMQP. Do not
+substitute a current-main image into the September template and assume that its
+historical broker configuration is sufficient. See the transport boundary in
+[Installation](installation#other-providers).
+
 This is the **Compact** topology. For **Scalable**, use the
 [VPS installation](installation#vps-guided-installation); the dated Render
 acceptance covered Compact only.

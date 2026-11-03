@@ -23,6 +23,13 @@ port mapping and volumes. Product behavior described below is supported on main;
 this does not establish that a corresponding image release has been published
 or that every behavior is present in the historical image pinned below.
 
+Before replacing the historical image, review the broker transport contract of
+the target revision. Current main defaults to `amqps://` with certificate and
+hostname verification; plaintext is allowed only by explicit, restricted local
+transport modes. A private hostname or shared VM alone does not establish that
+the template meets that contract. See
+[Installation](installation#other-providers).
+
 Fresh GitHub-template acceptance on **2026-09-28** used Compact source
 `31652e30e9c65b16576e9a4b3d105072c24b8337`, image digest
 `sha256:dee794207e38a4828cadd659cb41cbeaf65a1bdfedd6e4532bcb2a89c77681b1`.

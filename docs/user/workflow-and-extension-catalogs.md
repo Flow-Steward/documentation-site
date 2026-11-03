@@ -56,8 +56,11 @@ Administrators create workflows; operators can browse the configured catalog.
 9. Enable reviewed child workflows before the workflows that call them, including
    any reused children that are disabled. A workflow cannot be enabled while a
    workflow it calls is disabled. Enable only the reviewed workflows needed for
-   execution, then run a controlled administrator **Test Run** and inspect the
-   job. A disabled workflow cannot run; test mode can still make real external calls.
+   execution. The reviewed root workflow may remain disabled for a controlled
+   administrator **Test Run**, provided its required child workflows and other
+   dependencies are execution-ready. Inspect the job, then deliberately enable
+   the root for normal triggers after review. Test Run can still make real
+   external calls while the root is disabled.
 
 Catalog workflows are independent copies. Later catalog changes do not update,
 merge, or overwrite your local workflow. To adopt a newer version, create and
