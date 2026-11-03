@@ -24,7 +24,7 @@ if (action === 'prepare') {
   const context = sourceContext(input, sourceSha, checkpoint(root));
   const api = githubApi(process.env.GH_TOKEN);
   const branch = await api('GET', `/repos/${DOCS_REPO}/git/ref/heads/${BRANCH}`, undefined, true);
-  const metadata = {sourceSha, docsSha, branchSha: branch?.object.sha ?? null, context};
+  const metadata = {sourceSha, docsSha, branchSha: branch?.object.sha ?? null, context, skipTests: process.env.SKIP_TESTS === 'true'};
   writeFileSync(metadataPath, JSON.stringify(metadata, null, 2) + '\n');
   const directory = resolve(metadataPath, '..');
   const plan = reviewPlan(root, metadata);
@@ -71,7 +71,7 @@ if (action === 'prepare') {
     for (const {path, content} of changes) writeFileSync(resolve(path), content);
     console.log(`Validated ${changes.length} changed documentation files`);
   } else {
-    const result = await publishProposal({api: githubApi(process.env.GH_TOKEN), metadata, changes, summary: proposal.summary, evidence: proposal.evidence});
+    const result = await publishProposal({api: githubApi(process.env.GH_TOKEN), metadata, changes, summary: proposal.summary, evidence: proposal.evidence, reviews: proposal.reviews});
     console.log(result.noop ? 'No documentation changes needed; checkpoint unchanged.' : result.html_url);
   }
 } else throw new Error('unknown documentation automation action');

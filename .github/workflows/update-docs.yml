@@ -5,6 +5,11 @@ on:
   repository_dispatch:
     types: [product-docs-sync]
   workflow_dispatch:
+    inputs:
+      skip_tests:
+        description: 'Operational reconciliation only; skip test suites and PR CI for this run'
+        type: boolean
+        default: false
 permissions:
   contents: read
 concurrency:
@@ -45,6 +50,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           REQUESTED_SOURCE_SHA: ${{ github.event.client_payload.source_sha }}
+          SKIP_TESTS: ${{ github.event_name == 'workflow_dispatch' && inputs.skip_tests && 'true' || 'false' }}
         run: |
           mkdir -p "$RUNNER_TEMP/automation-context"
           node scripts/automation/run.mjs prepare ../product "$RUNNER_TEMP/automation-context/metadata.json"
@@ -146,7 +152,8 @@ jobs:
           path: ${{ runner.temp }}/proposal
       - name: Require complete coverage before combining proposals
         run: node scripts/automation/run.mjs combine "$RUNNER_TEMP/proposal" "$RUNNER_TEMP/context/metadata.json" ../product
-      - run: node --test scripts/automation/*.test.mjs
+      - if: ${{ !(github.event_name == 'workflow_dispatch' && inputs.skip_tests) }}
+        run: node --test scripts/automation/*.test.mjs
       - name: Validate and apply proposed Markdown files
         run: node scripts/automation/run.mjs apply "$RUNNER_TEMP/proposal/combined.json" "$RUNNER_TEMP/context/metadata.json"
       - run: npm ci
