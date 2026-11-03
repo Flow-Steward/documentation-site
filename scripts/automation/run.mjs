@@ -27,6 +27,10 @@ if (action === 'prepare') {
   const metadata = {sourceSha, docsSha, branchSha: branch?.object.sha ?? null, context, skipTests: process.env.SKIP_TESTS === 'true'};
   writeFileSync(metadataPath, JSON.stringify(metadata, null, 2) + '\n');
   const directory = resolve(metadataPath, '..');
+  // Prepare the tracked inventory outside the model sandbox. Review retrieval
+  // only reads files and must not require child-process privileges.
+  const sourcePaths = execFileSync('git', ['ls-files', '-z'], {cwd: input, encoding: 'utf8', maxBuffer: 16 * 1024 * 1024}).split('\0').filter(Boolean);
+  writeFileSync(resolve(directory, 'source-paths.json'), JSON.stringify(sourcePaths) + '\n');
   const plan = reviewPlan(root, metadata);
   writeFileSync(resolve(directory, 'plan.json'), JSON.stringify(plan, null, 2) + '\n');
   writeFileSync(resolve(directory, 'changed-paths.txt'), context.changedPaths.join('\n') + '\n');
