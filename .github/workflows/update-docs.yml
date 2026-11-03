@@ -103,7 +103,7 @@ jobs:
           safety-strategy: drop-sudo
           allow-bot-users: ${{ vars.DOCS_SYNC_ACTOR }}
           prompt-file: ${{ github.workspace }}/docs-site/.github/codex/documentation.md
-          output-schema-file: ${{ github.workspace }}/docs-site/.github/codex/proposal.schema.json
+          output-schema-file: ${{ github.workspace }}/automation-context/task.schema.json
           output-file: ${{ runner.temp }}/proposal-${{ matrix.task }}.json
       - name: Reject incomplete or failed page review
         working-directory: docs-site
@@ -114,6 +114,7 @@ jobs:
         if: always()
         with:
           name: docs-proposal-${{ matrix.task }}
+          overwrite: true
           path: ${{ runner.temp }}/proposal-${{ matrix.task }}.json
           retention-days: 7
           if-no-files-found: error

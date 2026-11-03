@@ -45,11 +45,17 @@ if (action === 'prepare') {
   checkPlan(plan, process.cwd(), metadata);
   const task = plan.tasks.find(task => task.id === input);
   if (!task) throw new Error('unknown documentation review task');
-  writeFileSync(resolve(directory, 'task.json'), JSON.stringify({
+  const identity = {
     task_id: task.id, source_sha: metadata.sourceSha, docs_sha: metadata.docsSha,
-    reviewed_document: task.path, mode: metadata.context.mode,
+    reviewed_document: task.path,
+  };
+  writeFileSync(resolve(directory, 'task.json'), JSON.stringify({
+    ...identity, mode: metadata.context.mode,
     changed_paths_file: '../automation-context/changed-paths.txt',
   }, null, 2) + '\n');
+  const schema = loadJSON(resolve('.github/codex/proposal.schema.json'));
+  for (const [name, value] of Object.entries(identity)) schema.properties[name].enum = [value];
+  writeFileSync(resolve(directory, 'task.schema.json'), JSON.stringify(schema, null, 2) + '\n');
 } else if (action === 'check-part') {
   const metadata = loadJSON(metadataPath), plan = loadJSON(resolve(metadataPath, '..', 'plan.json'));
   checkPlan(plan, process.cwd(), metadata);
