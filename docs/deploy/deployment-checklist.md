@@ -12,8 +12,10 @@ only when they name the candidate, topology, successful health evidence, and
 verification date. The [Installation](installation), [Render](render), and
 [Elestio](elestio) guides retain dated provider acceptance from upstream main,
 including their image identities and restart-preservation checks. These are
-bounded installation checks; they do not certify AI workflows, full recovery,
-or every later source candidate. Record fresh evidence for the version you deploy.
+bounded historical installation checks; they do not certify current provider
+state, AI workflows, full recovery, or every later source candidate. Public
+source alone cannot establish current provider acceptance. Record fresh evidence
+for the version you deploy.
 
 ## Host and installation evidence
 
@@ -34,9 +36,9 @@ or every later source candidate. Record fresh evidence for the version you deplo
   included in the off-host backup set because it holds the generated keys.
 - Required ports are exposed only to approved networks. A host reverse proxy
   uses loopback backends; a Docker proxy uses a dedicated shared network.
-  Public TLS, DNS and streaming are checked separately. Current Docker-proxy
-  readiness limitations in the [walkthrough](installer-walkthrough) are resolved
-  before declaring that branch accepted.
+  Public TLS, DNS and streaming are checked separately. Any Docker-proxy
+  readiness limitations recorded in the [walkthrough](installer-walkthrough)
+  need candidate-specific verification before declaring that branch accepted.
 - Durable PostgreSQL, queue, bundled-storage, logs, extensions, projects, TLS,
   and installer-state locations are understood.
 
@@ -47,14 +49,20 @@ Scalable production Compose requires independent role images and provenance, inc
 - `FS_APP_IMAGE` and `FS_APP_IMAGE_DIGEST`;
 - `FS_WORKER_IMAGE` and `FS_WORKER_IMAGE_DIGEST`;
 - `FS_CONTROL_IMAGE` and `FS_CONTROL_IMAGE_DIGEST`;
-- `MCP_IMAGE`, `MCP_IMAGE_DIGEST`, and their release revision values.
+- `FS_CLI_IMAGE` and `FS_CLI_IMAGE_REVISION`;
+- `MCP_IMAGE`, `MCP_IMAGE_DIGEST`, and the corresponding role revision values.
 
 `FS_IMAGE` is not a replacement for this role-specific set. Record the catalog
 or source evidence that supplied each pin. Compact has a different runtime topology;
 record its Compact runtime image and the retained database/queue identities rather
-than requiring separate app/worker/MCP images.
+than requiring separate app/worker images. For an official Compact release image
+set, also record the CLI and MCP image identities required by the release catalog,
+including the PostgreSQL image when that release supplies it. An image role in
+source or a checkout's `VERSION` does not prove that a release was published.
 
 ## Core readiness
+
+On a checkout installation, run:
 
 ```bash
 ./flow-steward status
@@ -64,10 +72,14 @@ than requiring separate app/worker/MCP images.
 ./flow-steward database status
 ```
 
-On Scalable, also inspect `./flow-steward stack status`. Compact does not carry
-that retained CLI command. Check each selected profile separately. From a
-browser on another machine, open `https://<public-host>/health/ready` and the
-sign-in page and confirm both load without a certificate warning.
+On provider Compact, use the in-image `flow-steward` command in the runtime
+service's console instead of the host launcher `./flow-steward`. On Scalable,
+also inspect `./flow-steward stack status`. Compact does not carry that retained
+CLI command. Check each selected profile separately. From a browser on another
+machine, open `https://<public-host>/health/ready` and the sign-in page. Confirm
+readiness returns HTTP 200 with `ready: true`, and both load without a certificate
+warning. Record release-catalog access separately: `release check` queries
+published stable GitHub Releases, so its availability is not core-health proof.
 
 - Core checks are green; optional AI warnings are classified separately.
   Doctor **NOT CHECKED** entries and provider `no_docker` output are recorded as
@@ -87,18 +99,25 @@ verify a supported account provider only before testing AI-dependent features.
 ## Recovery readiness
 
 - On checkout installations, `./flow-steward backup create`, `backup list`, and
-  `backup verify` have been exercised on the candidate. Provider deployments
-  have separately tested PostgreSQL/broker/persistent-volume recovery.
+  `backup verify <path>` have been exercised on the candidate. Verification takes
+  a protected artifact path below `backups/`; it inspects the dump without
+  rehearsing a restore. Provider deployments have separately tested
+  PostgreSQL/broker/persistent-volume recovery. Provider Compact also supports
+  `flow-steward backup create`, `backup list`, and `backup verify <path>` in its
+  console; supply `FS_BACKUP_ENCRYPTION_KEY` and copy backups off `/data/backups`.
 - Off-host copies exist for encrypted database backups and the key needed to
   decrypt them.
 - Object storage, extensions/projects, TLS material, configuration, image pins,
   and external-system state have their own recovery plan.
 - A destructive restore was rehearsed only against a disposable target and its
-  parity evidence was retained.
-- The update path is understood: for a checkout installation, check out the
-  new revision and rerun `./install.sh`; it stops with
-  `release_migration_required` before restarting anything when a database
-  migration is needed.
+  parity evidence was retained. Provider Compact recovery uses the provider's
+  database restore procedure; the product's platform restore path is unsupported.
+- The update path is understood: for a checkout source installation, check out
+  the new revision and rerun `./install.sh`; it stops with
+  `release_migration_required` before restarting the running application when a
+  database migration is needed. For an official release upgrade on a Docker
+  host, review `./flow-steward release upgrade --dry-run`; activation requires
+  maintenance, and database backup and migration remain explicit operator actions.
 - Upgrade and rollback procedures keep Maintenance Mode enabled until health
   and preservation checks pass.
 - A server move uses the [Clone migration procedure](diagnostics-and-migration),

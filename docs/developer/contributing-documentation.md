@@ -18,6 +18,16 @@ describe; follow [Contributing Code](contributing) for that pull request. A
 documentation-only problem you cannot fix yourself is reported like any other
 issue: see [Report a Bug or Request a Feature](../user/file-an-issue).
 
+On the reviewed application `main` revision
+`750d4a7d073591dad067fb5cefe937d1f88a9fc4`, the documentation sync workflow
+requests reconciliation in `Flow-Steward/documentation-site` after pushes to
+`main`; it also supports manual dispatch on `main`. The request carries the
+application commit SHA. The documented design treats generated changes as
+proposals requiring human acceptance before deployment. Workflow source does
+not establish that the required credentials are configured, a request succeeded,
+or a proposal was accepted or deployed; those external outcomes remain
+unverified here.
+
 ## Small contribution loop
 
 1. State the reader and task the page enables.

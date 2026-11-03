@@ -85,18 +85,20 @@ and fills it into that client's setup. See
 
 ### A token cannot outlive the token that creates it
 
-A token can itself call the token routes when its scopes allow. Since 0.9.7, a
-personal access token or machine token that has an expiry can only create
+A token can itself call the token routes when its role and scopes allow. On
+main, a personal access token or machine token that has an expiry can only create
 tokens that expire no later than itself; a request for a later expiry or for a
 token without expiry is refused with "Requested expiry exceeds the caller's
-token lifetime". The scopes of a new token are already limited to the caller's
-own. Tokens created from a signed-in browser session and tokens without an
-expiry are not affected.
+token lifetime". This source-backed behavior does not establish which published
+release includes it. New token scopes are checked against the caller's authority,
+and restricted project/workflow allowlists can only be narrowed, not widened or
+removed. Signed-in browser sessions and tokens without an expiry are not subject
+to the caller-lifetime limit.
 
 ## Connected AI apps
 
-Cloud AI apps (Claude.ai, Cowork, ChatGPT) do not use personal tokens. They
-connect through OAuth: the user signs in to Flow Steward and approves an access
+Cloud AI apps (Claude.ai, Cowork, ChatGPT) connect through OAuth rather than
+personal tokens: the user signs in to Flow Steward and approves an access
 level, projects and an expiry of 7, 30 or 90 days. The approved apps are listed
 under **Settings → Account → Personal tokens → Connected AI apps**, below the
 personal token list. Each row shows the app, its access and scopes, projects,
@@ -107,12 +109,15 @@ An administrator controls this per account in **Settings → Security → Cloud 
 apps (OAuth)**. The switch is off by default and works only on an installation
 with a public HTTPS address. Turning it off immediately rejects every OAuth
 token of the account; the granted access stays listed and can be revoked.
-Personal access tokens are not affected. See
+Personal access tokens are not affected. These controls are available on main;
+the public source does not establish current compatibility or availability in
+each external AI provider. See
 [Cloud AI apps](../integrations/connect-ai-agents#cloud-ai-apps-claudeai-cowork-chatgpt).
 
 ## Service accounts
 
-Use service accounts when the actor is not a person.
+Use service accounts when the actor is not a person. Managing service accounts
+and issuing their tokens requires administrator access.
 
 1. Open `Settings`.
 2. Open `Service Accounts`.
@@ -125,14 +130,16 @@ Use service accounts when the actor is not a person.
 8. Set token scopes and expiration.
 9. Copy the token once and store it in the integration secret store.
 
+The service account's scopes define its maximum authority. The token form only
+allows scopes within that authority; selecting no token scopes grants no access.
 
 Revoke tokens when an integration is retired. Delete tokens only when you are
 sure no audit or rollback workflow needs to refer to them.
 
 ## Account settings
 
-Users can manage account-level preferences such as timezone and email change
-from the account settings pages. Email change always requires verification and
-working email delivery. An unconfigured mail service prevents the request with
-HTTP 503; a delivery failure prevents completion rather than bypassing
-verification.
+Users can manage preferences such as timezone from the account settings pages.
+Email change is available only for local-auth accounts and always requires
+verification and working email delivery. An unconfigured mail service prevents
+the request with HTTP 503; a delivery failure prevents completion rather than
+bypassing verification.

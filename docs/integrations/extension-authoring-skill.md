@@ -10,14 +10,17 @@ review an extension. It guides the agent through the target application's
 schemas, provider runtime, tests, and packaging. It is separate from the
 [skills registered inside Flow Steward](../user/agents-and-skills).
 
-The skill ships in the **Flow Steward Developer** package
+The skill is included in the **Flow Steward Developer** package
 (`flow-steward-developer`), together with the skills for publishing an
-extension, contributing code and reporting an issue. Download it from the
-[latest Flow Steward release](https://github.com/Flow-Steward/flow-steward-app/releases/latest);
-see [Connect AI Agents](connect-ai-agents#download) for the files and
-checksums. The package contains no credentials, installs no dependencies and
-deploys nothing. The agent still has to inspect the actual target release's
-contracts.
+extension, contributing code and reporting an issue. Check the
+[latest Flow Steward release](https://github.com/Flow-Steward/flow-steward-app/releases/latest)
+for package downloads; see [Connect AI Agents](connect-ai-agents#download) for
+the expected files and checksums. The package source is available on main at
+`docs/agent-skills/flow-steward-developer` in the application repository.
+Source availability and archive-building support do not establish that a
+particular release has published those downloads. The package contains no
+credentials, installs no dependencies and deploys nothing. The agent still
+has to inspect the actual target release's contracts.
 
 ## Before you start
 
@@ -29,10 +32,10 @@ and the target checkout's instructions.
 
 Decide which provider to integrate, what the extension should do, and which
 Flow Steward version it must support. Start with mocked provider responses;
-keep live credentials out of prompts and committed fixtures. The
-[Example Showcase extension](build-an-extension#example-showcase-extension) is a
-good reference to point the agent at: it implements every extension feature in
-one bundle.
+keep live credentials out of prompts and committed fixtures. The skill recommends the
+[Example Showcase extension](build-an-extension#example-showcase-extension) as
+its default reference for extension features. Inspect that external bundle's
+current contracts and compatibility with your target checkout before reusing it.
 
 The skill is also how you add custom logic to workflows: Flow Steward has no
 inline code step, so ask the agent for an extension whose action you then call
@@ -73,7 +76,9 @@ session if the installed skill is not discovered.
 
 These are local coding-agent installation instructions. Cloud sessions must
 have access to the skill and application checkout in their own environment;
-a folder on your laptop is not automatically available there. See the official
+a folder on your laptop is not automatically available there. Client discovery
+and installation behavior can change; confirm support in your installed client.
+See the official
 [Claude Code skills documentation](https://code.claude.com/docs/en/skills),
 [Codex skills documentation](https://developers.openai.com/codex/skills), and
 [Cursor skills documentation](https://cursor.com/docs/skills) for discovery and
@@ -113,10 +118,11 @@ missing tests, and operator-instruction gaps.
   what remains unverified. Packaging/wheel coverage alone does not prove successful
   installation on both architectures or a live provider integration.
 
-Check the delivered `wheels/` folder yourself: every requirement needs an
-`_x86_64` and an `_aarch64` wheel, or one `py3-none-any` wheel.
-`extensions validate` passes a bundle that has only one architecture; only
-`lock-deps` and `bundle --with-wheels` run for both. Follow
+Check the delivered `wheels/` folder yourself: every requirement needs compatible
+`_x86_64` and `_aarch64` wheels, or a compatible universal `any` wheel.
+`extensions validate` does not verify coverage of both architectures.
+`lock-deps` and `bundle --with-wheels` target both by default; explicit
+`--platforms` overrides can narrow that coverage. Follow
 [Python Dependencies And Wheel Distribution](build-an-extension#python-dependencies-and-wheel-distribution)
 for locks, platform defaults and missing-wheel handling, and
 [Bundle And Install](build-an-extension#bundle-and-install) for

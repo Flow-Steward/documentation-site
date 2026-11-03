@@ -11,6 +11,7 @@ deployed independently from the Flow Steward application.
 
 ## Open the docs locally
 
+Use Node.js 20 or newer; the repository workflows use Node.js 22.
 From the documentation repository:
 
 ```bash
@@ -66,18 +67,21 @@ SITE_URL=https://flow-steward.github.io BASE_URL=/documentation-site/ npm run bu
 
 ## Publication
 
-The repository's server deployment workflow builds and publishes pushes to `main`
-to the existing `https://docs.flowsteward.org` host, with `BASE_URL=/`. A manual
-workflow dispatch from main uses the same destination. GitHub Pages is unused;
-there is no DNS or demo-stand migration.
+The repository's server deployment workflow is configured to build and publish
+pushes to `main` to `https://docs.flowsteward.org`, with `BASE_URL=/`. A manual
+workflow dispatch from main uses the same destination. This deployment path does
+not use GitHub Pages or perform a DNS or demo migration.
 
-Build and typecheck complete before deployment. A dedicated forced-command SSH
-key can update only `/home/admin/docs-flowsteward/site`; it cannot open a shell or
-change the demo installation. The existing Nginx container continues serving the
-same bind-mounted directory. The workflow checks `deployment-revision.txt` over
-HTTPS after transfer. A local build alone does not prove hosted deployment.
-See the repository README for the restricted receiver, environment secret,
-reviewed host key and failure/retry setup.
+Build and typecheck complete before deployment. The deployment scripts require a
+dedicated forced-command SSH key and a receiver restricted to
+`/home/admin/docs-flowsteward/site`. With the documented server setup, that key
+cannot open a shell or change the demo installation, and the existing Nginx
+container serves the same bind-mounted directory without a restart. The workflow
+checks `deployment-revision.txt` over HTTPS after transfer. Checked-in configuration
+does not establish the current server setup or successful publication; confirm
+the deployment result and public revision marker. A local build alone does not
+prove hosted deployment. See the repository README for the restricted receiver,
+environment secret, reviewed host key and failure/retry setup.
 
 ## Content model
 

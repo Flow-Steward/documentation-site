@@ -35,17 +35,24 @@ installation is built and how it runs:
 - installed extensions with their version and state;
 - which settings are customised.
 
-It has **no logs, no job content and no setting values**, apart from a short
+It collects **no logs, no job content and no setting values**, apart from a short
 list of deployment-shape settings such as the profile, the storage backend and
-the log level. Every configured secret is removed wherever it appears.
+the log level. It applies credential redaction, including replacement of
+registered secret values available to the reporting process when they are at
+least eight characters long. Shorter or unknown secrets are not guaranteed to
+be removed from incidental text, so check the file before sharing it.
 
-Get it in one of these ways (administrator only):
+Ask an administrator to get it in one of these ways:
 
 | Where | How | File |
 |---|---|---|
 | UI | **System → Monitoring**, then **Download diagnostics** | `flow-steward-diagnostics-<UTC stamp>.json` in your downloads |
 | Server | `./flow-steward reports diagnostics` in the installation folder | `.flow-steward/diagnostics/flow-steward-diagnostics-<UTC stamp>.json` |
-| API | `GET /api/system/diagnostics/report` with an administrator token | the same JSON |
+| API | `GET /api/system/diagnostics/report` with administrator authentication when authentication is enabled | the same JSON |
+
+The UI and API require an administrator role when authentication is enabled;
+the API does not enforce that role when authentication is disabled. The server
+command requires access to the installation host.
 
 The server command gives the most complete report, because it also records the
 host, Docker, container and `doctor` facts. If you are not an administrator,
@@ -59,7 +66,7 @@ See [Diagnose, Repair, and Move a Server](../deploy/diagnostics-and-migration#at
 for the full description.
 
 :::warning[The job's "Download full report" is different]
-A job page also offers **Download full report**. Secrets are redacted in it,
+A job page also offers **Download full report**. It applies secret redaction,
 but it contains the job's messages, logs, events and step data, which is often
 customer data. Do not attach it to a public issue. Say that you have it; a
 maintainer can ask for it privately.
@@ -91,8 +98,9 @@ contents). Check log excerpts and screenshots too. Replace a value with
 Use a title that says what is wrong and where, for example "Workflow import
 fails when a child workflow uses a Wait step". On GitHub, open
 [New issue](https://github.com/Flow-Steward/flow-steward-app/issues/new/choose)
-and pick **Bug report**: its form has a required field for the diagnostics
-file and one field per section below. If you file from the command line with
+and pick **Bug report**: its form requires the diagnostics report, what
+happened, what you expected and steps to reproduce, with optional fields for
+job or workflow IDs and other context. If you file from the command line with
 `gh issue create`, paste this text instead:
 
 ```markdown
@@ -119,7 +127,8 @@ file and one field per section below. If you file from the command line with
 ```
 
 Then attach the diagnostics JSON and screenshots by dragging them into the
-issue text box. If your browser refuses the `.json` file, zip it first.
+issue text box. GitHub's accepted attachment types can change; if it refuses
+the `.json` file, try zipping it first.
 
 From a terminal with the [GitHub CLI](https://cli.github.com/):
 
@@ -127,8 +136,8 @@ From a terminal with the [GitHub CLI](https://cli.github.com/):
 gh issue create --repo Flow-Steward/flow-steward-app --title "<title>" --body-file issue.md
 ```
 
-`gh` cannot attach files: open the created issue in the browser and add the
-diagnostics file in a comment.
+`gh issue create` cannot attach files: open the created issue in the browser
+and add the diagnostics file in a comment.
 
 ### Feature requests
 

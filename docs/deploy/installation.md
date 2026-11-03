@@ -7,12 +7,22 @@ description: Install Flow Steward on a VPS, Railway, Render, Elestio, or Fly.io.
 # Installation
 
 On a VPS, the normal path is to clone the repository, run `./install.sh`, answer
-the guided questions, and wait for readiness. A fresh Git checkout builds the
-application images locally and creates its Docker services. Release checks and
-upgrades use official release metadata separately.
+the guided questions, and wait for readiness. An ordinary source checkout builds
+the application images locally and creates its Docker services. A clean checkout
+exactly at its `v<VERSION>` tag instead resolves that release's official images
+through published release metadata; unavailable or mismatched release images stop
+installation rather than falling back to a source build.
 Railway uses a published Compact image
 and three Railway services; the downloadable fresh-project example stages them
 in dependency order.
+
+The hosted-provider examples below retain the reported 2026-09-28 deployment
+results and pinned images. The public product checkout does not establish the
+current contents of the external deployment repository or downloaded helpers,
+registry image availability, provider CLI behavior, account requirements or
+pricing. Verify those with the linked providers before use. The dated checks do
+not certify a deployment of current main; current-source requirements called out
+below do not establish that a corresponding release has been published.
 
 | Destination | Application layout | Entry point |
 | --- | --- | --- |
@@ -34,7 +44,7 @@ does not install Docker. Use [Docker Engine](https://docs.docker.com/engine/inst
 and the [Compose plugin](https://docs.docker.com/compose/install/linux/) on Linux,
 or [Docker Desktop](https://docs.docker.com/desktop/) for a local desktop trial.
 Windows shell launchers require Git Bash or WSL with Linux containers enabled.
-The host must be **amd64** (`x86_64`) or **arm64** (`aarch64`): an x86 or ARM
+The host must be **amd64** (`x86_64`) or **arm64** (`aarch64`): an x86-64 or ARM64
 Linux server, or a Mac with Docker Desktop. The installer stops with
 `unsupported_architecture` on anything else. It also needs at least 4 GiB of free disk to start.
 
@@ -71,9 +81,13 @@ cd flow-steward
 ./install.sh
 ```
 
-Use a full clone, without `--depth`. Git LFS is not needed. A fresh local
-installation uses the checked-out source; it does not require a published
-GitHub Release or a version tag. If the repository is private, configure
+Use a full clone, without `--depth`. Git LFS is not needed. An ordinary source
+checkout does not require a published GitHub Release or a version tag. On a fresh
+installation, a clean checkout whose HEAD exactly matches its `v<VERSION>` tag
+requires the matching published stable release and official images. If those
+cannot be resolved, the installer reports `release_images_unavailable`; use an
+ordinary non-release checkout to build from source instead. `VERSION` alone does
+not establish release publication. If the repository is private, configure
 your normal Git authentication before cloning. The installer does not provision
 GitHub access for you.
 
@@ -117,7 +131,7 @@ unused ports, and a unique Compose project name on the first invocation:
 identity for subsequent commands in that clone. Do not reuse a working
 installation's directory, project name, or persistent data.
 
-The first image build and infrastructure image downloads can take time. Leave the installer running until it reports
+The first image build or pull and infrastructure image downloads can take time. Leave the installer running until it reports
 completion; rerun the same `./install.sh` after a recoverable interruption.
 Then check the result:
 
@@ -131,7 +145,7 @@ You can also open `https://<your-host>/health/ready` in a browser. Run `./flow-s
 arguments to see the available commands.
 
 To update later, bring the checkout to the new release and run `./install.sh`
-again; it rebuilds and restarts only what changed and keeps your answers,
+again; it prepares the required images and restarts changed services while keeping your answers,
 secrets and data. See
 [Update a checkout installation](../user/installation-and-updates#update-a-checkout-installation).
 
@@ -141,11 +155,11 @@ A Droplet follows the VPS procedure above: prepare Docker Engine and Compose,
 clone the repository as your deployment user, and run `./install.sh`.
 It does not use an App Platform `app.yaml` or a separate application image.
 
-The guided Compact installation was checked on an Ubuntu 24.04 x64 Droplet
+A historical guided Compact installation check used an Ubuntu 24.04 x64 Droplet
 with 4 vCPUs and 8 GB RAM. The check covered the first administrator setup,
 CLI user management, HTTPS login, systemd stop/start, and rerunning the
 installer while preserving users. These are the resources used for the check,
-not a stated minimum. A cold source build and first startup took about
+not a stated minimum or certification of current main. A cold source build and first startup took about
 12 minutes on that test machine.
 
 For an IP-only trial, use the explicit public host and ports shown above.
@@ -221,11 +235,12 @@ already be running, but automatic startup is not configured. Have an administrat
 provide the required sudo access and rerun the installer. On Mac, Windows,
 rootless/remote Docker, or managed platforms, follow that platform's startup
 settings; the installer reports that no host systemd service was configured.
+Remote Docker endpoints are not supported by the checkout installer.
 Scalable retains its existing Docker restart policies. Switching from Compact to
 Scalable removes the matching Compact startup service automatically.
 
 The VPS installer link lasts **60 minutes**; the Compact provider startup link
-described below lasts **15 minutes**. After a restart, verify that the same user
+described below lasts **15 minutes**, both from issuance. After a restart, verify that the same user
 can still sign in. Email delivery and AI execution require their respective
 provider settings; a successful installation does not configure those services.
 
@@ -235,6 +250,21 @@ the repository content to be accessible from that host. Before
 holding real data, verify backups and a restore procedure for your installation.
 
 ## Railway: Compact in dependency order
+
+The sequence below describes the pinned 2026-09-28 example. It is not a complete
+recipe for deploying an image built from current main: main defaults
+`FS_RABBITMQ_TRANSPORT_MODE` to `tls` and rejects plaintext `amqp` connections to
+provider hostnames, including `rabbitmq.railway.internal`. Current main requires
+an `amqps` broker endpoint with certificate and hostname verification. Its local
+transport modes allow only specific Compose, audit or numeric loopback endpoints;
+they are not a bypass for provider private networking. Provisioning that broker
+TLS and updating the external deployment helper are outside the historical
+example below. This source behavior does not prove publication of an updated image.
+
+On main, `FS_COMPACT_WAIT_FOR_DEPENDENCIES=1` optionally waits for PostgreSQL and
+RabbitMQ before database bootstrap, using `FS_DB_DSN` and `RABBITMQ_URL` and
+preserving RabbitMQ TLS verification. It defaults to `0`; retain staged dependency
+startup unless you explicitly configure this wait in an image that supports it.
 
 Download the [Compact installer](/examples/railway/deploy-compact.sh), then
 run it from a new directory:
@@ -261,7 +291,7 @@ the three services and their volumes before connecting images, waits for the
 database and broker to become ready, and only then starts Compact. It pins the
 2026-09-28 evaluated images, checks `/health/ready`, and prints the private
 first-admin setup link from Compact's deploy logs. Open that link promptly;
-it expires 15 minutes after Compact starts. Keep the downloaded file if you need
+it expires 15 minutes after issuance. Keep the downloaded file if you need
 to review the exact commands;
 it is a fresh-install example, not an upgrade tool. If a step fails, inspect
 the named Railway services and their logs before deciding whether to remove
@@ -325,7 +355,9 @@ port must not be published just to make the app work.
 
 Create an **empty** service named `compact`, attach a persistent volume at
 `/data`, and generate a Railway public domain routed to container port `8080`.
-Set the following variables before adding its image. The `${{...}}` strings
+Set the following variables before adding its image. These are the historical
+pinned deployment's values; its plaintext broker URL is incompatible with current
+main's provider transport policy described above. The `${{...}}` strings
 are Railway references to the two backing services; keep the service names
 exactly as shown or adjust the references accordingly.
 
@@ -353,16 +385,18 @@ Wait for Railway deployment status **Success** and HTTP readiness. A successful
 image upload or a running PostgreSQL service alone does not prove the app is
 ready.
 
-The two `*_HOST` values are required even though the connection URLs already
-contain hostnames: Compact checks dependency readiness through those separate
-settings. Its LangGraph schema setup also builds a PostgreSQL URI from the
-`POSTGRES_*` components, including the password. The default PostgreSQL
+Keep the `*_HOST` values for the historical pinned image. On current main,
+RabbitMQ readiness derives its endpoint and TLS settings from `RABBITMQ_URL`,
+not `RABBITMQ_HOST`. PostgreSQL readiness normally uses `POSTGRES_HOST`; enabling
+`FS_COMPACT_WAIT_FOR_DEPENDENCIES=1` instead derives its endpoint from `FS_DB_DSN`.
+The provider entrypoint also builds `LANGGRAPH_POSTGRES_URI` from `POSTGRES_*`
+when `POSTGRES_HOST` is supplied, including the password. The default PostgreSQL
 hostname, `pg-fs`, belongs to the Compose network and does not resolve inside
 Railway.
 
 The runtime initializes the empty database, generates its own long-lived app
 secrets on `/data`, and logs a one-time first-admin URL. Open that URL within
-15 minutes and create the administrator. If it expires while there is still no
+15 minutes of issuance and create the administrator. If it expires while there is still no
 administrator, restart the runtime to receive a new link. Do not copy the
 token into tickets, screenshots, or a query string.
 
@@ -376,7 +410,7 @@ prints this URL when Compact first becomes ready. If you configured Railway
 manually, open **Compact → Deployments → current deployment → Deploy Logs** in
 the Railway dashboard and find the line beginning `Flow Steward has no
 administrator yet`. Copy the whole URL at the end of that line privately. The
-link is issued at startup and lasts **15 minutes**, not an hour.
+link is issued during startup and lasts **15 minutes from issuance**, not an hour.
 
 If the link has expired and no user has been created, restart **only the
 Compact service** from its deployment menu, then read its fresh Deploy Logs.
@@ -430,7 +464,8 @@ link when no administrator exists yet. The built-in command obtains Compact's
 saved runtime settings for that command alone, then uses its container-aware
 management adapters. Do not read or copy
 `/data/state/runtime-secrets.json` yourself. If `flow-steward` is not found,
-the deployed image predates this command: update the Compact image. Until then,
+the deployed image predates this command: update the Compact image after checking
+its deployment requirements. Until then,
 the [legacy Railway command wrapper](/examples/railway/admin-compact.sh) can
 run the packaged CLI over Railway SSH from your computer. That fallback needs
 Railway CLI and a registered SSH key; `railway ssh --service compact` opens the
@@ -471,9 +506,9 @@ The downloadable example automates the passwords, services, volumes, domain,
 variables, and dependency sequence for a fresh project. Manual setup still
 requires these steps. `PORT=8080` must match the Compact listener because
 Railway uses it for its health check; the domain target port alone does not
-configure that check. A prebuilt image is required: Railway's native builder
-has rejected the source Dockerfile's BuildKit bind mounts in testing. The
-Railway CLI and its helper tools are separate from the VPS installer.
+configure that check. A prebuilt image is required for this example: Railway's
+native builder rejected the source Dockerfile's BuildKit bind mounts in the
+historical testing. The Railway CLI and its helper tools are separate from the VPS installer.
 
 ## Fly.io: Compact with persistent volumes
 
@@ -484,6 +519,12 @@ The actual script generated credentials, deployed dependencies in sequence
 and delivered the private bootstrap link. First-administrator setup, browser
 login, native CLI administration and user/session/file/key persistence after
 restart passed. AI execution, HA and backup/restore were outside this check.
+
+These are historical pinned-image instructions. Before substituting an image
+built from current main, provision verified RabbitMQ TLS as described in the
+Railway section; private Fly networking alone does not permit a plaintext broker
+URL under main's transport policy. Current helper contents, provider behavior and
+image availability require separate verification.
 
 Use the same public Compact, extension-enabled PostgreSQL and RabbitMQ images
 as the Render and Elestio examples. Fly uses one application per image, so
@@ -500,8 +541,9 @@ The same files are in the public
 They pull pinned images; they do not build a separate Fly-specific image.
 
 Install [Fly CLI](https://fly.io/docs/flyctl/install/); the installer also
-needs `jq`, `openssl` and `curl`. A paid account is needed for a persistent
-installation: the trial stops each Machine after five minutes. Clone the
+needs `jq`, `openssl` and `curl`. The reported check required a paid account for a persistent
+installation because the trial stopped each Machine after five minutes; confirm
+Fly's current account and trial terms. Clone the
 public configuration repository, then run one installation command:
 
 ```bash
@@ -527,7 +569,9 @@ fails after creating resources, it prints the exact app names and deletion
 commands: those resources remain billable until removed. It does not delete
 them automatically. The full manual commands remain available above. Keep
 `--ha=false`: these are single-instance stores, without database or broker
-replication. Compact also waits for its dependencies before initialization.
+replication. On current main, waiting for dependencies before Compact bootstrap
+requires `FS_COMPACT_WAIT_FOR_DEPENDENCIES=1`; otherwise stage dependency startup
+before starting the runtime.
 
 The example uses 2 performance CPUs / 4 GB RAM for Compact, 1 shared CPU / 2 GB for each
 dependency, and 10 GB / 10 GB / 1 GB volumes. These are tested sizes, not a
@@ -545,7 +589,7 @@ price differs from the shared-CPU plans. See
 
 Wait for public `/health/ready` to return HTTP 200. Initial role startup can
 take several minutes after Fly reports a Machine as `started`. Read Compact's
-logs for the private first-administrator URL; it expires after 15 minutes.
+logs for the private first-administrator URL; it expires 15 minutes after issuance.
 Alternatively, create the first administrator inside the existing Machine:
 
 ```bash
@@ -591,6 +635,9 @@ and their volumes when finished; merely stopping Machines retains storage.
 
 Compact's provider contract is not Railway-specific: it requires persistent
 `/data`, compatible PostgreSQL 17 with AGE/pgvector, RabbitMQ, a public HTTP
-route, and graceful shutdown. Do not treat the Railway walkthrough as proof
+route, and graceful shutdown. On current main, provider RabbitMQ connections
+must use `amqps` with certificate and hostname verification; the canonical
+Compose installation separately declares its restricted local transport mode.
+Do not treat the Railway walkthrough as proof
 that another provider has been tested. Verify each provider's volumes, network,
 startup ordering, health checks, and backup/restore path independently.

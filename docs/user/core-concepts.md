@@ -8,16 +8,17 @@ description: The main product objects used across Flow Steward.
 
 Flow Steward is easiest to understand as an operator workspace around reusable
 building blocks. A workspace groups a client, team, or operating boundary. A
-project represents a specific delivery target inside that boundary. A workflow
-runs a job. A job uses agents. Agents use skills and tools. Tools may come from
-the built-in registry, MCP catalogs, or extensions. Datasets give workflows
-controlled access to structured data.
+project represents a specific delivery target inside that boundary. A job
+executes a workflow. Workflow steps can use agents, tools, or control flow.
+Agents use skills and tools. Tools may come from the built-in registry, MCP
+catalogs, or extensions. Datasets give workflows controlled access to structured
+data.
 
 This page explains the product model before the step-by-step guides.
 
 ## Workspace
 
-A workspace is the top-level operating context. Use it for a client,
+A workspace is an operating context within an account and tenant. Use it for a client,
 department, team, environment, or other boundary where projects share operating
 rules and data governance.
 
@@ -31,11 +32,11 @@ Workspaces group:
 - projects;
 - workspace data connections;
 - datasets that are shared with all projects or assigned to specific projects;
-- registry objects that should be managed together;
 - workspace-level navigation, search, and lifecycle decisions.
 
-Use separate workspaces when teams need separate data boundaries, provider
-access, operational ownership, or client separation.
+Use separate workspaces to organize data boundaries, operational ownership, or
+client separation. Model provider credentials are account-scoped; a separate
+workspace does not by itself create a separate provider credential boundary.
 
 ## Project
 
@@ -59,11 +60,11 @@ history.
 A job is one execution. It can be created by an explicit workflow launch, a configured trigger,
 a webhook, an MCP call, or an administrator Test Run.
 
-Jobs are where operators see runtime evidence:
+Jobs are where operators see runtime evidence, where applicable:
 
 - current status;
 - selected workflow;
-- current agent;
+- current steps and agents;
 - logs;
 - agent messages;
 - connector messages;
@@ -116,8 +117,10 @@ which role produced each decision or artifact.
 
 ## Skill
 
-A skill is a reusable ability an agent can perform. Skills describe what kind of
-work the agent is allowed or expected to do.
+A skill is a reusable ability an agent can perform. Skills describe the expected
+work, instructions, and input and output contracts. Assignment and runtime scope
+control whether an agent can use a selected skill; skill instructions do not
+grant tool permissions.
 
 Examples: analyze an input dataset, classify a request, review evidence,
 generate a report, reconcile records, or handle an incident. Provider actions
@@ -203,11 +206,15 @@ A data connection stores how Flow Steward reaches a data source. It belongs to a
 workspace and includes the connector type, environment, endpoint fields,
 credentials through secret references, and schema metadata.
 
+Query execution requires an installed and enabled Data Connector extension.
+Core stores connection and dataset contracts; the connector provides the data
+source driver.
+
 Connections are not automatically exposed to every workflow.
 
 ## Dataset
 
-A dataset is the safe, reusable data surface created from a workspace data
+A dataset is the scoped, reusable data surface created from a workspace data
 connection. It selects resources, columns, availability, and project access.
 
 Use datasets instead of raw connections in workflows. That keeps data exposure
@@ -224,8 +231,10 @@ Python modules into the core server process.
 
 ## Approval
 
-Approval gates keep humans in control of important transitions such as starting,
-resuming, cancelling, retrying, or applying generated work.
+Approval gates pause execution for a human decision. A workflow can include an
+authored Approval step with approved and rejected outcomes. Runtime recovery can
+also request approval after a failed execution, an exhausted rework budget, or a
+pre-step autonomy policy decision.
 
 Approvals should include enough evidence for an operator to decide. A good
 approval packet explains what will happen, why it is needed, and what artifacts

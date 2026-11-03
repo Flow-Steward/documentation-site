@@ -6,10 +6,10 @@ description: Install, verify, manage, and update a self-hosted Flow Steward stac
 
 # Installation And Updates
 
-This guide follows the current source contracts. The documentation and repository
-are being prepared for their first public release; the official documentation
-origin is https://docs.flowsteward.org. A local build does not establish live deployment
-verification.
+This guide follows the current source contracts on main. It does not establish
+that those changes have been published in a release. The official documentation
+origin is https://docs.flowsteward.org; live deployment was not verified in this
+review.
 
 Use this page for a checkout-based Docker installation. For prebuilt images on
 Railway, Fly.io, or Render, use [Platform Deployment](../deploy/platforms);
@@ -24,8 +24,8 @@ application should use [Local Development](../developer/local-development).
 
 - `./install.sh` installs, resumes, starts stopped installed services, and
   reconciles installer-built images with intentionally updated source. It also
-  supports profile switching and Compact worker-process changes. It has no
-  subcommands.
+  supports profile switching, Compact worker-process changes, and supported
+  host settings through `--setting NAME=VALUE`. It has no subcommands.
 - `./flow-steward` manages an installed stack: status, diagnostics,
   configuration, start/stop/restart, backup, maintenance, and upgrades.
 
@@ -41,7 +41,7 @@ These requirements apply on the Docker host, including a remote VPS or Droplet.
   entrypoints; a PowerShell/cmd prompt does not directly run `./install.sh`.
 - An amd64 (`x86_64`) or arm64 (`aarch64`) host with at least 4 GiB free
   disk; the installer refuses other architectures.
-- A full Git clone of the intended release (not a copied folder without
+- A full Git clone of the intended revision (not a copied folder without
   `.git`). Git LFS is not needed.
 - Free local ports and durable storage appropriate to the selected topology.
 - For `external_s3`, an existing bucket endpoint and an owner-only JSON file
@@ -66,7 +66,8 @@ docker info
 If the first two fail, install the missing component. If `docker info` fails,
 start Docker or correct socket access. For Linux permission setup, follow the
 [official post-install guide](https://docs.docker.com/engine/install/linux-postinstall/).
-This prerequisite applies to both deployment profiles.
+This prerequisite applies to both deployment profiles. Run the checkout on the
+Docker host; remote Docker endpoints are refused.
 
 Do not run the installer as root. A host Python runtime is not required for the
 normal Docker-based installer path. Core installation does **not** require model
@@ -83,7 +84,12 @@ Run from the application repository:
 
 Plain interaction is the default for both launchers. Use `--tui` only if you want
 the full-screen interface; `--plain` explicitly forces line-oriented interaction.
-A fresh checkout install uses local source, not a GitHub Release lookup.
+A fresh checkout with clean tracked files exactly at its `v<VERSION>` tag resolves
+that stable GitHub release and installs its official immutable images. If the
+release or complete image set is unavailable, installation stops with
+`release_images_unavailable`; it does not fall back to a source build. Other
+checkouts build from local source. `VERSION` alone does not establish publication.
+The installer announces which image path it selected before preparation.
 
 The [Installer Walkthrough](../deploy/installer-walkthrough) explains the guided
 sequence and each choice. The installer asks for:
@@ -159,7 +165,7 @@ At the end of a successful installation the installer prints a block headed
 **NEXT STEP: CREATE THE FIRST ADMINISTRATOR** with a one-time link of the form
 `https://<host>:<port>/bootstrap#setup-token=...` (on a default local install,
 `https://localhost:8099/bootstrap#setup-token=...`). Open the complete link in
-your browser and create the administrator's email and password there. The link
+your browser and create the administrator's email and password there. The token
 is also saved to the owner-only `.flow-steward/secret-output/bootstrap-token`.
 
 Treat the link as a secret: the token is in the URL fragment. Keep it out of
@@ -195,40 +201,50 @@ for a supported configuration change:
 ./flow-steward config apply --confirm
 ```
 
-On Compact the `stack` and `config` commands are refused, and a rerun of
-`./install.sh` changes only the worker-process count or the profile. Choose
-the public host, ingress/TLS and file storage carefully at installation.
+On Compact the `stack` and `config` commands are refused. Rerun
+`./install.sh` for supported worker-process, profile, or host-setting changes.
+Choose the public host, ingress/TLS and file storage carefully at installation;
+these are not changed by a Compact installer rerun.
+
+On either host profile, `./install.sh --setting NAME=VALUE` applies supported
+host settings and restarts the runtime. Only settings allowed by the public
+settings manifest are accepted; this is not a way to set arbitrary environment
+variables or secrets. Use `NAME=` to reset a setting to its default. The plain
+questionnaire does not ask for these settings.
 
 ## Update a checkout installation
 
-For images built and owned by the installer, the update path is the installer
-itself. Take a backup, move the checkout to the intended reviewed tag or commit,
-and rerun the installer:
+For production images built and owned by the installer, the update path is the
+installer itself. Take a backup, move the checkout to the intended reviewed
+commit, and rerun the installer. For an installation using official release
+images, use the official release procedure below.
 
 ```bash
 ./flow-steward backup create
 git fetch
-git checkout <reviewed-tag-or-commit>
+git checkout <reviewed-commit>
 ./install.sh
 ./flow-steward status
 ./flow-steward doctor
 ```
 
-On a completed installation `./install.sh` asks no questions and reuses the
-recorded answers. It compares the checkout's commit with the revision the
-running images were built from. If they differ, it rebuilds the images, checks
-the release's migrations against the database, restarts the services and
-verifies health, then prints `Updated from <old> to <new>.` If nothing changed
-it prints `Flow Steward is already installed.` after verifying the
-installation. It preserves installed configuration, secrets, TLS, and
+On a completed installation a plain `./install.sh` run asks no questions and
+reuses the recorded answers. It compares the checkout's commit with the revision
+the running images were built from. If they differ, it rebuilds the images,
+checks the selected revision's migrations against the database, restarts the
+services and verifies health, then prints `Updated from <old> to <new>.` If
+nothing changed it prints `Flow Steward is already installed.` after verifying
+the installation. It preserves installed configuration, secrets, TLS, and
 persistent data. A code-only update can complete without a database migration.
 Images you pinned yourself with variables such as `FS_COMPACT_IMAGE` are left
-in place, not rebuilt; the run warns that the runtime is behind the checkout.
+in place, not rebuilt; when the running revision is known to differ, the run
+warns that the runtime is behind the checkout.
 
-Do not pass changed installation options on an update run: apart from
-`--worker-processes` (Compact) and `--deployment-profile` (profile switch), a
-differing option stops with `installed_setting_not_applied` and nothing is
-changed.
+Do not pass changed installation options on an update run unless you intend a
+supported change. Apart from `--worker-processes` (Compact),
+`--deployment-profile` (profile switch), and `--setting` (supported host
+settings), differing options are refused with `installed_setting_not_applied`.
+Run configuration changes separately from source updates.
 
 If the schema check stops with `release_migration_required`, the previous runtime
 remains running. Review the release instructions, then:
@@ -281,10 +297,12 @@ backup first. Provider image deployments have no profile-switch path.
 Check official stable GitHub releases separately from installation. Enable
 maintenance explicitly before upgrade preflight; upgrade neither enables
 maintenance nor makes a database backup automatically. It does not reopen work.
-Checkout installation records source origin, not an official published version.
-The reviewed upgrade explicitly transitions that installation to the selected
-official release. See [Upgrade Reference](../reference/upgrade) for this boundary
-and private-repository credentials.
+A source-built checkout installation records source origin, not an official
+published version. The reviewed upgrade explicitly transitions that installation
+to the selected official release. A fresh installation from a verified published
+release tag already records official origin. See
+[Upgrade Reference](../reference/upgrade) for this boundary and private-repository
+credentials.
 
 ```bash
 ./flow-steward release info
@@ -300,29 +318,37 @@ and private-repository credentials.
 ```
 
 The shared release contract verifies the exact tag commit and complete
-immutable image set. Do not substitute another release or floating images. Keep maintenance enabled after either a success or failure
-until database, storage, queues, runtime health, and preservation checks are
-green.
+immutable image set. Do not substitute another release or floating images. Keep
+maintenance enabled after either a success or failure until database, storage,
+queues, runtime health, and preservation checks are green.
 
-### Notes for 0.9.7 and later
+If the upgrade stops with `release_migration_required`, verify the backup,
+apply `./flow-steward database upgrade --maintenance-confirmed --confirm`, then
+rerun `release upgrade` with the same target version. Database migration is an
+explicit operator action; `release upgrade` does not apply it automatically.
 
-- Use `release check` to see the latest release and pass that version to
-  `--target-version`.
-- Release 0.9.7 adds the AI agents page, cloud AI app connections over OAuth
-  and extension update notices. Cloud AI apps need five new OAuth tables. A
-  fresh 0.9.7 installation creates them, but an upgrade to 0.9.7 does not add
-  them to an existing database: an installation upgraded from an earlier
-  release gets them with the regular `release upgrade` to 0.9.8 or later. Until
-  then **Settings → Security** reports **The database is missing the OAuth
-  tables**. Personal access tokens, the AI agents page for local clients and
-  everything else work on 0.9.7.
-- Cloud AI apps stay off after the upgrade until an administrator turns them on
-  in **Settings → Security**. See
-  [Connect AI Agents](../integrations/connect-ai-agents).
+### OAuth tables on older installations
+
+The source records that 0.9.7 added five OAuth tables to the fresh-install
+baseline without a migration for existing databases. An installation upgraded
+from an earlier baseline can therefore report **The database is missing the
+OAuth tables** in **Settings → Security**; personal access tokens remain
+available.
+
+Current main includes `20261101153533_inbound_oauth_tables.sql` to create the
+missing tables. When updating to a revision or verified official release that
+contains it, follow the explicit maintenance, verified-backup, and database
+upgrade procedure above. This source review does not establish which releases
+have been published or whether their registry images are currently available;
+use `release check` and the exact target's upgrade preflight.
+
+Cloud AI apps require administrator enablement in **Settings → Security** and
+compatible public HTTPS configuration. See
+[Connect AI Agents](../integrations/connect-ai-agents).
 
 Installation, upgrade, and restore have not been executed as part of this
-documentation pass. Treat them as externally unverified until the final
-candidate completes a disposable-environment walkthrough.
+documentation pass. Runtime and provider deployment behavior remain externally
+unverified by this review.
 
 ## Related pages
 

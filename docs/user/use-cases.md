@@ -10,6 +10,9 @@ Flow Steward is useful when repeatable workflow operations should be automated,
 but not hidden. The platform keeps work visible through jobs, workflows, agents, tools,
 datasets, events, and approval gates.
 
+The instructions below describe current behavior on main; they do not establish
+which published release includes it.
+
 ## Manage one client with several projects
 
 Use this when one client, department, or team has several systems that should be
@@ -89,25 +92,27 @@ operational tasks as well as examples. Demo data is not required.
 
 Typical flow:
 
-1. Open `Registry > Workflows > Create workflow > From catalog`.
+1. Open `Registry > Workflows > Catalog`. The tab appears when a catalog is configured.
 2. Find a workflow and review its purpose, included child workflows, integrations,
    compatibility, and setup requirements.
-3. As an administrator, choose **Use this template**, select a project, and
+3. As an administrator, choose **Use template**, select a project, and
    resolve the dependency preflight and workflow-ID conflicts.
 4. Create the disabled draft or drafts and open the resulting workflow.
 5. Configure connections and credentials, validate, and review bindings, triggers,
-   and declared external effects before enabling it.
-6. Run an administrator **Test Run** in a suitable project, then open `Jobs`
-   and inspect messages, logs, approvals, artifacts, and final output. Test mode
-   can still call real external services.
-7. Operators use the administrator-provisioned workflow through API, MCP, or
-   configured triggers with the required authority.
+   and declared external effects.
+6. Run a **Test Run** in a suitable project and inspect its results,
+   messages, logs, approvals, artifacts, and final output. Disabled drafts can
+   be tested; test mode can still call real external services.
+7. Enable the reviewed workflow when ready. Operators use the
+   administrator-provisioned workflow through API, MCP, or configured triggers
+   with the required authority.
 
-The **Extension Catalog**, available under `Extensions > Marketplace`, supplies
+The **Extension Catalog**, available under `Extensions > Catalog`, supplies
 separately installable integrations and capabilities. Install and configure the
-extensions required by your workflow. Catalog contents grow as Flow Steward and
-community contributors publish new releases; the current list is shown in the
-application. A local workflow remains your independent copy when the catalog changes.
+extensions required by your workflow. Catalog contents and availability depend
+on the configured external catalog; inspect the application for the current list
+and any availability warnings. A local workflow remains your independent copy
+when the catalog changes.
 
 Useful docs:
 
@@ -141,7 +146,7 @@ Use local workflows before composing new structure:
 
 1. Call `workflow_examples_search(project_name, query)` and inspect suitable workflows.
 2. Use `capability_search(project_name, query)` and `capability_describe(project_name, ref, operation_id)` to obtain live contracts and permitted connection readiness.
-3. Get `workflow_authoring_schema(step_kind)` and author exactly one explicit workflow ID in the existing `platform.workflow_bundle.v1` format.
+3. Get `workflow_authoring_schema(step_kind)` and author exactly one explicit workflow ID with an explicit execution graph in the current `platform.workflow_bundle.v2` format.
 4. Call `workflow_draft_validate(project_name, bundle_yaml, resolutions)`; only `use_existing` and `map_existing` resolutions are supported.
 5. When validation permits saving and the user requests a draft, call `workflow_draft_save` with the same bundle and ID.
 
@@ -150,8 +155,9 @@ install dependencies, enable, execute, schedule or publish. Creation requires ex
 administrator authority; machine tokens remain operators. Read access and launch grants
 are not creation grants. Validation reports unperformed execution checks separately.
 Inspect a saved draft in the manual editor or `workflow_list` with `enabled_only=false`.
-A user reviews and enables it when appropriate before Test Run; Test Run can cause
-external effects. See [MCP Reference](../reference/mcp#workflow-authoring) for exact arguments.
+Resolve execution-readiness issues and use Test Run before enabling it for normal
+execution; Test Run can cause external effects even while the draft is disabled.
+See [MCP Reference](../reference/mcp#workflow-authoring) for exact arguments.
 
 ## Operate long-running AI work
 
@@ -213,8 +219,10 @@ Typical flow:
 2. Add a data connection.
 3. Test and introspect the connection.
 4. Create a dataset from selected resources and columns.
-5. Attach the dataset to one or more projects.
-6. Use a `dataset_query` workflow step.
+5. Make the dataset available to all workspace projects or assign it to specific projects.
+6. Add and validate a saved query on the dataset.
+7. Use a `dataset_query` workflow step that references the saved query's
+   `query_template_id` and maps its parameters. Raw SQL in the step is rejected.
 
 Useful docs:
 
@@ -241,8 +249,9 @@ Typical flow:
 9. Inspect job messages, logs, traces, and artifacts to confirm redaction.
 
 Use pseudonymization when agents still need stable references across a run. Use
-hard redaction when sensitive values should not be visible in persisted logs or
-messages.
+hard redaction to replace detected values at scanned boundaries. Coverage depends
+on enabled scanners, detectors, and surface policy; verify the outputs you retain
+rather than assuming every sensitive value or artifact is automatically redacted.
 
 Useful docs:
 
@@ -259,18 +268,19 @@ Typical flow:
 
 1. Finish the workflow in the source environment.
 2. Validate it and run a workflow test run.
-3. Export the workflow YAML from the workflow header.
+3. Export the workflow YAML from the workflow header when its export policy permits it.
 4. Open the target environment.
-5. Import the YAML from `Registry > Workflows > Import`.
+5. Choose **Import YAML** under `Registry > Workflows`.
 6. Run preflight and resolve missing dependencies.
 7. Map environment-specific projects, child workflows, datasets, connections,
    extensions, or tools.
 8. Import the workflow as a disabled draft.
 9. Validate and review settings, credentials, trigger channels, project
    bindings, schedules, webhooks, and side effects.
-10. Do not promise an execution Test Run while disabled: the backend rejects it
-    with HTTP 422. Use an isolated provider-free fixture for target execution,
-    or wait for the application limitation to be resolved.
+10. Run a Test Run in a suitable target project while the draft is disabled.
+    Resolve readiness and project-link issues first, and use disposable data or
+    isolated services because Test Run can cause external effects. Enable the
+    workflow for normal execution only after review.
 
 Useful docs:
 
@@ -287,13 +297,15 @@ provider callback.
 Typical flow:
 
 1. Define the workflow's expected inputs.
-2. Bind the workflow to an enabled project.
+2. Enable the workflow and bind it to an enabled project.
 3. Open `Workflow settings > Triggers`.
 4. Create an incoming webhook.
 5. Choose auth, content-type, payload-size, idempotency, and source-IP policy.
 6. Map payload selectors such as `body.title` or `headers.X-Request-Id` to
    workflow inputs.
-7. Copy the generated public URL and one-time credential reveal.
+7. Copy the generated public URL and any one-time credential reveal. For a
+   signature mode that uses a source-issued signing secret, configure that
+   secret as required by the source service instead.
 8. Configure the source system.
 9. Dry-run a sample payload.
 10. Watch the created job and webhook delivery evidence.
@@ -331,9 +343,10 @@ without keeping everything forever.
 Typical flow:
 
 1. Open `Settings > Retention`.
-2. Set how long to keep action logs, job logs, trash, events, messages, jobs, and
-   retry queue records.
-3. Confirm the values match your compliance and support needs.
+2. Set retention days for action logs, job logs, trash, and terminal job
+   checkpoints, and choose how many revisions to keep.
+3. Review deployment-level cleanup settings for other runtime evidence, and
+   confirm the values match your compliance and support needs.
 4. Use `Trash` to restore accidental deletes before the trash retention window
    expires.
 5. Plan permanent deletion only after checking dependent workflows, projects,
@@ -364,7 +377,9 @@ Typical flow:
 2. Choose the delete or lifecycle action.
 3. Review the generated plan before confirming.
 4. For a workspace, decide whether each active child project should move to
-   another workspace or move to trash with the workspace.
+   another workspace or move to trash with the workspace. Also choose an
+   explicit action for every live data connection. Linked datasets must be
+   moved or deleted before their connection can be reassigned or deleted.
 5. For hard delete, review the dependency tree and selected nodes.
 6. Unselect anything that should not be permanently deleted.
 7. Resolve direct dependency conflicts before executing the plan.
@@ -415,7 +430,9 @@ Typical flow:
 1. Create users.
 2. Assign viewer, operator, or admin roles.
 3. Create service accounts for automation.
-4. Scope service account tokens by project, workflow, and permission.
+4. Restrict service account access by project and workflow, then issue machine
+   tokens with explicit permission scopes within that authority. A token with
+   no scopes has no API access; machine tokens retain the operator role.
 5. Rotate tokens and revoke retired credentials.
 
 Useful docs:

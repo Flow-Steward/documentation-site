@@ -17,22 +17,28 @@ inside one runtime container behind one internal HTTP router. PostgreSQL and
 RabbitMQ remain separate services, and bundled artifact storage adds SeaweedFS.
 Compact requires Production and runs one runtime replica; its worker-process
 count is separate from runtime replication. Its durable `/data` volume holds
-local product files and runtime state.
+local product files and runtime state by default. Profile switches preserve the
+configured placement of shared trees, so a Compact installation switched from
+Scalable can retain host directories mounted into `/data`.
 
-Scalable runs separate service containers and retains `fs-cli` for host
-configuration/stack operations. Its worker scaling uses configured replicas.
-Development is a contributor preset on Scalable; Production is the minimal
-runtime preset and also works for local Compact trials.
+Scalable runs separate service containers. Both Docker-host profiles retain
+`fs-cli` for host configuration/stack operations. Scalable worker scaling uses
+configured replicas. Development is a contributor preset on Scalable;
+Production is the minimal runtime preset and also works for local Compact trials.
 
 The chosen ingress is another independent decision: bundled Traefik, existing
 Docker Traefik, existing Apache/Nginx, or Compact platform ingress. A host proxy
 forwards to private loopback ports; a Docker proxy uses a shared network and
 service aliases. See [Answer the Installer Questions](installer-walkthrough)
-for routes, TLS ownership and current Docker-proxy readiness limitations.
+for routes, TLS ownership and Docker-proxy readiness checks.
 
-On a provider such as Railway, Compact runs from an image with provider-managed
-deployment/volumes and no Docker daemon inside the container. Its management
-console is not the checkout's host installer or retained `fs-cli` environment.
+The source on main supports provider-managed Compact deployments from an image,
+with no Docker daemon inside the container. A provider such as Railway must
+supply compatible PostgreSQL and RabbitMQ services, persistent `/data` storage,
+HTTP ingress, and console or job execution for management. This describes the
+runtime contract, not verification of a provider's current capabilities or a
+published release. Its management console is not the checkout's host installer
+or retained `fs-cli` environment.
 
 ## Runtime components
 
@@ -45,6 +51,7 @@ console is not the checkout's host installer or retained `fs-cli` environment.
 | Knowledge retrieval | Uses canonical Postgres memory and workflow/entity graph/vector context; not a repository-code or schema index. |
 | File/artifact storage | Holds artifacts on persistent local storage, bundled SeaweedFS, or external S3. Logs, backups, project trees, extensions and installer state have separate persistence/recovery boundaries. |
 | MCP server | Exposes Flow Steward tools to approved AI clients. |
+| Extension installer | Handles extension installation through a private service; in Compact it is a separate loopback process, not the host deployment installer. |
 | Extension runtime | Runs provider bundles out of process and returns validated responses to the host. |
 | Observability | Emits health, metrics, logs, traces, events, and incident evidence. |
 

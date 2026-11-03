@@ -9,20 +9,34 @@ description: Surface-specific payload, file, row, timeout, concurrency, and rete
 Limits are enforced at different boundaries. A browser limit does not prove a
 proxy, API, worker, provider, or extension runtime accepts the same payload.
 The tables distinguish code fallbacks, example-file values, and Compose
-interpolation defaults where those layers differ.
+interpolation defaults where those layers differ. These contracts describe the
+reviewed source on main; they do not establish published-release availability
+or effective deployment capacity.
 
 ## Workflow-run inputs and attachments
 
 `POST /api/workflow-runs` accepts JSON only: an explicit project UUID, workflow
-ID, declared `inputs`, optional `client_context`, and `test_mode`. Each of
-`inputs` and `client_context` is bounded to 32 nesting levels and 262,144 bytes
-when serialized as compact JSON. Extra request fields are rejected.
+ID, declared `inputs`, optional `client_context`, `test_mode`, and optional
+`files`. Each of `inputs` and `client_context` is bounded to 32 nesting levels
+and 262,144 bytes when serialized as compact JSON. Extra request fields are
+rejected.
 
-`POST /api/workflow-runs` uses the JSON request contract above. File-bearing
-requests enter through separately configured `POST /webhook/workflows/{entry_key}`
-entrypoints. The `FS_TASK_UPLOAD_*` controls below govern workflow-webhook
-admission and body receipt; each entrypoint also enforces its own content-type,
-size, count, and input-mapping contract.
+The JSON `files` array accepts at most 10 uploads and at most 1,048,576 bytes
+(1 MiB) of decoded content in total. Each upload contains `input_name`,
+`filename`, optional `mime_type`, and strict, nonempty `content_base64`.
+`input_name` is limited to 128 characters, `filename` to 255, `mime_type` to
+255, and `content_base64` to 1,398,104. Each file input can have only one upload
+and must name a declared workflow file input. Supply file inputs through
+`files`, not through JSON `inputs`; caller-created artifact references or local
+paths are not uploads. ZIP-named content and content with a ZIP header also
+undergo archive-safety validation. The shared attachment policy below still
+applies and can impose narrower limits.
+
+Multipart requests enter through separately configured
+`POST /webhook/workflows/{entry_key}` entrypoints. The `FS_TASK_UPLOAD_*`
+controls below govern workflow-webhook admission and body receipt; each
+entrypoint also enforces its own content-type, size, count, and input-mapping
+contract.
 
 | Workflow-entrypoint boundary | Default | Accepted range and meaning |
 |---|---:|---|
@@ -91,14 +105,32 @@ falls back to the shipped example defaults; `FS_ALLOWED_ATTACHMENT_MIMES=` and
 empty helper set can therefore arise only from a different reviewed caller or
 configuration layer, not from blanking these environment values.
 
+### Generated files, test files, and previews
+
+These limits are separate from the JSON workflow-run upload total:
+
+| Boundary | Control | Default / accepted range |
+|---|---|---|
+| Save file from base64 step | `FS_BASE64_FILE_MAX_BYTES` | 50 MiB; integer clamped to 1 KiB–1 GiB; the step's `max_bytes` can only lower the effective limit |
+| Saved workflow test file | `FS_WORKFLOW_TEST_FILE_MAX_BYTES` | 50 MiB; integer clamped to 1 KiB–1 GiB |
+| Inline file preview | `FS_FILE_PREVIEW_MAX_BYTES` | 20 MiB; integer clamped to 1 KiB–256 MiB |
+
+Unset or invalid values use the defaults. These controls have production Compose
+bindings and Compact child-process allowlist entries. A test-file upload above
+its limit returns HTTP 413 with `workflow_sample_file_too_large`; an oversized
+base64-generated file fails with `file_too_large`. Job artifact previews return
+HTTP 413 above the preview limit and HTTP 415 for unsupported types. Supported
+text previews are served as plain text; HTML and SVG are not served inline.
+A preview limit does not raise a download or upload limit.
+
 ## Verify effective deployment values
 
 The shared attachment-policy defaults do not prove a particular transport or
 service accepts an upload. Confirm the owning endpoint, rendered service
 environment, and reverse-proxy body limit before changing a limit. For JSON
-workflow-run requests, verify the declared inputs and JSON limits. For workflow
-webhooks, verify the entrypoint's record limits and whether the deployment
-forwards the active request-transport controls above.
+workflow-run requests, verify the declared inputs, JSON limits, and decoded
+file total. For workflow webhooks, verify the entrypoint's record limits and
+whether the deployment forwards the active request-transport controls above.
 
 Verify live capacity, proxy behavior, and the effective owning-process environment
 in the target deployment. The fallback/Compose comparisons below describe
@@ -133,6 +165,12 @@ Provider webhook authentication and signature rules are provider-specific.
 External MCP paginates `tools/list`, validates endpoint/header safety, and
 requires HTTPS for credential-bearing requests.
 
+For a workflow `http_request` step, `max_response_bytes` defaults to 5 MiB in
+`inline` mode, with a 5 MiB ceiling. In `artifact` mode it defaults to 100 MiB,
+with a 200 MiB ceiling. An explicit value must be a positive integer within the
+mode's ceiling. Oversized responses fail with `response_too_large`; these
+per-step limits are independent of extension artifact limits.
+
 ## Extensions
 
 | Boundary | Control | Default |
@@ -158,10 +196,11 @@ the environment value is not a universal timeout for every extension process.
 
 The install-archive and installer-proxy caps above are constants, not
 environment controls. Changing a similarly named environment value cannot
-alter them in this candidate.
+alter them at this revision.
 
-Bundles are ZIP archives; manifests, descriptors, references, and Contract v2
-definitions are YAML. Python dependency artifacts must be exact-version,
+Bundles are ZIP archives; manifests, references, and Contract v2 definitions
+use YAML. Descriptor import accepts JSON or YAML descriptor files and rejects
+archive inputs. Python dependency artifacts must be exact-version,
 SHA-256-pinned wheels; offline installation needs the complete compatible wheel
 closure in the bundle.
 
@@ -174,28 +213,38 @@ impact.
 
 ## Datasets and tabular feeds
 
-| Boundary | Control | Compose default |
+| Boundary | Control | Default |
 |---|---|---:|
 | Feed input | `FS_FEED_MAX_BYTES` | 1 GiB |
 | Feed rows | `FS_FEED_MAX_ROWS` | 2,000,000 |
 | Materialized feed | `FS_TABULAR_FEED_MAX_MATERIALIZE_BYTES` | 128 MiB |
 | `read_rows` scan bytes | `FS_TABULAR_FEED_READ_ROWS_SCAN_MAX_BYTES` | 64 MiB |
 | `read_rows` scan rows | `FS_TABULAR_FEED_READ_ROWS_SCAN_MAX_ROWS` | 100,000 |
-| Dataset query runtime rows | `FS_DATASET_QUERY_MAX_RUNTIME_ROWS` | 1,000 |
+| Dataset query runtime rows / For each items per pass | `FS_DATASET_QUERY_MAX_RUNTIME_ROWS` | 1,000 |
 | `read_rows` returned rows | surface contract | maximum 1,000 |
+| `read_rows` requested rows × projected columns | surface contract | maximum 50,000 cells |
 | Preview | surface contract | 10 rows |
 
-Reader and declared media type determine supported formats. Keep CSV/TSV
-delimiter and encoding explicit; preserve Parquet types; validate spreadsheet
-sheet/range selection before relying on inferred columns.
+The tabular artifact reader supports CSV, TSV, XLSX, JSON, NDJSON/JSONL, and
+Parquet. Explicit format, filename, and media type affect detection; the shared
+attachment allowlist does not establish reader support. Keep CSV/TSV delimiter
+and encoding explicit; preserve Parquet types; validate spreadsheet sheet
+selection before relying on inferred columns.
 
 Feed environment values must be positive integers. Unset, invalid, zero, or
 negative values fall back to the listed defaults; reader-requested row/byte
 limits can only narrow the operator maximum. Oversized input/materialization
 returns `feed_too_large`; row overflow returns `too_many_rows`. The `read_rows`
-action caps each returned page at 1,000 rows and also applies the 100,000-row,
-64 MiB scan ceilings, so callers should filter and paginate instead of raising
-the return limit.
+action caps each returned page at 1,000 rows and rejects a requested row limit
+multiplied by projected column count above 50,000 with
+`payload_budget_exceeded`.
+
+The `read_rows` scan controls bound dataset materialization before filtering;
+a small returned page does not bypass them. Unfiltered Parquet pagination
+applies the byte ceiling while slicing the requested page without applying the
+whole-dataset row ceiling. Filtered reads and JSON materialization also apply
+the scan row ceiling. Prepare a smaller source dataset when these boundaries
+are exceeded; filtering or pagination alone does not guarantee admission.
 
 `FS_DATASET_QUERY_MAX_RUNTIME_ROWS` is stricter: an explicit blank, invalid,
 zero, or negative value fails configuration instead of falling back, and a
@@ -203,8 +252,10 @@ positive whole number has no code-level upper clamp. When a `dataset_query`
 step omits `row_limit`, its effective request is the smaller of 100 and the
 deployment maximum. A request above the maximum fails before the source fetch.
 The complete returned rows are held in workflow state; the separate preview is
-only a display subset. This variable has no shipped production Compose app
-binding or Compact child allowlist entry at this revision.
+only a display subset. The same deployment maximum also bounds one For each
+pass: a longer collection selects its first N items and reports the source
+count, applied limit, and truncation. This variable has no shipped production
+Compose app binding or Compact child allowlist entry at this revision.
 
 ## Nested workflow depth
 
@@ -230,22 +281,26 @@ storage factory fallback and operations example are 600 seconds; base and
 production Compose interpolate 900 seconds. The adapter constrains a requested
 TTL to at least 60 seconds and no more than its configured ceiling, itself
 capped at seven days. Inspect the effective service environment before
-promising a lifetime.
+promising a lifetime. Browser-facing presigned downloads additionally require
+an explicitly configured public storage endpoint; otherwise the application
+serves the authorized download instead of promising a storage URL.
 
 ## Retention precedence and dry run
 
 Retention uses precedence; it does not take the narrowest value:
 
 1. An explicit cleanup argument overrides the corresponding stored value.
-2. For action logs, job logs, trash, and terminal job checkpoints, the stored
-   account value overrides the environment fallback.
+2. For action logs, job logs, trash, terminal job checkpoints, and retained
+   revision counts, the stored account value overrides the environment fallback.
 3. The environment fallback applies when no higher-precedence value exists.
 
 For example, an account-stored job-log value of 90 days overrides an
 `FS_RETENTION_MESSAGES_DAYS=30` fallback. The account-scoped Retention page
-edits only positive whole-day values for action logs, job logs, trash, and
-terminal job checkpoints. Jobs, events, retry queues, and registry changelog
-have separate cleanup arguments/environment controls.
+edits positive whole-day values for action logs, job logs, trash, and terminal
+job checkpoints, plus the number of revisions kept per entity. The revision
+count defaults to 5 through `FS_RETENTION_REVISIONS_KEEP`; stored counts are
+bounded to 1–100. Jobs, events, and retry queues have separate cleanup
+arguments/environment controls.
 
 Inspect resolved policy and deletion counts without deleting data:
 
@@ -255,20 +310,25 @@ python -m core.application.tooling.ops.retention_cleanup --dry-run
 
 Arguments include `--jobs-days`, `--events-days`, `--retry-queue-days`,
 `--job-logs-days`, `--action-logs-days`, `--trash-days`,
-`--terminal-job-checkpoints-days`, and `--registry-changelog-days`. Do not put
-an extra `--` before them.
+`--terminal-job-checkpoints-days`, and `--revisions-keep`. The revision-count
+argument overrides every account's stored count. `--registry-changelog-days`
+is not accepted at this revision. Do not put an extra `--` before the arguments.
 
 ## Applying environment changes
 
 These controls come from process environments; several are snapshotted at
-module import. Change the deployment's supported environment source, render the
-Compose configuration, and recreate affected application/worker services. The
-typed `flow-steward config set/apply` surface does not accept arbitrary names.
-Verify that the selected endpoint actually consumes a control; the presence of
-a name in an example environment file is not proof of an active feature.
+module import. Change the deployment's supported configuration source and
+recreate affected application/worker services. For supported host settings,
+Scalable accepts `flow-steward config set NAME=VALUE` followed by
+`flow-steward config apply`; Compact accepts
+`./install.sh --setting NAME=VALUE`. These commands accept only supported
+setting names, not arbitrary environment variables. Verify the rendered service
+environment and that the selected endpoint actually consumes a control; the
+presence of a name in an example environment file is not proof of an active
+feature.
 
 The earlier workflow-run and upload review was conducted at
-`62a95e3456d3a692092b5a04daecca504c3f97b1`. The remaining detailed capacity
-values originated in the earlier documentation pass and require verification
-against the effective deployment before use; no live capacity or proxy test was
-performed.
+`62a95e3456d3a692092b5a04daecca504c3f97b1`. The contracts above were reviewed
+against source revision `750d4a7d073591dad067fb5cefe937d1f88a9fc4`; no live
+capacity or proxy test was performed, and target-deployment values still need
+verification before use.

@@ -7,8 +7,8 @@ description: Install, preview, enable, health-check, and disable Flow Steward ex
 # Extension Operator Guide
 
 Extensions let Flow Steward connect to task providers, notification providers,
-tool providers, dataset connectors, callbacks, and provider-specific actions
-without loading provider code into the core server process.
+tool providers, LLM providers, dataset connectors, callbacks, and provider-specific
+actions without loading provider code into the core server process.
 
 ## Operator lifecycle
 
@@ -24,6 +24,11 @@ without loading provider code into the core server process.
 10. Preview the uninstall plan and confirm only its current revision when
     removal is intended.
 
+For an extension declaring an `llm_provider` contract, use its **LLM provider**
+panel to configure the connection, discover models, and add the models you want
+to use. For a remote runtime, configure its public runtime endpoint separately
+from provider credentials and upstream settings.
+
 ## What to review before install
 
 - extension id and version;
@@ -34,6 +39,9 @@ without loading provider code into the core server process.
 - schemas and UI manifest;
 - health endpoint;
 - machine-auth requirements;
+- declared extension dependencies, their version bounds, and whether they are
+  required;
+- an optional `llm_provider` contract and its runtime and connection requirements;
 - `python_requirements` and bundled `wheels/` when the extension has subprocess
   Python dependencies;
 - release or provenance notes.
@@ -71,9 +79,11 @@ plan** dialog:
   routes;
 - **Retained audit history**: records kept after removal.
 
-Resolve or explicitly accept every listed effect. To confirm, tick
-**I understand this can't be undone.** and click **Uninstall extension**. The
-dialog confirms the exact plan revision it showed you.
+Resolve or explicitly accept every listed effect. Active required dependents
+can block removal; acknowledging the plan does not override that check.
+Dependent workflows can be preserved and disabled by uninstall. To confirm,
+tick **I understand this can't be undone.** and click **Uninstall extension**.
+The dialog confirms the exact plan revision it showed you.
 
 On Scalable, an operator can do the same from the deployment host:
 

@@ -15,6 +15,9 @@ itself, is covered in
 [Connect An AI Client With MCP](../integrations/built-in-mcp-quick-start) and
 [MCP Reference](../reference/mcp).
 
+The behavior described here is available on main; availability in a published
+release depends on the version installed.
+
 ## Add an MCP connector
 
 [![Create MCP connector form with endpoint, transport, authentication, headers, scopes, namespace, and enabled controls](/img/screenshots/2026-10-04/mcp-create-form.png)](/img/screenshots/2026-10-04/mcp-create-form.png)
@@ -22,31 +25,51 @@ itself, is covered in
 *The blank connector form. No endpoint or credential was submitted for this screenshot.*
 
 1. Open `Registry`.
-2. Open `MCP`.
+2. Open `MCP` and select the `Connected` tab.
 3. Select the required `Project scope`; credentials and projected tools are
    isolated to that project.
 4. Choose `+ New MCP` and enter a name and endpoint URL.
-5. Keep transport as `streamable_http`.
+5. Keep transport as `streamable_http`; this runtime does not support `stdio`
+   or SSE connectors.
 6. Choose `none`, `bearer`, `api_key`, or `oauth2` authentication.
-7. Add each custom header as a key/value row. Store secrets through the
-   credential controls; do not paste a JSON object into the header UI.
+7. Add each custom header as a key/value row. Header values use sensitive
+   inputs and encrypted storage; do not paste a JSON object into the header UI.
 8. Add a namespace prefix when tool names need to stay distinct.
 9. Leave `Enabled` on when the connector should be usable after save.
 10. Save the MCP connector.
 
 For OAuth, review scopes and authorization parameters, complete the provider
-grant, and confirm whether a refresh token is required. Reconnect when the
-endpoint, client binding, credential revision, or required scopes change.
+grant, and confirm whether a refresh token is required. Authorization parameters
+appear in the browser authorization URL; do not put secrets in them. Reconnect
+when the endpoint, client binding, credential revision, or required scopes change.
+
+### Install from the catalog
+
+The `Catalog` tab offers predefined server entries. Choose an entry, select the
+project and endpoint, and fill in its required URL variables, headers, and OAuth
+client credentials where requested. Installation creates an ordinary connector;
+complete authorization, sync, and choose an allowlist afterward. A changed
+catalog revision requires reviewing and confirming the updated entry again.
+Later catalog changes do not rewrite existing connectors.
+
+A catalog entry does not establish that a third-party provider is currently
+available or that your credentials and scopes will work. Check the connector
+against the provider before using it in a workflow.
 
 ## Sync and health-check MCP
 
 After saving a connector:
 
 1. Click `Sync` to discover remote tools.
-2. Click `Health` to verify the endpoint can be reached.
+2. Click `Health` to check an authenticated `tools/list` request to the endpoint.
 3. Open the connector detail page.
 4. Review discovered tools.
-5. Allowlist only the tools that workflows or agents should be able to use.
+5. Select only the tools that workflows or agents should be able to use, then
+   click `Save allowlist` to publish their projected registry tools.
+
+Enabling a connector alone does not allow its tools. Runtime calls also check
+project ownership and the saved allowlist; disabling the connector blocks calls.
+A successful health check does not verify that every remote action will succeed.
 
 The list page shows connector status, transport, endpoint, allowed tool count,
 and last sync time.
@@ -92,13 +115,23 @@ Before exposing a tool to workflows:
 
 ## Let an external agent author a workflow
 
-Connect the client with the existing MCP quick start, then use the six
+Connect the client with the existing MCP quick start, then use the
 [authoring tools](../reference/mcp#workflow-authoring) to reuse local workflows,
 inspect contracts and validate a disabled draft. Save requires an admin user
 and `admin:all`; machine tokens remain operators. Project-name resolution also
-needs `projects.read`. Saving does not enable or execute the draft. The manual
-editor remains the place to inspect, adjust and deliberately enable the workflow
-before Test Run.
+needs `projects.read`. Saving does not enable or execute the draft. Use the
+manual editor to inspect and adjust the workflow, then use a controlled Test Run
+while the reviewed draft remains disabled. Resolve execution-readiness issues
+first; Test Run can still cause external effects. Enable deliberately for normal
+execution after review.
+
+For an existing workflow, `workflow_definition` returns its current definition
+and revision. `workflow_apply_changes` applies an atomic set of step, group and
+graph changes using `expected_revision`; `dry_run=true` checks the changes
+without saving. A stale revision requires reloading. `workflow_convert_group`
+previews extracting a group into a child workflow by default; applying the
+conversion requires its current preview digest and expected revision. These
+write tools require an administrator user and `admin:all`.
 
 The agent can also create and change agents and skills, assign skills to
 agents, and enable or disable agents, skills and workflows through the

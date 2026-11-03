@@ -6,20 +6,27 @@ description: Submit the documentation smoke workflow and follow its durable job.
 
 # Start And Observe A Workflow With The Public API
 
-Use the same provider-free fixture as [First Workflow](../user/first-workflow).
-An administrator must first import, bind, review, and enable
-`docs_deterministic_smoke_v1`. On 2026-10-05, the exact downloadable fixture
+Use the compatible provider-free workflow described in
+[First Workflow](../user/first-workflow). The linked legacy v1 download cannot
+be imported on current main. An administrator must recreate the equivalent in
+the builder, or import a reviewed v2 export with an explicit execution graph,
+then bind, review, and enable it for public API launch. Record its actual ID.
+
+On 2026-10-05, the legacy `docs_deterministic_smoke_v1` downloadable fixture
 completed through the API on a fresh disposable Compact installation at source
 commit `eb1626b05d06ca893a451560df2b5e95b972c47e`, returning the declared
 `normalized` output. A separate provider-free approval variant also completed
 with its approved output; disallowed and stale decisions returned HTTP 409.
 These are local installed checks, not production, MCP, or SSE acceptance.
+They are historical observations, not verification of a current deployment.
+The request contracts below reflect public source behavior available on main;
+they do not establish that a release containing that behavior has been published.
 
 ## Credentials and scopes
 
 Set `FLOW_STEWARD_URL`, `FLOW_STEWARD_TOKEN`, `PROJECT_ID`, and `WORKFLOW_ID`.
-Use `WORKFLOW_ID=docs_deterministic_smoke_v1` unless import conflict handling
-renamed it. `PROJECT_ID` must be the existing project UUID. The workflow must
+Use the actual recorded ID of the compatible workflow as `WORKFLOW_ID`, including
+any import conflict rename. `PROJECT_ID` must be the existing project UUID. The workflow must
 admit its `mcp` trigger channel. The narrow minimum scope families are:
 
 | Operation | Any accepted narrow scope |
@@ -60,7 +67,7 @@ Idempotency-Key: docs-api-smoke-001
 
 {
   "project_id": "<PROJECT_ID>",
-  "workflow_id": "docs_deterministic_smoke_v1",
+  "workflow_id": "<WORKFLOW_ID>",
   "test_mode": true,
   "inputs": {"payload": {"message": "hello"}}
 }
@@ -71,8 +78,13 @@ Keep the returned `job_id` for the next steps.
 HTTP 200 accepts this asynchronous launch; it does not mean execution has
 completed. The response supplies `project_id`, `job_id`, `status`, `queue`, and
 `deduplicated`. Reuse the same idempotency key for an identical retry; use a new
-key only for a deliberately new run. The API does not accept a task summary,
-caller task ID, or file uploads in this request.
+key only for a deliberately new run. The API does not accept a task summary or
+caller task ID in this request. It also accepts bounded `client_context` and,
+for workflows declaring file inputs, a JSON `files` array with `input_name`,
+`filename`, optional `mime_type`, and strict base64 `content_base64`. Uploads
+are limited to 10 entries and 1 MiB of decoded bytes in total, with one upload
+per input name. Supply actual file bytes rather than a path or fabricated
+artifact reference. This smoke fixture needs no files.
 
 `test_mode` is not a general external-effect sandbox. Safety here comes from
 the reviewed provider-free fixture.
@@ -84,9 +96,12 @@ GET /api/jobs/{JOB_ID}
 Authorization: Bearer <FLOW_STEWARD_TOKEN>
 ```
 
-Wait for a terminal state and inspect the returned outputs. The expected output
-variable is `normalized: {"message":"hello"}`. Assert that value as well as
-`completed`; a completed job without the declared output does not pass this check.
+Use the nested `workflow_run` field as the stable integration projection.
+Wait for `workflow_run.terminal` and inspect `workflow_run.result.outputs` on
+success. The expected output is
+`workflow_run.result.outputs.normalized: {"message":"hello"}`. Assert that
+value as well as `workflow_run.status == "completed"`; a completed job without
+the declared output does not pass this check.
 
 For durable state events:
 

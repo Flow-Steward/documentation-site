@@ -10,12 +10,16 @@ This page describes how Flow Steward loads, validates, renders, and invokes
 extensions. For an authoring walkthrough, start with
 [Build An Extension](../integrations/build-an-extension).
 
+The contracts below describe current public source on main; availability in a
+published release must be checked separately.
+
 Core does not bundle any extension. The authoring guide includes a small
-provider-free example, and the
+provider-free example and links to the separately maintained
 [Example Showcase extension](../integrations/build-an-extension#example-showcase-extension)
-(`flowsteward.example-showcase`, in the Extension Catalog and at
-[github.com/Flow-Steward/ext-example-showcase](https://github.com/Flow-Steward/ext-example-showcase))
-demonstrates every feature on this page in one bundle. The
+(`flowsteward.example-showcase`, at
+[github.com/Flow-Steward/ext-example-showcase](https://github.com/Flow-Steward/ext-example-showcase)).
+Its current catalog availability and feature coverage are not established by the
+core source. The
 [Extension Authoring Skill](../integrations/extension-authoring-skill) helps coding
 agents follow these contracts and report actual validation evidence.
 
@@ -34,7 +38,8 @@ not `extension.yaml`; the archive validator checks it before publishing files.
 
 Successful subprocesses exit 0 with `ok: true`. Domain failures exit 2 with
 `ok: false`, nonempty `error_code` and `error`, and a nonempty `errors` list
-whose first code/message exactly match those top-level fields. Other failures
+whose entries have nonempty codes and messages and whose first code/message
+exactly match those top-level fields. Other failures
 can trip the runtime circuit breaker. See the authoring guide's
 [response envelope](../integrations/build-an-extension#response-envelope).
 
@@ -71,6 +76,7 @@ core/application/extensions/
   extension_descriptor.py
   extension_contract_v2.py
   extension_projection_v2.py
+  compiled_manifest_validation.py
   lifecycle.py
 
 core/infrastructure/extension_runtime/
@@ -84,6 +90,7 @@ core/infrastructure/extension_runtime/
   extension_runtime_platform.py
 
   boundary.py
+  process_confinement.py
   python_dependencies.py
   extension_runtime_helpers.py
 
@@ -105,12 +112,12 @@ runtime invocation paths consume.
 
 Compile flow:
 
-1. Resolve the bundle root and locate `extension.yaml` or `extension.yml`.
+1. Resolve the bundle root and locate `extension.yaml`.
    `icon.png` next to it is checked separately by `validate`, `bundle` and
    install.
 2. Reject YAML-only violations such as `extension.json`, `manifest.json`,
-   `schemas/*.schema.json`, or JSON files under `ui/actions`, `ui/queries`,
-   `ui/pages`, and `ui/components`.
+   `ui/ui_manifest.json`, `schemas/*.schema.json`, `locales/*.json`, or JSON
+   files under `ui/actions`, `ui/queries`, `ui/pages`, and `ui/components`.
 3. Parse the manifest and normalize identity, kind, version, display fields,
    features, scopes, entrypoint, and healthcheck.
 4. Resolve schema refs. Refs must be relative to the bundle and cannot escape
@@ -136,6 +143,9 @@ known fields such as identity, kind, version, features, scopes, schemas, UI,
 actions, queries, callbacks, event subscriptions, supported events,
 dependencies, `python_requirements`, workflow triggers, entrypoint,
 healthcheck, and validation metadata.
+
+The `egress` declaration describes intended destinations for review; it does not
+enforce a network allowlist.
 
 ## Validation Issues
 
@@ -235,23 +245,25 @@ writes the full closure with every wheel hash into `extension.yaml`.
 `extensions bundle --with-wheels` downloads each locked requirement for each
 platform into `wheels/` with `--require-hashes` and stops when a platform has no
 wheel whose hash is locked. The tooling interpreter (Python 3.12 in the
-Development tool runtime) sets the Python version and ABI; the server runtime is
-CPython 3.12 on Debian (glibc 2.36), amd64 or arm64.
+Development tool runtime) sets the Python version and ABI; the Docker runtime
+uses a pinned Python 3.12 slim image, with Linux amd64 and arm64 extension
+targets. Check the actual runtime image before relying on a specific libc version.
 
 What each stage enforces about architectures:
 
 | Stage | Checks |
 | --- | --- |
 | `lock-deps`, `bundle --with-wheels` | Every requirement resolves/downloads for every platform passed (both by default). `--platforms active` checks only the tool runtime's own architecture. |
-| `extensions validate` | Files in `wheels/` are declared wheels with listed hashes, the closure is complete, and each requirement has at least one bundled wheel. It does **not** check that both x86_64 and aarch64 wheels are present. |
+| `extensions validate` | Files in `wheels/` are declared wheels with listed hashes and the closure is complete. With `FS_EXTENSION_DEPS_FETCH=off`, each requirement must have at least one bundled wheel. It does **not** check that both x86_64 and aarch64 wheels are present. |
 | Install and update | A wheel compatible with the server's own Python and architecture exists for every requirement; otherwise `No compatible wheel for python requirement …`. |
 
 Archives are limited to 50 MiB zipped and 150 MiB unpacked (packager and
 installer). `bundle --runtime-target linux-amd64|linux-arm64` writes a
 per-architecture archive that keeps only that architecture's wheels and records
 the target in `.fs-package.yaml`; a server refuses an archive for the other
-target. Native executables under `bin/<runtime-target>/` always need these two
-archives. Step-by-step instructions, including vendoring with plain
+target. Native executables under `bin/<runtime-target>/` require target-specific
+archives; build both targets when distributing for both server architectures.
+Step-by-step instructions, including vendoring with plain
 `pip download`, are in
 [Python Dependencies And Wheel Distribution](../integrations/build-an-extension#python-dependencies-and-wheel-distribution).
 
@@ -267,10 +279,15 @@ removed after versioned updates.
 
 Runtime dependency settings:
 
-| Setting | Default | Description |
+| Setting | Runtime fallback | Description |
 | --- | --- | --- |
 | `FS_EXTENSION_DEPS_FETCH` | `off` | `off` requires bundled wheels. `allowlist` permits install-time wheel fetches from the default index when hashes match. |
 | `FS_EXTENSION_DEPS_SITE_MAX_BYTES` | `500 MiB` | Maximum size for the materialized site directory, clamped between 1 MiB and 10 GiB. |
+
+Deployment configuration can override these fallbacks. The checked-in Compose
+files supply `0` for the fetch setting and `536870912` bytes (512 MiB) for the
+site limit when unset. Use the documented `off` or `allowlist` fetch values
+explicitly; the runtime does not normalize `0` to `off`.
 
 ## Descriptor Model
 
@@ -283,16 +300,18 @@ Root descriptor fields:
 | --- | --- |
 | `schema_version` | Descriptor schema version, for example `extension_descriptor_v1`. |
 | `extension_id` | Stable id. Must match the runtime manifest. |
-| `release_version` | Release version of the distributable artifact. |
+| `release_version` | Release version of the distributable artifact. Must match the runtime manifest version when co-located in an archive. |
 | `extension_type` | Listing/import classification. |
 | `identity` | Display name, description, tags. |
 | `vendor` | Vendor name and support URL. |
 | `listing` | Marketplace visibility, category, and extra listing metadata. |
 | `distribution` | Channel, execution modes, self-hosting support, and import sources. |
-| `runtime` | Runtime contract version, compatibility, auth, local or remote settings, and optional Contract v2. |
+| `runtime` | Runtime contract version, compatibility, auth, remote settings, and optional Contract v2. |
+| `extension_contract_v2` | Optional builder-facing contract, also accepted under `runtime`. |
 | `python_requirements` | Optional dependency lock validated with the same rules as the runtime manifest. |
 | `dependencies` | External dependency metadata. |
-| `artifacts` | Workflows, agents, skills, tools, contracts, guardrails, and nested extension artifacts. |
+| `lifecycle` | Extension data schema version and migration declarations. |
+| `artifacts` | Workflows, agents, skills, tools, datasets, saved queries, data contracts, guardrails, and nested extension artifacts. At least one artifact entry is required. |
 | `provenance` | Origin and supply-chain metadata. |
 | `commerce` | Billing and plan metadata. |
 
@@ -327,6 +346,7 @@ Sections:
 
 | Section | Validates |
 | --- | --- |
+| `oauth_providers` | Host-owned OAuth provider declarations and authorization flow settings. |
 | `connection_types` | Connection ids, auth types, OAuth2 details, token placement, and secret names. |
 | `dataset_connectors` | Dataset connector ids, runtime kind, and data contract refs. |
 | `operation_manifest` | Operation ids, kinds, inputs, outputs, connection refs, batching, async support, and failure behavior. |
@@ -347,10 +367,15 @@ Allowed connection auth types:
 none, api_key, oauth2, static_secret
 ```
 
-OAuth2 connections require an authorization-code grant, PKCE marked as required,
-HTTP(S) authorization and token endpoints, at least one required scope, platform
-secret client credentials, token placement in secrets, and access token secret
-names.
+An OAuth2 connection can reference an extension-declared OAuth provider through
+`auth.provider_id`, with validated scopes. Provider declarations use an
+authorization-code flow and declare PKCE as `s256` or `none`.
+
+Inline OAuth2 connection declarations instead require an authorization-code
+grant, PKCE marked as required, HTTP(S) authorization and token endpoints, at
+least one required scope, platform-secret client credentials, token placement
+in secrets, and an access-token secret name. The client secret may be marked
+optional.
 
 Contract refs can be inline objects, local refs, URL refs that stay on the same
 origin and path scope, or snapshot refs. Local refs cannot escape the bundle.
@@ -380,8 +405,9 @@ The validator recognizes these component types:
 ```text
 section, columns, stack, action_bar, form, fieldset, repeater, key_value,
 json_editor, secret_field, grid, stats_row, key_value_card, markdown,
-health_panel, log_list, empty_state, alert, confirm_action, drawer_detail,
-status_badge, filter_bar, callback_setup
+health_panel, log_list, empty_state, alert, confirm_action, connection_form,
+state_editor, drawer_detail, status_badge, filter_bar, callback_setup,
+external_resource_picker
 ```
 
 Form widgets:
@@ -398,10 +424,11 @@ Grid column types:
 text, datetime, date, number, badge, boolean, json_summary, link, id
 ```
 
-The frontend implements the common extension components directly, including
-forms, grids, stats rows, health panels, callback setup, markdown, log lists,
+The frontend implements forms, grids, stats rows, health panels, callback setup,
+connection forms, state editors, external resource pickers, markdown, log lists,
 and repeater form fields. Other validated component types are available as
-contract vocabulary and may need frontend implementation in the target version.
+contract vocabulary; the current renderer falls back to a titled block for
+component types without a dedicated renderer.
 
 ## Query And Action Invocation
 
@@ -427,11 +454,13 @@ The frontend action payload includes:
 | `page_id` | Current extension page id. |
 | `context` | Page, project, workflow, or component context. |
 | `target` | Row, connection, callback, or selected resource target. |
-| `values` | Current UI values. |
-| `data` | Additional component data. |
+| `input` | Materialized declared action inputs, when an input contract is available. |
+| `values` | Current UI values in the fallback payload without a declared input contract. |
+| `data` | Additional component data in that fallback payload. |
 
 The backend normalizes this into the runtime `action.input` envelope before
-launching the extension subprocess.
+launching the extension subprocess. Frontend action requests also carry an
+`Idempotency-Key` header.
 
 ## Public Extension SDK
 
@@ -441,7 +470,8 @@ but must not import private `core.*` modules.
 
 Public SDK surface:
 
-The package is `flowsteward-extension-sdk` 0.4.0.
+The package metadata on main declares `flowsteward-extension-sdk` version
+0.4.0; this declaration does not establish package publication.
 
 | Module area | Exports |
 | --- | --- |
@@ -504,11 +534,25 @@ Subprocess controls:
 
 | Control | Default or behavior |
 | --- | --- |
-| Timeout | Uses operation timeout or defaults to 30 seconds. |
-| Output cap | Controlled by `FS_EXTENSION_OUTPUT_MAX_BYTES`; default is 5 MiB, with safety min and max bounds. |
-| Circuit breaker | Tracks failures per extension and quarantines repeatedly failing providers. |
+| Timeout | Uses an explicit invocation timeout or `entrypoint.timeout_seconds`, defaulting to 30 seconds and clamped to 1–600 seconds, unless the canonical timeout policy applies. |
+| Output cap | Controlled by `FS_EXTENSION_OUTPUT_MAX_BYTES`; default is 5 MiB per stdout/stderr stream, clamped between 64 KiB and 256 MiB. |
+| Circuit breaker | Tracks failures per account, install and extension, and quarantines repeatedly failing providers. |
 | Concurrency | Per-extension concurrency is capped. |
 | I/O | One JSON request on stdin and one JSON response on stdout. |
+
+An entrypoint can declare the canonical `timeout_policy`: environment variable
+`FS_EXTENSION_OPERATION_TIMEOUT_SECONDS`, default 300 seconds, minimum 30,
+maximum 3600, and 30 seconds of headroom. Only that exact policy is accepted;
+when present, it takes precedence over an explicit invocation timeout.
+
+Local processes run as the service's OS user and retain that user's file and
+network access. Confinement applies per-process CPU, address-space and file-size
+limits, disables core dumps, sets Linux no-new-privileges, and provides a private
+scratch directory. The host cleans up the process group and descendants still
+carrying the invocation marker. Descendants that clear that marker can evade
+that additional cleanup. These controls limit faulty or runaway code; they do
+not provide isolation from deliberately malicious extensions. On Linux, failure
+to apply a required protection stops the run with exit code 70.
 
 If the subprocess exceeds output limits, times out, exits with invalid JSON, or
 omits the response envelope, the platform returns a normalized extension error.
@@ -559,16 +603,22 @@ Runtime event envelopes can carry event id, type, correlation id, occurrence
 time, account id, severity, summary, payload, project/workflow/job/group/For each/step
 scope, source, aggregate id, actor, URLs, and metadata.
 
-Emitted events must match the compiler-derived `supported_events` projection.
-Authors declare delivery selectors through `event_subscriptions`, not by adding
-`supported_events` to `extension.yaml`.
+When the compiler-derived `supported_events` projection is nonempty, emitted
+events must match it; an empty projection does not restrict event types through
+this filter. Authors declare delivery selectors through `event_subscriptions`,
+not by adding `supported_events` to `extension.yaml`.
 
 ## Callback Runtime
 
-Supported auth modes are `none`, `shared_secret_header`, and `hmac_sha256`.
-The HMAC option has a fixed timestamp/delivery-ID/raw-body contract, bounded
-freshness, and replay detection; see the
+Supported auth modes are `none`, `shared_secret_header`, `hmac_sha256`, and
+`hub_signature`. The `hmac_sha256` option has a fixed
+timestamp/delivery-ID/raw-body contract, bounded freshness, and replay
+detection; see the
 [authoring callback contract](../integrations/build-an-extension#callbacks).
+`hub_signature` requires `auth.signature_header` and `auth.secret_name`: POST
+deliveries use HMAC-SHA256 over the raw body with the named connection secret,
+and GET verification uses the provider's `hub.challenge` handshake. It does not
+use the timestamp/delivery-ID contract of `hmac_sha256`.
 OAuth authorization callbacks follow their separate host-owned flow.
 
 Callbacks bridge provider webhooks into extension actions.
@@ -637,16 +687,20 @@ Marketplace and installation endpoints:
 GET  /api/extensions
 GET  /api/extensions/catalog
 GET  /api/extensions/catalog/availability
+GET  /api/extensions/catalog/updates
 POST /api/extensions/catalog/install
 GET  /api/extensions/marketplace
 GET  /api/extensions/{extension_id}
 GET  /api/extensions/installs/{install_id}
 POST /api/extensions/releases/{release_id}/install
 POST /api/extensions/installs/{install_id}/handshake
-POST /api/extensions/{extension_id}/install
 POST /api/extensions/runtime/token
 POST /api/extensions/generated-jobs
 ```
+
+`POST /api/extensions/{extension_id}/install` is retired and returns a validation
+error. Install a descriptor-validated release through the release-install route,
+or use the catalog or archive installation paths above.
 
 ## CLI Reference
 
@@ -660,8 +714,8 @@ Authoring commands:
 ./flow-steward extensions bundle <extension_id> --with-wheels
 ```
 
-Operator commands (Development and Scalable; on Compact use the UI or the
-install API):
+Operator commands through the Development and Scalable launcher (on Compact,
+use the UI or install API for archive installation):
 
 ```bash
 ./flow-steward extensions list
@@ -741,11 +795,12 @@ When an extension does not compile or render correctly:
    `core.*` modules.
 9. Confirm runtime files do not mutate `sys.path`.
 10. If `python_requirements` is present, confirm `wheels/` contains matching
-    hashes for every requirement, with an `_x86_64` and an `_aarch64` wheel (or
-    one `any` wheel) for each.
+    hashes for every requirement and wheels compatible with each intended
+    server architecture. For target-specific archives, check each archive
+    separately.
 11. Confirm response envelopes include `ok`.
-12. Confirm authoring uses `event_subscriptions` and emitted events match the
-    compiled `supported_events` projection.
+12. Confirm authoring uses `event_subscriptions` and emitted events match any
+    nonempty compiled `supported_events` projection.
 13. Run the smoke script directly, then run pytest for the extension.
 
 ## Platform Design Rules

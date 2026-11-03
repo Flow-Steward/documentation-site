@@ -14,7 +14,10 @@ Clone replaces a target rather than merging two installations.
 The original source baseline was
 `62a95e3456d3a692092b5a04daecca504c3f97b1` (2026-10-04). The CLI context and
 Clone admission contracts were rechecked against candidate
-`f09b196c25cbacffdb25147751faedfd93198ac8` on 2026-10-06. This guide covers
+`f09b196c25cbacffdb25147751faedfd93198ac8` on 2026-10-06. This page's contracts
+were reviewed against main source
+`750d4a7d073591dad067fb5cefe937d1f88a9fc4` on 2026-11-03; this does not establish
+that the behavior is available in a published release. This guide covers
 Docker-host checkout installations of both Compact and Scalable. That source
 review is not an executed repair, profile-by-profile recovery, or release-backed
 Clone acceptance test; the rehearsal boundaries below still apply.
@@ -263,8 +266,10 @@ to source control, log, or captured output. `--output-directory` defaults to
 way to expose arbitrary host directories.
 
 Creation briefly stops the state-owning broker/bundled-storage services needed
-for capture and restores their previous running state even on failure. It
-publishes the completed archive atomically. Plaintext staging and partial
+for capture and attempts to restore their previous running state even on failure.
+If that recovery also fails, it reports `clone_source_service_recovery_required`;
+inspect the Clone journal and restore the recorded source services before proceeding.
+It publishes the completed archive atomically. Plaintext staging and partial
 outputs are not migration artifacts. Maintenance remains enabled.
 
 ## 2. Transfer the completed archive

@@ -30,18 +30,44 @@ workspace artifact pruning, and prompt debug traces, see
 
 ## Launchers
 
-From the deployment or development host, as the checkout/deployment owner:
+From the deployment or development host, as the non-root checkout/deployment owner
+without `sudo`:
 
 ```bash
 ./flow-steward --help
 ```
 
-The launcher uses Docker: Scalable selects its retained `fs-cli` runtime;
-Compact dispatches supported commands into its platform/product runtimes and
-refuses families requiring absent services. It is not a host-virtualenv command
+The launcher uses Docker. Scalable routes lifecycle commands to its retained
+`fs-cli` runtime, product commands to `fs-app`, and tooling commands to dedicated
+services. Database commands on Scalable use a one-shot container of the configured
+`fs-app` image so they can access that image's migrations. Compact dispatches
+supported commands into its platform/product runtimes and refuses commands
+requiring absent services, including retained-CLI operations such as `config` and
+`stack`.
+
+Run this launcher on the host. It is not a host-virtualenv command
 and is not supported from inside `fs-app`. Contributors
 who need a direct Python entry point for isolated parser tests must use the
 specific module documented by that test, not the installed launcher.
+
+## Automation
+
+For schema-driven product commands, use `--json` for machine-readable output and
+`--non-interactive` to make unattended intent explicit:
+
+```bash
+./flow-steward projects list --json --non-interactive
+```
+
+JSON mode disables prompts. Plain text is the default; `--tui` explicitly opts
+into full-screen forms and rich output. Commands requiring review still need
+confirmation in unattended runs. Check the command's `--help`: `--confirm` is
+either a flag or requires the exact canonical confirmation value printed after
+review, depending on the command.
+
+Commands exposing `--input-json` accept a JSON object of non-secret fields;
+explicit command options override values from that input. Use the supported
+field-specific `--<field>-stdin` or `--<field>-file` options for secrets.
 
 ## Developer usage principles
 

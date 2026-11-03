@@ -6,19 +6,39 @@ description: Install Flow Steward Compact with one Render Blueprint.
 
 # Install Compact on Render
 
-The single public [`render.yaml`](https://github.com/Flow-Steward/flow-steward-deploy/blob/main/render.yaml) describes one Compact web service, a private
-PostgreSQL service with the Flow Steward database extensions, and a private
-RabbitMQ service. Render creates and connects the three services from one
-Blueprint. It pulls from the same public Compact image repository used by other platforms;
-there is no Render-specific application image or Dockerfile. PostgreSQL and
-RabbitMQ can start in parallel; Compact waits for
-both before it initializes the database or writes to its persistent volume.
-You do not need to run a local shell script, change disk permissions manually,
-or copy connection passwords between services.
+The public [`render.yaml`](https://github.com/Flow-Steward/flow-steward-deploy/blob/main/render.yaml) is maintained in a separate deployment repository. The
+**2026-09-28** acceptance configuration described one Compact web service, a
+private PostgreSQL service with the Flow Steward database extensions, and a
+private RabbitMQ service, connected through one Blueprint. It used the public
+Compact image rather than a Render-specific application image or Dockerfile.
+
+The deployment repository and Render's current configuration, image availability,
+plans and dashboard behavior were not verified in this source review. Before
+provisioning, inspect the linked Blueprint and confirm the settings described
+below. The application behavior documented here is supported by the reviewed
+source on main; this does not establish that a corresponding image or release
+has been published.
+
+PostgreSQL and RabbitMQ can start in parallel. Set
+`FS_COMPACT_WAIT_FOR_DEPENDENCIES=1` on Compact so it waits for both before
+initializing the database or writing to its persistent volume. The provider
+entrypoint builds connection URLs from linked-service settings when canonical
+URLs are absent. Confirm that the Blueprint supplies those settings and mounts
+writable persistent storage; the dated installation did not require a local
+shell script, manual disk-permission changes or manual password copying.
+
+Current main defaults to verified RabbitMQ TLS (`amqps://`), including certificate
+and hostname verification. Before selecting an image with this contract, confirm
+that the broker, linked-service URL and port, certificate trust, and broker
+hostname satisfy it. The dependency-wait flag does not provision broker TLS,
+and a provider-private hostname alone does not permit plaintext AMQP. Do not
+substitute a current-main image into the September template and assume that its
+historical broker configuration is sufficient. See the transport boundary in
+[Installation](installation#other-providers).
 
 This is the **Compact** topology. For **Scalable**, use the
-[VPS installation](installation#vps-guided-installation) until a Render-specific
-Scalable deployment has been tested.
+[VPS installation](installation#vps-guided-installation); the dated Render
+acceptance covered Compact only.
 
 Fresh Blueprint acceptance on **2026-09-28** used Compact source
 `31652e30e9c65b16576e9a4b3d105072c24b8337`, image digest
@@ -31,15 +51,15 @@ and a full backup/restore exercise were outside this installation check.
 
 ## Before you start
 
-- Have a Render account with a payment method. The Blueprint repository and
-  all three container images are public; Render does not need access to the
-  Flow Steward application source. Render's Hobby workspace itself is free,
-  but the three services and their persistent disks are paid.
+- Have a Render account with a payment method. The dated configuration used a
+  public Blueprint repository and three public container images without access
+  to the Flow Steward application source. Confirm their current availability
+  and Render's account requirements. The test used paid services and disks.
 - Use a new Blueprint and new disks for a new installation. A previous test
   disk is not a clean first-install test, even if its service is suspended.
 - Review the service plans and disk sizes in the public `render.yaml`
   before confirming the Blueprint. The file is the deployment configuration;
-  Render can show its resources and estimated charges before provisioning.
+  review Render's proposed resources and estimated charges before provisioning.
 
 The September 2026 test configuration was quoted at **$140.25/month**:
 
@@ -52,15 +72,15 @@ The September 2026 test configuration was quoted at **$140.25/month**:
 These are separate allocations, not a shared 8 GB memory pool. This is a test
 configuration, not a measured minimum. Confirm current prices in Render before
 deploying; traffic overages and applicable taxes may add to the estimate.
-PostgreSQL is our extension-enabled container on a private service, not Render's
+The tested PostgreSQL service used our extension-enabled container, not Render's
 managed PostgreSQL product. Plan database backups and upgrades accordingly.
 
 ## Deploy
 
-1. Use the [Deploy to Render button](https://render.com/deploy?repo=https%3A%2F%2Fgithub.com%2FFlow-Steward%2Fflow-steward-deploy). It opens the public configuration repository; choose its `main` branch and the root `render.yaml`. No application-source Git connection is required.
-2. Review the three proposed services, their **Frankfurt** region, plans, and disks. Deploy the Blueprint. It generates separate PostgreSQL and RabbitMQ passwords and links them to Compact without exposing them in the YAML file.
-3. Wait until PostgreSQL and RabbitMQ are running and the Compact web service is **Live**. Compact uses `/health/ready` as its health check. The first image pull can take longer than a restart; a web address appearing in the dashboard is not a readiness signal.
-4. Open **flow-steward-compact → Logs**. Find the line beginning `Flow Steward has no administrator yet`. Privately copy the complete one-time setup URL printed there and open it to create the first administrator. The URL expires **15 minutes** after issue. Opening `/bootstrap` directly without it displays a token field because the public page does not reveal the secret.
+1. Use the [Deploy to Render button](https://render.com/deploy?repo=https%3A%2F%2Fgithub.com%2FFlow-Steward%2Fflow-steward-deploy). It targets the public configuration repository; choose its `main` branch and the root `render.yaml`. Confirm that no application-source Git connection is required.
+2. Review the three proposed services, region, plans, and disks. The dated configuration used **Frankfurt**, generated separate PostgreSQL and RabbitMQ passwords, and linked them to Compact without embedding passwords in the YAML file. Confirm those connections and `FS_COMPACT_WAIT_FOR_DEPENDENCIES=1` before deploying.
+3. Wait until PostgreSQL and RabbitMQ are running and the Compact web service is **Live**. Confirm that its health check is `/health/ready`. The first image pull can take longer than a restart; a web address appearing in the dashboard is not a readiness signal.
+4. Open the Compact service's **Logs**. Find the line beginning `Flow Steward has no administrator yet`. Privately copy the complete one-time setup URL printed there and open it to create the first administrator. The URL expires **15 minutes** after issue. Opening `/bootstrap` directly without it displays a token field because the public page does not reveal the secret.
 
 Do not paste the setup URL into a support ticket or screenshot. It contains a
 one-time token. After creating the administrator, sign in at `/login`.
@@ -69,16 +89,18 @@ If the link expires before any user exists, restart **only** the Compact service
 from its dashboard, then read its fresh logs. Keep the PostgreSQL and RabbitMQ
 services and all three disks intact. If the logs say an earlier link is still
 valid, use that link or wait for it to expire before restarting again.
+Self-issuance also requires local authentication and first-administrator
+bootstrap to be enabled, with no separately configured setup token.
 
 ## Operate and update
 
-Open **flow-steward-compact → Shell** in Render to inspect the running
+Open the Compact service's **Shell** in Render to inspect the running
 container. The packaged application is under `/app`; `/data` is the persistent
-volume. The Blueprint keeps one Compact instance because two instances must
-not write to the same volume. PostgreSQL and RabbitMQ are private services;
-only the Compact web service has a public HTTPS URL.
+volume. Keep one Compact instance per volume: the runtime locks the volume
+against concurrent use. Confirm that PostgreSQL and RabbitMQ remain private
+services and only Compact has a public HTTPS URL, as in the dated configuration.
 
-A restart or deployment temporarily interrupts access while Render replaces
+A restart or deployment can temporarily interrupt access while Render replaces
 the instance attached to the persistent disk. Wait for **Live** and
 `/health/ready` before retrying; this single-instance configuration does not
 provide zero-downtime deployments.
@@ -117,15 +139,16 @@ or copy files out of `/data/state`. Host installation and stack commands, and
 `users issue-bootstrap-token`, are unavailable in the container. Use the
 Render dashboard for deployment operations and `/health/ready` for HTTP readiness.
 
-The Blueprint disables automatic application redeployment, but Blueprint
-configuration changes can still sync from its public repository. Review image
-digest and configuration changes before an upgrade, with a verified backup and the
-release's database-upgrade procedure. Suspending a service pauses compute,
-but it does not replace a backup or establish that data will survive deletion.
-Keep all three disks if you intend to resume the installation.
+The dated Blueprint disabled automatic application redeployment. Confirm the
+current setting and Blueprint configuration-sync behavior in Render before
+relying on it. Review image digest and configuration changes before an upgrade,
+with a verified backup and the release's database-upgrade procedure. Suspending
+a service does not replace a backup or establish that data will survive deletion.
+Confirm Render's current suspension and disk-retention policies, and keep all
+three disks if you intend to resume the installation.
 
 If deployment fails, inspect each service's **Deploy Logs**. A database image
-that lacks Apache AGE or pgvector, an unavailable private hostname, or a
-missing disk will prevent Compact from becoming ready. Do not repeatedly
-delete and recreate the application disk just to make the health check green:
-record the failing step and preserve the data for diagnosis.
+that lacks Apache AGE or pgvector, an unavailable private hostname, or an
+unwritable persistent volume can prevent Compact from becoming ready. Do not
+repeatedly delete and recreate the application disk just to make the health
+check green: record the failing step and preserve the data for diagnosis.

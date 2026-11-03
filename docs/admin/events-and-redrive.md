@@ -31,15 +31,23 @@ Open `Monitoring > Events` when:
 |---|---|
 | Workflow | Limit the timeline to one workflow definition. |
 | Event family | Separate workflow, extension, notification, approval, and system events. |
-| Category | Narrow broad event families into product areas. |
+| Category | Narrow broad event families into product areas; select a family first. |
 | Event type | Find one exact emitted event. |
-| Dispatch status | Find matched, skipped, queued, dispatching, succeeded, failed, or dead-lettered records. |
-| Created range | Bound an investigation window. |
+| Dispatch status | Filter the event's aggregate status: recorded, dispatching, succeeded, partially_failed, failed, or dead_lettered. Available options come from matching event records. |
+| Period | Bound the event occurrence window using calendar days in your effective user timezone. |
+
+Despite its Dispatch status label, the list filter uses event status. Individual
+dispatches have their own statuses, including matched, skipped, and queued, in
+the event's advanced diagnostics.
 
 Job identity can appear in an event's detail context, but it is not a list
 filter on the current Events inspector.
 
 ## Safe redrive checklist
+
+Redrive requires operator-level access and access to the selected event's scope.
+The action is available only for events whose aggregate status is `failed` or
+`dead_lettered`; `partially_failed` events are not eligible.
 
 1. Open the event and read the payload summary.
 2. Confirm the event target is still enabled and points to the expected
@@ -51,17 +59,21 @@ filter on the current Events inspector.
    configuration before replaying.
 6. Choose one eligible `failed` or `dead_lettered` event and click **Redrive
    failed dispatches**.
-7. Treat **Redrive requested successfully** as an enqueue acknowledgement, not
-   completed delivery. The action resets all eligible failed/dead-lettered
-   dispatches for that selected event to `queued`; it does not select one
-   delivery or redrive multiple events. The service inspects at most 1,000
-   dispatch records for that event.
-8. Follow dispatch history until each replay reaches `succeeded` or records a
-   new failure.
+7. Treat **Redrive requested successfully** as acknowledgement that at least one
+   dispatch was reset to `queued`, not completed delivery. The action attempts
+   to reset eligible failed/dead-lettered dispatches for that selected event;
+   it does not select one delivery or redrive multiple events. The service
+   inspects at most 1,000 dispatch records for that event. Some updates can fail
+   even when the request succeeds, so inspect each dispatch afterward.
+8. Reopen the event to check updated dispatch history. Confirm delivery outcomes
+   and investigate dispatches that remain queued or record another failure.
+   The redrive endpoint changes stored dispatch state; it does not itself invoke
+   provider delivery or guarantee that a replay consumer will complete it.
 
 Do not redrive events that create external records, send user-visible messages,
 approve work, or mutate production systems until the duplicate-effect risk is
-understood.
+understood. Confirm external outcomes with the target provider; a queued state
+alone does not establish delivery or provider readiness.
 
 ## What to record during an incident
 

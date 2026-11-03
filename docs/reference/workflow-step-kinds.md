@@ -9,7 +9,8 @@ description: Reference for workflow step kinds, Groups, For each containers and 
 A workflow definition has steps, Groups, For each containers and one execution
 graph (`entry` and edges `source → outcome → target`). There are no phases. The
 [Workflow Builder](../user/workflow-builder) guide shows how to build them in
-the UI; this page is the stored-name lookup for Flow Steward 0.7.27.
+the UI; this page is the stored-name lookup for current behavior on main.
+Availability in a published release has not been verified.
 
 ## Steps
 
@@ -58,15 +59,12 @@ per item or per batch, put them in a For each.
 
 ## Custom code (code step)
 
-Flow Steward has no inline code step. n8n (**Code**), Zapier
-(**Code by Zapier**), Make (custom JavaScript) and similar tools let you type a
-script into a workflow step; Flow Steward deliberately does not.
-
-Custom logic belongs in an extension instead, because there:
+Flow Steward has no inline code step. Custom logic belongs in an extension,
+where:
 
 - the developer owns the code in a repository and can review every change;
-- it is covered by its own tests (`extensions test`) and passes the same
-  validation as any extension before it can be installed;
+- it can be covered by its own tests (`extensions test`) and must pass extension
+  validation before it can be installed;
 - it is versioned and released, so a workflow run uses a known version and an
   update is a deliberate install;
 - it runs out of process with its own pinned dependencies, not inside the
@@ -100,11 +98,13 @@ text and branching.
 | If | `true` and `false` |
 | Switch | one `case` per case, plus `default` |
 | Approval | `approved` and `rejected` |
-| Stop · success, Stop · fail | none |
-| Any step or group with an On error route | additionally `error` |
+| Stop · success, Stop · fail, Break, Continue | none |
+| Nonterminal step, Group or For each with its own On error route | additionally `error` |
 
 One outcome leads to exactly one target. Every root path ends at a Stop step;
-a step with no continuation is a definition issue, never an implicit success.
+a nonterminal step with no continuation is a definition issue, never an implicit
+success. Break and Continue terminate the For each or current item without an
+outgoing edge.
 
 ## Containers
 
@@ -114,8 +114,8 @@ A Group runs its body once. Its body is a sequence (`{kind: sequence, entry}`)
 or lanes (`{kind: lanes, lanes: [{lane_id, entry}], concurrency_limit}`). The
 body or each lane ends at the group exit; the Group then leaves on `success`.
 A lanes body runs its lanes in parallel up to `concurrency_limit` and joins when
-all have finished; each lane lands only the values it changed, and for the same
-field the later lane in lane order wins.
+all have finished. Only changed fields are merged, in step-position order and
+then lane order; a later write in that merge order wins for the same field.
 
 ### For each
 
@@ -131,8 +131,8 @@ for_each:
     body: {kind: sequence, entry: {kind: step, id: build_shipment}}
 ```
 
-Items run one at a time. A list is walked as it is, a missing value is an empty
-pass, any other value is one item. At most `FS_DATASET_QUERY_MAX_RUNTIME_ROWS`
+Items run one at a time. A list is walked as it is, a null or missing value is an
+empty pass, any other value is one item. At most `FS_DATASET_QUERY_MAX_RUNTIME_ROWS`
 items (1000 by default) are walked and the run reports truncation. A dataset
 cursor is refused as a source: read the rows first.
 
@@ -150,5 +150,6 @@ cursor is refused as a source: read the rows first.
 | A Group in a Group, a For each in a For each, parallel items | No |
 | A hook inside a Group, For each or lane | No |
 
-Validation refuses an unsupported placement before the workflow can be saved or
-run.
+Validation reports unsupported placements. A disabled workflow may retain
+structural diagnostics, but unsupported hook placement is refused even in a
+draft. An enabled workflow, and every run, must pass definition validation.

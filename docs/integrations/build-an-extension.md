@@ -11,10 +11,14 @@ runtime entrypoint. An extension can add external system integrations, custom
 workflow triggers, builder operations, tools, skills, and operator UI pages
 without importing provider code into the Flow Steward server process.
 
+This guide describes the public source contracts available on main. Availability
+in a published release depends on the version installed; source package versions
+alone do not establish that a release has been published.
+
 Core does not bundle a reference extension. Start with the CLI scaffold, this
 guide's small provider-free example, or the
-[Example Showcase extension](#example-showcase-extension), which demonstrates
-every extension feature in one bundle. Extension IDs such as
+[Example Showcase extension](#example-showcase-extension), which provides a
+broader authoring reference. Extension IDs such as
 `com.acme.crm-sync` map to folders such as `com_acme_crm_sync` (dots and hyphens
 become underscores). For coding-agent assistance, install the
 [Extension Authoring Skill](extension-authoring-skill).
@@ -64,7 +68,7 @@ validators. Two references follow it:
 | Reference | Use it for |
 | --- | --- |
 | [Acme CRM Sync example](#runtime-manifest) | The smallest valid bundle: a deterministic task provider with one page, three actions, one query and a smoke check. No dependencies, no network. |
-| [Example Showcase extension](#example-showcase-extension) | Every extension feature in one synthetic bundle: UI pages, forms, actions, queries, settings and secrets, OAuth, Contract v2 operations, a workflow trigger, event bindings, callbacks, tools, workflows with a hook, health, translations, tests. |
+| [Example Showcase extension](#example-showcase-extension) | A broader reference for UI pages, forms, actions, queries, settings and secrets, OAuth, Contract v2 operations, workflow triggers, event bindings, callbacks, tools, workflows with a hook, health, translations and tests. Verify its current contents and compatibility before copying it. |
 
 Core ships neither in its `extensions/` folder.
 
@@ -74,10 +78,11 @@ available, not in a Compact runtime/admin container. See
 
 ## Example Showcase Extension
 
-The Example Showcase (`flowsteward.example-showcase`) is a reference bundle for
-extension authors. It is synthetic: it calls no real service unless you switch
-its mock mode off. Install it from **Extensions › Marketplace**, or read and
-copy its source:
+The Example Showcase (`flowsteward.example-showcase`) is an external reference
+bundle for extension authors. The Core authoring reference describes it as
+synthetic and mock-by-default. If a compatible release is listed in your
+**Extensions › Marketplace**, you can install it there, or read and copy its
+source:
 
 ```bash
 git clone https://github.com/Flow-Steward/ext-example-showcase.git
@@ -85,13 +90,16 @@ git clone https://github.com/Flow-Steward/ext-example-showcase.git
 
 Browse it online at
 [github.com/Flow-Steward/ext-example-showcase](https://github.com/Flow-Steward/ext-example-showcase).
-Its README explains each feature in detail. What it shows and where:
+The following file map is an authoring reference, not verification of the
+external repository's current contents or Marketplace availability. Check its
+README and the selected revision before relying on feature names, counts,
+dependencies or mock behavior.
 
 | Feature | Showcase files | What to look at |
 | --- | --- | --- |
 | Runtime manifest, host contract, network destinations | `extension.yaml` | `kind: tool_provider`, features `tool`, `action`, `query`, `workflow_trigger`, `artifact_bundle`; `runtime.contract_version: extension_host_v2`; `egress` hosts and connection fields; optional dependency on another extension. |
 | Logo | `icon.png` | 128×128 PNG next to the manifest. |
-| UI pages | `ui/ui_manifest.yaml`, `ui/pages/*.yaml` | Four pages: **Overview**, **Configuration**, **Operations**, **Demo Artifacts**. |
+| UI pages | `ui/ui_manifest.yaml`, `ui/pages/*.yaml` | Four reference pages: **Overview**, **Configuration**, **Operations**, **Demo Artifacts**. |
 | UI components | `ui/components/*.yaml` | `markdown`, `health_panel`, `stats_row`, `callback_setup`, `form` (settings, secrets, test request, batch, notification) and `grid` (workflows, agents, tools, operations). |
 | Settings and secrets | `schemas/config.schema.yaml`, `schemas/secrets.schema.yaml`, `schemas/subscriptions.schema.yaml` | Non-secret settings with a conditional rule (`allowed_hosts` is required when `mock_mode` is off); password, API token and webhook secret stored as secrets and never echoed. |
 | Queries | `ui/queries/queries.yaml`, `handlers/queries.py` | `provider_health`, `load_connection_settings`, `connection_status`, `list_demo_workflows`, `list_demo_agents`, `list_demo_tools`, `list_example_resources`, `operation_contracts`. |
@@ -102,16 +110,15 @@ Its README explains each feature in detail. What it shows and where:
 | Workflow trigger and event bindings | `workflow_triggers` in `extension.yaml`, `contracts/event_bindings.yaml` | A provider trigger type with its config form; platform events (`approval.requested`, `job.completed`, `interaction.received`) bound to operations. |
 | Callbacks | `ui/components/callback_setup.yaml` | Webhook registration panel and HMAC signing rules. |
 | Tools | `artifacts/tools/*.yaml`, `demo_workflow_tools.py` | Deterministic tool artifacts (content, weather, product catalog) run through `invoke_tool`, including writing a file artifact. |
-| Workflows, agents, skills, datasets | `artifacts/`, `extension-descriptor.yaml` | 14 demo workflows (branching, HTTP, child workflow, For each, Groups and parallel lanes, error route, **hook**), 5 agents, 5 skills, a dataset and a saved query. |
+| Workflows, agents, skills, datasets | `artifacts/`, `extension-descriptor.yaml` | Reference inventory: 14 demo workflows (branching, HTTP, child workflow, For each, Groups and parallel lanes, error route, **hook**), 5 agents, 5 skills, a dataset and a saved query. |
 | Hooks (extension points in a shipped workflow) | `artifacts/workflows/demo_order_with_client_hook.yaml` | A protected author workflow with a hook where each project adds its own steps. |
 | Health | `health.py` | Loads each runtime module and reports per-file checks. |
 | Translations | `locales/en.yaml`, `locales/lt.yaml` | Flat key maps derived from ids. |
 | Tests and scripts | `tests/`, `.github/scripts/`, `release/checks.py` | Pytest suites for the bundle, descriptor, demo tools and test wheels; smoke check, packaging and catalog check scripts; release-candidate checks over the public API. |
 
-The showcase has no third-party runtime dependencies, so it has no `wheels/`
-folder. For a real extension that bundles wheels for both architectures, see
-the File Transfer extension
+For another external wheel-bundling reference, see the File Transfer extension
 ([github.com/Flow-Steward/ext-file-transfer-sftp](https://github.com/Flow-Steward/ext-file-transfer-sftp)).
+Verify its selected revision and wheel platforms before using it as a template.
 
 ## Create A Scaffold
 
@@ -182,10 +189,10 @@ documentation. Its ten files, all under `/examples/com_acme_crm_sync/`:
 | `health.py` | [health.py](/examples/com_acme_crm_sync/health.py) |
 | `requirements-dev.txt` | [requirements-dev.txt](/examples/com_acme_crm_sync/requirements-dev.txt) |
 | `scripts/smoke_check.py` | [scripts/smoke_check.py](/examples/com_acme_crm_sync/scripts/smoke_check.py) |
-| `ui/ui_manifest.yaml` | [ui/ui_manifest.yaml](/examples/com_acme_crm_sync/ui/ui_manifest.yaml) |
-| `ui/pages/overview.yaml` | [ui/pages/overview.yaml](/examples/com_acme_crm_sync/ui/pages/overview.yaml) |
-| `ui/actions/actions.yaml` | [ui/actions/actions.yaml](/examples/com_acme_crm_sync/ui/actions/actions.yaml) |
-| `ui/queries/queries.yaml` | [ui/queries/queries.yaml](/examples/com_acme_crm_sync/ui/queries/queries.yaml) |
+| `ui/ui_manifest.yaml` | [ui_manifest.yaml](/examples/com_acme_crm_sync/ui/ui_manifest.yaml) |
+| `ui/pages/overview.yaml` | [overview.yaml](/examples/com_acme_crm_sync/ui/pages/overview.yaml) |
+| `ui/actions/actions.yaml` | [actions.yaml](/examples/com_acme_crm_sync/ui/actions/actions.yaml) |
+| `ui/queries/queries.yaml` | [queries.yaml](/examples/com_acme_crm_sync/ui/queries/queries.yaml) |
 
 ### Get and verify the example
 
@@ -300,8 +307,9 @@ For example, `ingress_event` is valid only for `notification_provider`.
 | `entrypoint.timeout_seconds` | Optional | Invocation timeout, validated when supplied. |
 
 All refs must stay inside the extension bundle and must point to YAML files.
-Absolute paths, path traversal, missing files, and JSON contract files are
-validation errors.
+Absolute paths, refs that escape the bundle, missing files, and JSON contract
+files are validation errors. Relative `../` segments are allowed when the
+resolved target remains inside the bundle.
 
 ### Kind-Specific Operation Contracts
 
@@ -384,8 +392,9 @@ callbacks:
       header: X-Acme-Signature
 ```
 
-Callback ids use lowercase letters, numbers, underscores, and hyphens. Callback
-auth supports `none`, `shared_secret_header`, and `hmac_sha256`.
+Callback ids use lowercase letters, numbers, underscores, and hyphens, starting
+with a letter or number. Callback methods are `GET` and `POST`; auth supports
+`none`, `shared_secret_header`, `hmac_sha256`, and `hub_signature`.
 
 For HMAC, declare `signature_header`, `timestamp_header`, and
 `delivery_id_header`; `max_age_seconds` defaults to 300 and accepts 30–3,600.
@@ -397,6 +406,23 @@ Confirm that your provider supports this exact recipe and a configurable secret.
 This is distinct from workflow webhook signature configuration and the generic
 OAuth callback. See `core/application/extensions/callbacks.py` in the target
 application source for the current ingress contract.
+
+For Meta-style webhooks, `hub_signature` uses a different recipe:
+
+```yaml
+auth:
+  type: hub_signature
+  signature_header: X-Hub-Signature-256
+  secret_name: app_secret
+```
+
+Use a connection-scoped registration and allow both `GET` and `POST`. The
+registration's generated shared secret is the verification token for the GET
+`hub.mode=subscribe` handshake; a matching `hub.verify_token` returns
+`hub.challenge` as plain text. POST authentication checks HMAC-SHA256 of the raw
+body against the connection secret named by `secret_name`. It does not use the
+timestamp/delivery-ID recipe above; handle provider retries in your ingress
+logic.
 
 The operator UI can expose callback setup through a `callback_setup` component.
 Flow Steward APIs create, rotate, and check registrations, while the extension
@@ -491,6 +517,14 @@ Common schema files:
 The validator resolves schema refs from the bundle root. Keep schema files in
 YAML and avoid refs that escape the bundle.
 
+Use the platform's executable JSON Schema subset. It supports object/array and
+scalar types, required fields, enums/constants, bounds, patterns, and composition
+such as `oneOf`, `anyOf`, `allOf`, `if`/`then`/`else`, `dependentRequired` and
+`not`. Unsupported assertion keywords are rejected rather than silently
+ignored. `format` is an annotation, not format validation. Check
+`core/application/extensions/json_schema_subset.py` for the target version's
+exact supported keywords.
+
 ## UI Manifest
 
 The UI manifest is the root of the operator-facing extension UI:
@@ -531,6 +565,9 @@ newer UI surfaces.
 | `stats_row` | Compact metric row from static values or query results. |
 | `health_panel` | Provider/runtime health summary. |
 | `callback_setup` | Webhook or callback registration and status panel. |
+| `connection_form` | Connection configuration form, with optional pre-save actions. |
+| `state_editor` | Extension state editing component declaration. |
+| `external_resource_picker` | Browser resource picker with an explicit bootstrap action, scripts, origins and selection contract. |
 | `markdown` | Rendered documentation or guidance block. |
 | `log_list` | List of log-style messages with severities. |
 | `section`, `columns`, `stack`, `action_bar`, `fieldset` | Layout and grouping primitives. |
@@ -549,11 +586,11 @@ title: Connection settings
 schema_ref: ../../schemas/config.schema.yaml
 ui_schema:
   fields:
-    - name: base_url
+    - path: base_url
       label: Base URL
       widget: url
       required: true
-    - name: mock_mode
+    - path: mock_mode
       label: Mock mode
       widget: boolean
 data:
@@ -564,6 +601,9 @@ data:
 
 Action bindings must live under `data`. Top-level `save_action`,
 `validate_action`, `test_action`, or `load_query` fields are rejected.
+Use `path` or `field_id` for form fields so the compiler can check them against
+the save action's declared `parameters`. Every saved field must have a matching
+parameter; an input schema alone does not replace that declaration.
 
 Valid form widgets include:
 
@@ -583,17 +623,17 @@ and may require frontend support in the target Flow Steward version.
 Use a repeater when the operator edits a list of objects:
 
 ```yaml
-- name: records
+- path: records
   label: Records
   widget: repeater
   props:
     min_items: 1
     fields:
-      - name: record_id
+      - path: record_id
         label: Record id
         widget: text
         required: true
-      - name: urgent
+      - path: urgent
         label: Urgent
         widget: boolean
 ```
@@ -629,9 +669,10 @@ row_actions:
 Supported column types are `text`, `datetime`, `date`, `number`, `badge`,
 `boolean`, `json_summary`, `link`, and `id`.
 
-The renderer accepts rows in `result.items` or provider-specific list fields.
-For paginated data, return fields such as `page`, `page_size`, `total`, and
-`has_more`.
+The renderer reads rows from `result.items`, falling back to `result.connectors`.
+For server-paginated data, return `page` or `page_size` with the page's rows, plus
+`total` and `has_more` as needed. Without `page` or `page_size`, the renderer
+slices the returned rows locally.
 
 ### Health Panels
 
@@ -692,6 +733,9 @@ actions:
     mutates_platform: true
     command_type: invoke_extension_action
     workflow_visible: false
+    parameters:
+      - {name: base_url, type: string, required: true}
+      - {name: mock_mode, type: boolean, required: false}
     handler:
       mode: extension
 ```
@@ -708,6 +752,7 @@ Common operation fields:
 | `error_codes` | Optional | Known provider error codes. |
 | `contract` | Optional | Operation-specific contract metadata. |
 | `handler.mode` | Optional | `extension` for provider runtime, `platform` for host handling. |
+| `parameters`, `input_schema` | Actions | Declared input fields and optional input schema. Form save fields must match declared parameters. |
 | `mutates_platform` | Actions | Set true when an action requests host-side mutation. |
 | `command_type` | Mutating actions | Required when `mutates_platform` is true. |
 | `workflow_visible` | Required for actions | Explicit boolean. `true` requires a same-ID workflow-visible Contract V2 operation with compatible action/input/output semantics. |
@@ -720,7 +765,7 @@ must reference an id declared in the corresponding manifest.
 To add an action:
 
 1. Add the action to `ui/actions/actions.yaml`.
-2. If the action has input, add or update a YAML schema.
+2. If the action has input, declare its parameters and add or update a YAML schema.
 3. Bind the action from a component, workflow operation, callback, or Contract
    v2 operation.
 4. Implement a handler in the extension runtime.
@@ -754,6 +799,8 @@ actions:
     description: Scores a CRM lead with the team's own rules.
     required_scopes: [extension:invoke]
     handler: {mode: extension}
+    parameters:
+      - {name: lead, type: object, required: true}
     result_fields: [result.score]
     error_codes: [invalid_payload]
     mutates_platform: false
@@ -780,7 +827,7 @@ The handler receives the mapped inputs in `action.input` and returns
 map inputs from workflow state. A visible action without a matching operation
 fails validation (`workflow_action_requires_contract_v2`,
 `workflow_action_operation_mismatch`). The Example Showcase's `run_demo_tool`
-and `invoke_tool` are worked examples.
+and `invoke_tool` are reference examples to check in its selected revision.
 
 ## Runtime Backend Logic
 
@@ -809,6 +856,16 @@ Query request shape:
 {
   "contract_version": "extension_host_v2",
   "mode": "query",
+  "runtime_context": {
+    "account_id": "acct_123",
+    "project_id": "project_123",
+    "workflow_id": null,
+    "job_id": null,
+    "group_id": null,
+    "for_each_id": null,
+    "step_id": null,
+    "step_execution_id": null
+  },
   "host": {
     "contract_version": "extension_host_v2",
     "operation": "query",
@@ -846,12 +903,23 @@ Action requests use the same host envelope and place operation data under
 {
   "contract_version": "extension_host_v2",
   "mode": "action",
+  "runtime_context": {
+    "account_id": "acct_123",
+    "project_id": "project_123",
+    "workflow_id": "workflow_123",
+    "job_id": "job_123",
+    "group_id": null,
+    "for_each_id": "each_order",
+    "step_id": "save_order",
+    "step_execution_id": "3f0c9a52-6d1e-4c8e-9b7a-2e5d0f1a8c44"
+  },
   "host": {
     "contract_version": "extension_host_v2",
     "operation": "command",
     "scope": {
       "account_id": "acct_123",
       "project_id": "project_123",
+      "workflow_id": "workflow_123",
       "job_id": "job_123",
       "group_id": null,
       "for_each_id": "each_order",
@@ -873,14 +941,16 @@ Action requests use the same host envelope and place operation data under
 }
 ```
 
-Every envelope carries the four execution-scope keys `group_id`,
-`for_each_id`, `step_id` and `step_execution_id`. `group_id` or `for_each_id`
-names the step's immediate container (at most one of them; both are null for a
-root step), and all four are null outside a workflow run. The SDK's
-`runtime_context_from_payload` refuses an envelope with another contract, a
-missing scope key, or both containers set. There are no phases in this
-contract. Runtime context can also include artifact grants and logger metadata
-when an action runs inside a workflow.
+The SDK reads execution context from the top-level `runtime_context`, not from
+`host.scope`. Include the four execution-scope keys `group_id`, `for_each_id`,
+`step_id` and `step_execution_id` there, even when their values are null.
+`group_id` or `for_each_id` names the step's immediate container (at most one of
+them; both are null for a root step), and all four are null outside a workflow
+run. The SDK's `runtime_context_from_payload` refuses an envelope with another
+contract, a missing scope key, both containers set, or only one of `step_id` and
+`step_execution_id` set. There are no phases in this contract. Runtime context
+can also include artifact grants and logger metadata when an action runs inside
+a workflow.
 
 ## Extension SDK
 
@@ -903,7 +973,8 @@ patterns for new extensions. Platform primitives belong in
 `flowsteward_extension_sdk`; third-party libraries belong in
 `python_requirements`.
 
-The SDK is `flowsteward-extension-sdk` 0.4.0. It exposes:
+The SDK source package declares `flowsteward-extension-sdk` version 0.4.0;
+this is not proof of a published package release. Its public surface exposes:
 
 | SDK area | Use it for |
 | --- | --- |
@@ -1084,13 +1155,15 @@ Keep live network behavior explicit and safe:
 
 For example code, make live requests an explicit choice. Validate the target
 host, keep credentials out of URLs, and redact token material from diagnostics.
-The Acme CRM Sync example makes no live provider requests. The Example
-Showcase's `test_external_request` shows a mock-by-default live request.
+The Acme CRM Sync example makes no live provider requests. In the Example
+Showcase reference, inspect `test_external_request` for its mock and live-request
+behavior before running it.
 
-OAuth connections are described in Contract v2 `connection_types`. The runtime
-action receives only the connection-scoped secret values it needs, for example
-`target.connection.secrets.access_token`. Refresh tokens and client credentials
-remain platform-managed.
+OAuth connections are described in Contract v2 `connection_types`; the contract
+also supports `oauth_providers` for platform-owned provider configuration and
+authorization. The runtime action receives connection-scoped secret values, for
+example `action.target.connection.secrets.access_token`. Refresh tokens and
+client credentials remain platform-managed for platform-owned OAuth flows.
 
 ## Extension Contract V2
 
@@ -1121,6 +1194,7 @@ Contract sections:
 
 | Section | Purpose |
 | --- | --- |
+| `oauth_providers` | Platform-owned OAuth provider declarations, including configuration, callbacks and optional post-connect actions. |
 | `connection_types` | Connection definitions and auth model, including API key, OAuth2, static secret, or none. |
 | `dataset_connectors` | Dataset connector declarations and runtime kind. |
 | `operation_manifest` | Builder operations such as sources, actions, bulk actions, reports, and human channels. |
@@ -1175,9 +1249,8 @@ Supported artifact sections are `workflows`, `agents`, `skills`, `tools`,
 packaged but not listed.
 
 Validate every published artifact against the target registry schema. The
-Acme CRM Sync example has no distribution descriptor; the Example Showcase
-publishes 14 workflows, 5 agents, 5 skills, 3 tools, a dataset and a saved
-query this way.
+Acme CRM Sync example has no distribution descriptor; inspect the Example
+Showcase's selected revision for a broader descriptor/artifact example.
 
 ## Package target and host grants
 
@@ -1196,7 +1269,7 @@ There is no privileged system-extension bootstrap step.
 The extension compiler and validator perform several checks before an extension
 can be enabled:
 
-1. Locate `extension.yaml` or `extension.yml`, and check `icon.png`.
+1. Locate `extension.yaml`, and check `icon.png`. Manifest discovery does not use `extension.yml`.
 2. Reject forbidden JSON contract files.
 3. Normalize manifest identity, entrypoint, healthcheck, features, scopes, and
    refs.
@@ -1209,6 +1282,12 @@ can be enabled:
 10. Check `runtime.contract_version`, `egress`, bundled wheels against
     `python_requirements`, translations and the runtime code boundary.
 11. Build the compiled manifest preview.
+
+The static code scan also rejects patterns such as dynamic code execution,
+direct `ctypes`/`cffi` use, shells and process replacement in extension-owned
+runtime code. Other findings, such as raw sockets or subprocesses without a
+shell, can produce warnings for review. The scan is not a security boundary;
+third-party libraries and runtime isolation have separate responsibilities.
 
 Compiler validation issues include severity, code, message, file path, field
 path, and hint. These compiler codes are separate from public CLI envelope codes.
@@ -1258,6 +1337,26 @@ The `extensions test` command runs validation, then any smoke script and local p
 ./flow-steward extensions test com.acme.crm-sync
 ```
 
+Run it through the Development launcher, which supplies the dedicated test
+runtime. Calling the native test service outside that runtime fails before
+smoke or pytest execution; a command returning an error is not a completed test
+run.
+
+Use repeatable `--test-path` options to select bundle-local pytest files or node
+ids. Selected tests stop at the first failure; without a selection, the command
+runs the discovered `tests/test_*.py` targets without fail-fast:
+
+```bash
+./flow-steward extensions test com.acme.crm-sync \
+  --test-path tests/test_actions.py::test_score_lead
+```
+
+Smoke and pytest receive a filtered environment. For an extension-owned sandbox
+input already present in your environment, pass its name with repeatable
+`--test-env NAME` options. Values are read for that invocation and are not stored.
+Malformed names and platform configuration/credential variable names are refused;
+tests do not inherit the full platform environment.
+
 The isolated test environment inherits the tooling interpreter's site packages and uses offline pip with `dev-wheels/` and `wheels/`. The generated scaffold has a comment-only `requirements-dev.txt` and one pytest file; neither wheel directory is required when the tooling interpreter already has the test packages. Missing requirements or unavailable development dependencies fail the command. `--allow-no-pytest` and `--skip-pytest` do not prove regression coverage.
 
 Use `scripts/smoke_check.py` to answer "does this bundle basically work right
@@ -1267,9 +1366,9 @@ platform evolve?"
 ## Python Dependencies And Wheel Distribution
 
 An extension never installs packages into the Flow Steward Python environment
-and never runs `pip install` at run time. Every third-party library it imports
-ships inside the archive as a wheel, and `extension.yaml` pins it with its
-hashes under `python_requirements`:
+and never runs `pip install` during an invocation. Every third-party library it
+imports ships inside the archive as a wheel, and `extension.yaml` pins it with
+its hashes under `python_requirements`:
 
 ```yaml
 python_requirements:
@@ -1297,10 +1396,11 @@ installation.
 
 ### Target platforms
 
-Flow Steward runs extensions on Linux in its own container: CPython 3.12,
-Debian with glibc 2.36, on **x86_64 (amd64)** or **aarch64 (arm64)** servers.
-Apple Silicon Macs and ARM cloud servers run the arm64 image. A distributable
-extension must include wheels for **both** architectures:
+The public Dockerfile pins a Python 3.12 slim container image. Extension runtime
+targets are Linux **x86_64 (amd64)** and **aarch64 (arm64)**. Apple Silicon Macs
+and ARM cloud servers use the arm64 target when running the arm64 image. A
+single distributable archive intended for both targets must include compatible
+wheels for **both** architectures:
 
 | Server | Wheel platform tag | Example wheel |
 | --- | --- | --- |
@@ -1311,7 +1411,9 @@ extension must include wheels for **both** architectures:
 A pure-Python `py3-none-any` wheel covers both. A compiled package needs one
 wheel per architecture, built for CPython 3.12 (`cp312`) or the stable ABI
 (`abi3`). macOS (`macosx_*`), Windows (`win_*`) and `musllinux` wheels do not
-install in the Flow Steward container.
+install in the Flow Steward container. Check the target image's actual glibc
+version before choosing a newer manylinux baseline; the Dockerfile alone does
+not establish a universal glibc version for installed releases.
 
 ### Step by step
 
@@ -1346,7 +1448,7 @@ Run these in the Development tool runtime (`./flow-steward …`). It runs Python
    For each platform, `--with-wheels` downloads every locked requirement with
    `--require-hashes`, so a platform without a wheel whose hash is in the lock
    stops the bundle. The wheels stay in `<extension>/wheels/`; commit them if
-   you build archives elsewhere, as the published Flow Steward extensions do.
+   you build archives elsewhere.
 
 4. Validate the bundle with its wheels and check the archive size (below):
 
@@ -1354,10 +1456,9 @@ Run these in the Development tool runtime (`./flow-steward …`). It runs Python
    ./flow-steward extensions validate com.acme.crm-sync --root extensions
    ```
 
-Some packages publish only newer `manylinux_2_28` wheels (for example recent
-`numpy`, `pillow` or `onnxruntime`). The `manylinux2014` default does not find
-them; name a newer baseline for both steps. The runtime's glibc 2.36 accepts
-anything up to `manylinux_2_36`:
+If a package publishes only wheels for a newer manylinux baseline, the
+`manylinux2014` default may not find them. After confirming that the target
+runtime supports the newer baseline, name it for both steps, for example:
 
 ```bash
 ./flow-steward extensions lock-deps com.acme.crm-sync --root extensions \
@@ -1384,7 +1485,7 @@ pip download --only-binary=:all: --dest wheels \
   --abi cp312 --abi abi3 --abi none -r requirements.in
 ```
 
-These are the options `lock-deps` passes to pip. Then add one
+These are the target options `lock-deps` passes to pip. Then add one
 `python_requirements` entry per package and version, listing the SHA-256 of
 every wheel of that version (`sha256sum wheels/*.whl`, or `shasum -a 256` on
 macOS). Run `extensions validate` on the result: it reports any wheel that is
@@ -1396,7 +1497,7 @@ closure.
 | Check | Where | Both architectures? |
 | --- | --- | --- |
 | Every file in `wheels/` is a `.whl`, declared in `python_requirements` with its hash; wheel metadata names no undeclared dependency | `extensions validate`, install | No: it checks the files that are there. |
-| Every requirement has at least one bundled wheel with a listed hash | `extensions validate`, install | No: one wheel of any architecture satisfies it. |
+| Every requirement has at least one bundled wheel with a listed hash | `extensions validate`, install, with the default fetch mode `off` | No: one wheel of any architecture satisfies it. |
 | Each target platform resolves with binary wheels | `extensions lock-deps` | Yes, for the platforms it is given (both by default). |
 | Each locked requirement downloads for each target platform with a listed hash | `extensions bundle --with-wheels` | Yes, for the platforms it is given (both by default). |
 | A wheel compatible with this server's Python and architecture exists | Install and update | Only the server's own architecture. |
@@ -1430,7 +1531,8 @@ sets. Extensions with native executables (`bin/linux-amd64/`,
 ### At install time
 
 Install and update pick, for each requirement, the bundled wheel that best
-matches the server, and unpack them into the extension folder:
+matches the server, and install the verified wheels with offline pip into the
+extension folder:
 
 ```text
 .fs-python/<extension-version>/site/
@@ -1456,7 +1558,8 @@ invalid. Then build the archive:
 ```
 
 Use bare `bundle` (without `--with-wheels`) only when the extension has no
-`python_requirements`. The command prints the archive path and its SHA-256, for
+`python_requirements` or you have already supplied and verified the required
+wheels. The command prints the archive path and its SHA-256, for
 example `dist/extensions/com.acme.crm-sync-0.1.0.zip`. The archive's top folder
 is the canonical folder name (`com_acme_crm_sync/`). It never contains
 `dev-wheels/`, `.fs-python/` or cache folders, and the bundle refuses to run
@@ -1488,8 +1591,10 @@ To update an installed extension, install an archive with a **higher**
 version through the same paths: **Install extension from file**,
 `POST /api/extensions/install` or `extensions install --archive`. Flow Steward
 recognises the installed extension id and updates it in place: it stages the
-new release, runs its data migrations, and only then switches over; a failure
-leaves the previous release active. A disabled extension stays disabled.
+new release, runs its data migrations, and only then switches over. Failures
+before lifecycle commit roll back the candidate; failures during or after a
+commit attempt require checking the reported outcome rather than assuming the
+previous release is still active. A disabled extension stays disabled.
 Installing the same version again, or a lower one, is refused.
 
 Before you release an update:
@@ -1522,10 +1627,13 @@ Before you release an update:
 - Every UI page, component, query, and action id is unique.
 - Every UI reference points to a declared action or query.
 - Schemas describe data, while UI schemas describe controls.
+- Form save fields match the action's declared parameters.
 - Secret values are stored only in secrets and are never echoed back.
 - Runtime code imports platform helpers from `flowsteward_extension_sdk`, not
   private `core.*` modules.
 - Runtime code does not mutate `sys.path`.
+- Runtime requests used in tests include top-level `runtime_context` with all
+  four execution-scope keys.
 - Third-party subprocess libraries are locked in `python_requirements` and
   bundled as wheels.
 - Live external requests require HTTPS and an allowlist.

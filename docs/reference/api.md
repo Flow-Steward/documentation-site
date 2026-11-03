@@ -10,10 +10,16 @@ Flow Steward exposes web UI routes, JSON APIs, webhooks, WebSockets, MCP, and
 CLI surfaces. The built-in FastAPI `/openapi.json`, `/docs`, and `/redoc`
 routes are disabled; use the curated public or internal schema surfaces instead.
 
+This page describes behavior available on main. Availability in a published
+release depends on the version installed; consult that installation's schema.
+
 | Surface | Schema | Swagger UI | Main flags |
 |---|---|---|---|
 | Public integration API | `/openapi-public.json` | `/docs/api` | `FS_OPENAPI_PUBLIC_ENABLED=1`, `FS_DOCS_PUBLIC_ENABLED=1` |
 | Internal app API | `/openapi-internal.json` | `/docs/internal` | `FS_OPENAPI_INTERNAL_ENABLED=1`, `FS_DOCS_INTERNAL_ENABLED=1` |
+
+Schema and Swagger UI exposure are disabled by default. Each Swagger UI requires
+both its schema flag and its docs flag.
 
 Both surfaces require authentication by default through
 `FS_OPENAPI_PUBLIC_REQUIRE_AUTH=1` and `FS_OPENAPI_INTERNAL_REQUIRE_AUTH=1`.
@@ -64,7 +70,9 @@ the UI. Use the curated internal schema for exact request and response shapes.
 | Route | Purpose |
 |---|---|
 | `GET /api/workspaces/{workspace_id}` | Read workspace metadata. |
-| `PUT /api/workspaces/{workspace_id}` | Update workspace name, key, and description. |
+| `PUT /api/workspaces/{workspace_id}` | Update workspace display name, description, and metadata. Changing the existing key is rejected. |
+| `POST /api/workspaces/{workspace_id}/key-change/preview` | Preview a key change, conflicts, and impact. Body requires `workspace_key`. |
+| `POST /api/workspaces/{workspace_id}/key-change` | Change the key. Body requires `workspace_key` and `confirm_workspace_id` matching the workspace ID. |
 | `GET /api/workspaces/{workspace_id}/projects` | List active projects in a workspace. |
 | `POST /api/projects/{project_id}/move-workspace` | Move a project to another workspace. Body requires `workspace_id`. |
 | `POST /api/trash/workspace/{workspace_id}/delete-plan` | Preview workspace deletion and project reassignment/trash actions. |
@@ -86,7 +94,9 @@ They do not publish, edit, moderate, or administer catalog entries.
 | `POST /api/workflows/catalog/{item_id}/preflight` | Verify a template and review dependency resolutions. |
 | `POST /api/workflows/catalog/{item_id}/create` | Create an ordinary disabled workflow draft through portability apply. |
 | `GET /api/extensions/catalog` | List extension releases joined with the account's install state. |
+| `GET /api/extensions/catalog/updates` | Check installed extensions for newer catalog releases; `refresh=true` requests a fresh check. |
 | `GET /api/extensions/catalog/availability` | Report extension catalog availability. |
+| `GET /api/extensions/catalog/{extension_id}/icon` | Serve the catalog entry's verified PNG icon. |
 | `POST /api/extensions/catalog/install` | Verify and install the selected release through the existing installer. |
 
 Configure `FS_WORKFLOW_TEMPLATE_CATALOG_URL` and `FS_EXTENSION_CATALOG_URL`
@@ -94,6 +104,12 @@ with their HTTPS index URLs; an empty value disables that catalog. Workflow
 preflight/create accepts `target_workflow_id`, `project_id`, and `resolutions`.
 Extension install pins `extension_id`, `version`, and `release_sha256`;
 browser-authority changes require their separately reviewed impact hash.
+
+The update check normally reuses the catalog response for up to one hour. It
+includes newer incompatible releases as informational entries and returns
+`checked: false` when the catalog cannot be checked. Live catalog availability
+is external to the source contract; use the availability and update-check
+responses to assess it for your installation.
 
 The extension entry offers **Update to X** for a newer compatible release; it
 uses the same `POST /api/extensions/catalog/install` route and existing archive
@@ -125,10 +141,16 @@ webhook/callback ingress.
 ### Launch a workflow
 
 `POST /api/workflow-runs` accepts `project_id` (a UUID), `workflow_id`,
-`inputs`, optional `client_context`, and `test_mode`. The request rejects extra
-fields; the retired task ID, summary, execution mode, and upload request are not
-part of this contract. The workflow must admit the `mcp` trigger channel and the
-caller needs `workflows.write` (or an accepted broader scope).
+`inputs`, optional `client_context`, `test_mode`, and `files`. The request rejects
+extra fields; the retired task ID, summary, and execution mode are not part of
+this contract. The workflow must admit the `mcp` trigger channel and the caller
+needs `workflows.write` (or an accepted broader scope).
+
+`files` accepts up to ten uploads, each naming `input_name`, `filename`, optional
+`mime_type`, and strict `content_base64`. Uploads must contain nonempty bytes,
+with at most 1 MiB decoded across the request and only one upload per input name.
+ZIP uploads are checked for archive safety. Send actual file bytes through this
+contract, rather than host paths or caller-created artifact references.
 
 Send an optional stable `Idempotency-Key` to deduplicate identical retries.
 The response supplies `project_id`, `job_id`, `status`, `queue`, and
@@ -152,11 +174,11 @@ returned `approval_id` and an explicit approval action to
 retry with the same key is safe; do not create a new key merely because the
 client lost the first response.
 
-`GET /api/events/stream` requires `job_id`. Reconnect with the last opaque
-marker using `Last-Event-ID` (which takes precedence) or `cursor`. Handle
-`400`, `403`, `404`, `409`, `410`, `429`, and `503`; on `429`, honor the
-integer `Retry-After` seconds header. SSE is a durable public workflow-state
-stream, not a complete internal event or log feed.
+`GET /api/events/stream` requires `job_id` for the public integration contract.
+Reconnect with the last opaque marker using `Last-Event-ID` (which takes
+precedence) or `cursor`. Handle `400`, `403`, `404`, `409`, `410`, `429`, and
+`503`; on `429`, honor the integer `Retry-After` seconds header. SSE is a durable
+public workflow-state stream, not a complete internal event or log feed.
 
 ## Health and metrics
 
@@ -167,18 +189,20 @@ business APIs.
 |---|---|
 | `GET /health/live` | Liveness probe. |
 | `GET /health/ready` | Readiness probe with component checks. |
-| `GET /health/deep` | Readiness plus deeper runtime metadata. |
+| `GET /health/deep` | Readiness plus deeper runtime metadata; requires an admin or operator role. |
 | `GET /health` | Compatibility liveness route. |
 | `GET /api/health` | Compatibility liveness route. |
 | `GET /metrics` | Prometheus-compatible app metrics. |
 
-`/metrics` returns `text/plain; version=0.0.4`. If `FS_METRICS_TOKEN` is set,
-the caller must send either `x-metrics-token: <token>` or
-`Authorization: Bearer <token>`.
+`/metrics` returns `text/plain; version=0.0.4`. It accepts an authenticated admin
+or operator, or a configured `FS_METRICS_TOKEN` sent as either
+`x-metrics-token: <token>` or `Authorization: Bearer <token>`. Requests without
+either form of authorization return HTTP 401; leaving the token unset does not
+make metrics public.
 
 Worker and control-plane process exporters expose their own `/metrics`
 and `/health/live` endpoints on their configured metrics ports. The MCP process
-does not start a metrics exporter in this release. See
+does not start a metrics exporter in the current source. See
 [Operations Internals](../developer/operations-internals).
 
 ## Contract direction

@@ -6,15 +6,29 @@ description: Install Flow Steward Compact on an Elestio CI/CD server.
 
 # Install Compact on Elestio
 
-Elestio runs the three Compose services on one dedicated VM: Compact,
-PostgreSQL with the required Flow Steward extensions, and RabbitMQ. The
-deployment uses the same public container images as the other installation
-guides. It does not build the application or require its private source code.
+The Elestio recipe tested in September 2026 runs three Compose services on one
+dedicated VM: Compact, PostgreSQL with the required Flow Steward extensions,
+and RabbitMQ. It uses prebuilt public container images and does not build the
+application or require its private source code.
 
-The public configuration repository contains `docker-compose.yml` and
+The tested public configuration repository contains `docker-compose.yml` and
 `elestio.yml`. The first defines the services, persistent volumes, dependency
 health checks and image digests. The second fills in Elestio's deployment
 commands, generated passwords and HTTPS reverse proxy settings.
+
+The Elestio interface, external deployment template and image availability have
+not been revalidated by the current product-source review. Check the current
+template before deploying, especially its image references, environment settings,
+port mapping and volumes. Product behavior described below is supported on main;
+this does not establish that a corresponding image release has been published
+or that every behavior is present in the historical image pinned below.
+
+Before replacing the historical image, review the broker transport contract of
+the target revision. Current main defaults to `amqps://` with certificate and
+hostname verification; plaintext is allowed only by explicit, restricted local
+transport modes. A private hostname or shared VM alone does not establish that
+the template meets that contract. See
+[Installation](installation#other-providers).
 
 Fresh GitHub-template acceptance on **2026-09-28** used Compact source
 `31652e30e9c65b16576e9a4b3d105072c24b8337`, image digest
@@ -41,6 +55,9 @@ AI-provider execution and backup/restore were outside this installation check.
 
 ## Deploy
 
+The following steps describe the tested September 2026 template and Elestio
+interface. Verify the equivalent settings in the current interface and template.
+
 1. Fork the [public deployment repository](https://github.com/Flow-Steward/flow-steward-deploy)
    into your GitHub account. This copies configuration, not application images.
 2. In Elestio, open **CI/CD → GitHub → Import Git Repository**. Choose your fork.
@@ -50,16 +67,18 @@ AI-provider execution and backup/restore were outside this installation check.
    name to `flow-steward-compact`. Confirm that Elestio selected **Docker Compose**,
    build command `docker-compose pull`, and run command `docker-compose up -d`.
 5. Verify the generated environment settings and the reverse proxy route:
-   **HTTPS 443 → HTTP 172.17.0.1:3000**. Leave additional HTTP Basic Auth off;
-   Flow Steward provides its own sign-in. Create the CI/CD pipeline.
+   **HTTPS 443 → HTTP 172.17.0.1:3000** in the tested template. Confirm that this
+   matches the current template's host port mapping. Leave additional HTTP Basic
+   Auth off; Flow Steward provides its own sign-in. Create the CI/CD pipeline.
 6. Wait for the pipeline to finish and the public `/health/ready` endpoint to
-   return HTTP 200. PostgreSQL and RabbitMQ start first; Compact waits for
-   both before initialization. A VM marked **Running** does not yet mean the
+   return HTTP 200. The tested configuration starts PostgreSQL and RabbitMQ
+   before Compact initialization. A VM marked **Running** does not yet mean the
    application is ready.
 
 Import the template through GitHub. Do **not** paste `random_password` into
 the manual Docker Compose environment editor: in our direct-paste test,
-Elestio kept that literal text as the password. Template import expands it.
+Elestio kept that literal text as the password. Template import expanded it in
+the tested deployment; verify that the current import generates values.
 The generated password values are secrets; do not copy them into Git.
 
 ## Create the first administrator
@@ -68,6 +87,9 @@ Open the pipeline logs and find `Flow Steward has no administrator yet`.
 Privately open the complete one-time setup URL printed there. It includes the
 token needed by `/bootstrap` and expires after **15 minutes**. Opening the
 public application URL without this token cannot authorize first-user creation.
+If the log prints only `/bootstrap#setup-token=...`, prepend your application's
+public HTTPS origin. The setup page removes the token from the address bar;
+if you reload and lose it, reopen the original unexpired link.
 
 If the link expires while no user exists, open the VM's **Open terminal** and
 restart only Compact:
@@ -79,7 +101,9 @@ docker compose logs --tail=100 compact
 ```
 
 Read the fresh setup URL, or use an earlier link if the log says it remains
-valid. Do not remove any volumes to regenerate a link.
+valid. Do not remove any volumes to regenerate a link. Automatic link generation
+requires local authentication and first-administrator bootstrap to be enabled,
+with no separately configured setup token.
 
 ## Use the administrative CLI
 
@@ -93,8 +117,9 @@ docker compose exec compact flow-steward --json users list
 docker compose exec compact flow-steward status
 ```
 
-The directory follows the pipeline name. If you chose another name, replace
-`flow-steward-compact` in the path. For an interactive container shell:
+The directory follows the pipeline name in the tested deployment. If you chose
+another name, replace `flow-steward-compact` in the path. Confirm the service is
+named `compact` in your template. For an interactive container shell:
 
 ```bash
 docker compose exec compact sh
@@ -115,16 +140,17 @@ operations.
 
 ## Persistence, updates and cleanup
 
-Only Compact is exposed through Elestio's HTTPS proxy. PostgreSQL and RabbitMQ
-are private to the Compose network. The three named volumes hold database,
-broker and application data. Restarting Compact preserves them; deleting
-volumes does not.
+In the tested template, only Compact is exposed through Elestio's HTTPS proxy.
+PostgreSQL and RabbitMQ are private to the Compose network. The three named
+volumes hold database, broker and application data. Confirm these settings in
+the current template. Restarting Compact preserves mounted persistent data;
+deleting volumes does not.
 
-GitHub CI/CD can redeploy when you push to its configured branch. Review
-changes before syncing your fork, especially image digests and database
-upgrade requirements. Keep one Compact instance with this configuration.
-Restart and replacement temporarily interrupt access; wait for readiness
-before retrying.
+GitHub CI/CD can redeploy when you push to its configured branch; verify the
+pipeline's current trigger settings. Review changes before syncing your fork,
+especially image digests and database upgrade requirements. Keep one Compact
+instance with this configuration. Restart and replacement temporarily interrupt
+access; wait for readiness before retrying.
 
 Arrange and test backups of all three persistent stores before keeping real
 data. A provider VM backup is not evidence that application-level recovery

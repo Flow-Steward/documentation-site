@@ -1,7 +1,7 @@
 ---
 sidebar_position: 5
 title: Operations Internals
-description: Runtime files, logs, backups, retention jobs, prompt debug logs, and local operational paths.
+description: Runtime files, logs, backups, retention jobs, and local operational paths.
 ---
 
 # Operations Internals
@@ -10,6 +10,10 @@ This page is for developers and operators who need the technical runtime
 boundaries behind Flow Steward operations. The User Guide explains what to do in
 the UI; this page explains where operational evidence lives and which scripts
 own it.
+
+The behavior below is supported by the current public source on main; this does
+not establish availability in a published release or validate a particular
+installed deployment.
 
 ## Runtime directories
 
@@ -25,7 +29,7 @@ without deleting operator data.
 |---|---|---|
 | `FS_EXTENSIONS_DIR` | Mounted to `/app/extensions` for self-hosted extensions. | `../../extensions` |
 | `FS_LOGS_DIR` | Mounted to `/app/logs` for runtime logs and generated evidence. | `../../logs` |
-| `FS_BACKUPS_DIR` | Installer manifest host path; current backup scripts resolve `${FS_ARTIFACT_ROOT:-repository}/backups`. | `../../backups` |
+| `FS_BACKUPS_DIR` | Host transfer directory mounted at `/app/backups` for CLI operations; scheduled backup scripts separately resolve `${FS_ARTIFACT_ROOT:-repository}/backups`. | `../../backups` |
 | `FS_DB_SCHEMA_DIR` | Mounted into Postgres init scripts. | `../../db/schema` |
 | `FS_ARTIFACT_ROOT` | Root used by scheduled ops scripts for `logs/` and `backups/`. | repo root when unset |
 
@@ -35,8 +39,9 @@ Generated development and audit artifacts are intentionally routed under
 
 ## Runtime logging
 
-Long-running services use shared runtime logging with stderr plus an optional
-daily file sink.
+Long-running application, worker, and control services use shared runtime logging
+with stderr plus an optional daily file sink. The thin MCP transport uses its own
+logging setup; do not assume every shared logging setting applies to it.
 
 | Variable | Purpose |
 |---|---|
@@ -56,9 +61,9 @@ daily file sink.
 Daily file names follow `<basename>-YYYY-MM-DD.log`, for example
 `platform-2026-06-16.log`.
 
-Job evidence is not only file-based. Job logs, messages, events, runtime journal,
-errors, approvals, artifacts, cost, and incident records are persisted through
-the platform database and exposed through UI, CLI, API, and MCP surfaces.
+Job evidence is not only file-based. Runtime and observability records, including
+job messages, action logs, and events, are also persisted in the platform
+database.
 
 ## Sentry
 
@@ -66,9 +71,10 @@ Sentry is optional production observability for runtime exceptions, error-level
 logs, traces, and profiling samples. If `SENTRY_DSN` is empty, initialization is
 skipped and the process continues normally.
 
-Sentry is initialized in the FastAPI app, worker, control-plane, worker manager,
-and MCP server paths. Runtime records are tagged with a `component` value such
-as `serve`, `worker`, `control`, `worker_manager`, or `mcp_server`.
+Sentry is initialized in the FastAPI app, worker, control-plane, and worker manager
+paths. Runtime records are tagged with a `component` value such as `serve`,
+`worker`, `control`, or `worker_manager`. The current thin MCP server entrypoint
+does not initialize Sentry.
 
 | Variable | Purpose |
 |---|---|
@@ -80,38 +86,59 @@ as `serve`, `worker`, `control`, `worker_manager`, or `mcp_server`.
 | `SENTRY_SEND_DEFAULT_PII` | Whether Sentry may send default PII. Keep `0` unless explicitly approved. |
 | `SENTRY_AUTO_ENABLING_INTEGRATIONS` | Lets Sentry auto-enable integrations. Defaults to `0`. |
 
-This release initializes no browser Sentry SDK or browser tracing; the backend
-integration remains supported.
+The current public source initializes no browser Sentry SDK or browser tracing;
+the backend integration remains supported.
 
 The runtime adds logging integration with `event_level=ERROR`. FastAPI and
 Starlette integrations are used for the app process when available.
 
+## OpenTelemetry export
+
+Optional OpenTelemetry export supports traces, metrics, and logs over OTLP/HTTP
+with `http/protobuf`. Each signal stays off unless its exporter is explicitly
+set to `otlp` and an endpoint is configured. There is no implicit localhost
+collector.
+
+Use `OTEL_TRACES_EXPORTER`, `OTEL_METRICS_EXPORTER`, and `OTEL_LOGS_EXPORTER` to
+select signals. Configure a common `OTEL_EXPORTER_OTLP_ENDPOINT` or the
+signal-specific `OTEL_EXPORTER_OTLP_TRACES_ENDPOINT`,
+`OTEL_EXPORTER_OTLP_METRICS_ENDPOINT`, and `OTEL_EXPORTER_OTLP_LOGS_ENDPOINT`.
+The MCP entrypoint also initializes this optional telemetry lifecycle. Configuring
+export does not establish that an external collector is reachable or retaining
+data; verify that in the installed environment.
+
 ## Prometheus metrics
 
 Flow Steward exposes Prometheus-compatible text metrics from the app and from
-long-running process exporters. The table below describes Scalable defaults.
+long-running process exporters. The table below describes Scalable Compose
+defaults. Without a configured positive exporter port, a standalone worker or
+control process does not start its metrics server.
 Compact allocates worker exporters from port `9200 + worker_index` inside its
 runtime rather than using the Scalable worker default universally.
 
 | Surface | Path | Default port |
 |---|---|---|
 | App/API metrics | `/metrics` on the app HTTP service | Same as app port |
-| Worker process metrics | `/metrics` | `FS_WORKER_METRICS_PORT`, default `9101` |
-| Control-plane process metrics | `/metrics` | `FS_CONTROL_METRICS_PORT`, default `9102` |
+| Worker process metrics | `/metrics` | `FS_WORKER_METRICS_PORT`, Compose default `9101` |
+| Control-plane process metrics | `/metrics` | `FS_CONTROL_METRICS_PORT`, Compose default `9102` |
 | Process liveness | `/health/live` on worker/control exporters | Same exporter port |
 
-`FS_PROCESS_METRICS_HOST` controls the exporter bind host. Worker and control
-exporters must be reachable through the deployment's private network or configured
-collector route. No MCP process metrics server is started in this release.
+`FS_PROCESS_METRICS_HOST` controls the exporter bind host. Scalable worker and
+control exporters must be reachable through the deployment's private network or
+configured collector route. Compact binds these exporters to internal loopback;
+use the app endpoint for external collection. No MCP process metrics server is
+started by the current MCP entrypoint.
 
-Set `FS_METRICS_TOKEN` in production to require either:
+Configure a nonempty `FS_METRICS_TOKEN` and supply either:
 
 - `x-metrics-token: <token>`
 - `Authorization: Bearer <token>`
 
-When the token is empty, `/metrics` is reachable without a metrics-specific
-token. Use network policy, reverse proxy rules, or the token for production
-hardening.
+The app endpoint also permits an authenticated `admin` or `operator`. An empty
+token does not grant anonymous access: process `/metrics` endpoints return `401`,
+and the app still requires an authorized user. Process `/health/live` remains
+accessible without the metrics token. Production Compose requires a nonempty
+metrics token. Use network policy or reverse proxy rules as additional controls.
 
 The app `/metrics` payload includes readiness, readiness checks, total projects,
 jobs by status, active project leases, ready queue depth, and 24-hour SLO values
@@ -135,8 +162,10 @@ evidence, and restart checks.
 
 ## Scheduled ops wrapper
 
-`core/entrypoints/cli/scripts/ops_schedule.sh` runs recurring maintenance tasks
-and writes rolling plus per-run logs under `logs/runtime/`.
+`core/entrypoints/cli/scripts/ops_schedule.sh` runs maintenance tasks when invoked
+and writes rolling plus per-run logs under `logs/runtime/`. An external scheduler
+must invoke this wrapper for recurrence. Retention also has a built-in
+control-plane loop, described below.
 
 ```bash
 core/entrypoints/cli/scripts/ops_schedule.sh backup
@@ -160,7 +189,12 @@ It writes:
 ## Retention cleanup
 
 Retention cleanup removes old records from observability and lifecycle tables.
-Use dry-run first:
+The control-plane retention loop invokes the same cleanup with each account's
+settings, so retention does not require host cron. Its configuration defaults to
+`FS_RETENTION_ENABLED=1` and `FS_RETENTION_INTERVAL_SECONDS=86400`, with a minimum
+interval of 3600 seconds.
+
+For a manual pass, use dry-run first:
 
 ```bash
 python -m core.application.tooling.ops.retention_cleanup --dry-run
@@ -176,18 +210,24 @@ python -m core.application.tooling.ops.retention_cleanup \
   --events-days 30 \
   --retry-queue-days 14 \
   --trash-days 30 \
-  --terminal-job-checkpoints-days 30
+  --terminal-job-checkpoints-days 30 \
+  --revisions-keep 5
 ```
 
 Defaults come from account retention settings and these deployment variables:
 `FS_RETENTION_JOBS_DAYS`, `FS_RETENTION_MESSAGES_DAYS`,
 `FS_RETENTION_LOGS_DAYS`, `FS_RETENTION_EVENTS_DAYS`,
-`FS_RETENTION_RETRY_QUEUE_DAYS`, `FS_RETENTION_TRASH_DAYS`, and
-`FS_RETENTION_TERMINAL_JOB_CHECKPOINTS_DAYS`.
+`FS_RETENTION_RETRY_QUEUE_DAYS`, `FS_RETENTION_TRASH_DAYS`,
+`FS_RETENTION_TERMINAL_JOB_CHECKPOINTS_DAYS`, and `FS_RETENTION_REVISIONS_KEEP`.
+The revision setting is a count per entity, not a duration. Explicit
+`--revisions-keep` overrides every account's setting for that pass.
 
 The cleanup prints counts for jobs, agent messages, action log, events, retry
-queue, terminal job checkpoints, trash, and failed trash purges. Job artifact
-purge uses the configured artifact storage adapter.
+queue, terminal job checkpoints, idempotency tombstones, registry changelog,
+project settings revisions, trash, failed trash purges, expired artifacts and
+datasets, and artifact cleanup failures. Job artifact purge uses the configured
+artifact storage adapter. Artifact cleanup failures can fail the pass, including
+journal finalization failures after the database commit.
 
 ## Workspace artifact pruning
 
@@ -207,29 +247,33 @@ python -m core.application.tooling.ops.prune_workspace_artifacts \
 ```
 
 `FS_WORKSPACES_ROOT` changes the default workspace root, and
-`FS_WORKSPACE_MAX_AGE_DAYS` changes the default max age.
+`FS_WORKSPACE_MAX_AGE_DAYS` changes the default max age. Pruning uses each child
+directory's modification time and skips ordinary files and `.gitkeep`.
 
-Compact does not ship this cleanup module. The CLI image copies the ops package,
-so do not describe cleanup modules as absent from every image. Package presence
-alone does not verify dependencies, database access, or workspace mounts in a
-particular installed CLI; check that exact context before dropping `--dry-run`.
+Compact does not ship this workspace pruning module. The CLI image copies the
+ops package, so do not describe cleanup modules as absent from every image.
+Package presence alone does not verify dependencies, database access, or
+workspace mounts in a particular installed CLI; check that exact context before
+dropping `--dry-run`.
 
 ## Artifact storage
 
-Workflow artifacts can use memory, local filesystem, or S3-compatible storage:
+Workflow artifacts can use memory, local filesystem, or S3-compatible storage.
+The runtime factory defaults to `local_fs` and rejects unsupported backend names.
 
 | Variable | Purpose |
 |---|---|
-| `ARTIFACT_STORAGE_BACKEND` | `memory`, `local_fs`, or `s3`. |
-| `ARTIFACT_LOCAL_ROOT_DIR` | Local filesystem root, default `/data/artifacts` when local storage is used. |
+| `ARTIFACT_STORAGE_BACKEND` | `memory`, `local_fs`, or `s3`; default `local_fs`. |
+| `ARTIFACT_LOCAL_ROOT_DIR` | Local filesystem root; factory default `/data/artifacts`, overridden to `/app/logs/artifacts` by Scalable production Compose. |
 | `ARTIFACT_S3_ENDPOINT_URL` | S3-compatible endpoint. |
+| `ARTIFACT_S3_PUBLIC_ENDPOINT_URL` | Optional public endpoint supplied to the S3 adapter. |
 | `ARTIFACT_S3_BUCKET` | Bucket name. |
 | `ARTIFACT_S3_ACCESS_KEY` | Access key. |
 | `ARTIFACT_S3_SECRET_KEY` | Secret key. |
 | `ARTIFACT_S3_REGION` | Region. |
-| `ARTIFACT_S3_KEY_PREFIX` | Optional key prefix. |
+| `ARTIFACT_S3_KEY_PREFIX` | Optional key prefix; `ARTIFACT_KEY_PREFIX` takes precedence in the runtime factory. |
 | `ARTIFACT_S3_USE_SSL` | SSL toggle. |
-| `ARTIFACT_S3_PRESIGN_TTL_SECONDS` | Presigned URL lifetime. |
+| `ARTIFACT_S3_PRESIGN_TTL_SECONDS` | Presigned URL lifetime; factory default 600 seconds, Scalable production Compose default 900 seconds. |
 
 Retention cleanup uses the same artifact storage configuration when purging job
 artifacts for expired jobs.
