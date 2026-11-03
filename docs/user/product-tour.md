@@ -16,18 +16,25 @@ transitions, and decide what automation is allowed to touch.
 
 ## Main areas
 
+The areas and actions available depend on your permissions. Workflow authoring
+requires an administrator; Monitoring, Trash, and platform settings require
+platform administration access.
+
 | Area | Use it for |
 |---|---|
 | Dashboard | See current delivery activity, cost, failures, and attention signals. |
-| Projects | Organize automation inside a workspace, maintain project rules and policy, attach datasets, assign data connections, and route notifications. |
-| Jobs | Follow running work, review logs/messages/errors, approve or reject gates, retry, cancel, and restart. |
-| Workflows | Create and manage executable delivery plans; browse the Workflow Catalog through Create workflow > From catalog. |
+| Projects | Organize automation inside a workspace, maintain project rules and policy, attach datasets, assign data connections, and inspect the read-only notification overview. |
+| Jobs | Follow running work, review logs/messages/errors, approve or reject gates, acknowledge failed or stuck runs, cancel active jobs, and restart terminal jobs. |
+| Workflows | Create and manage executable delivery plans; browse workflow templates in the Catalog tab when a template catalog is configured. |
 | Registry | Manage agents, skills, tools, MCP catalogs, workspaces, datasets, data connections, and guardrails. |
-| Extensions | Browse the Extension Catalog in Marketplace; install, configure, update, and operate extension bundles. |
-| Events | Inspect platform events, workflow step events, runtime messages, dispatch state, and redrive candidates. |
+| Extensions | Browse the Extension Catalog in the Catalog tab; install, configure, update, and operate extension bundles. |
+| Monitoring > Events | Inspect platform events, workflow step events, runtime messages, dispatch state, and redrive candidates. |
 | Monitoring | Check services, queues, storage, runtime health, and operational state. |
 | Settings | Manage users, roles, service accounts, model providers, security, retention, and notifications. |
 | Trash | Restore soft-deleted registry and data objects or plan permanent deletion. |
+
+Catalog contents and availability depend on the installation's configuration
+and the configured catalog service.
 
 ## Search within your scope
 

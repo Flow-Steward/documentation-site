@@ -10,7 +10,8 @@ Flow Steward exposes an MCP server for agents and developer tools that need
 structured access to projects, workflows, agents and skills, jobs, reports, and
 notifications.
 
-This page describes the built-in Flow Steward MCP tools. The user-facing guide
+This page describes the built-in Flow Steward MCP tools available on main;
+it does not establish which published release includes them. The user-facing guide
 for registering external MCP catalogs is [Tools And MCP](../user/tools-and-mcp).
 `tools/list` is the exact JSON Schema source for MCP clients. The tables below
 are a human navigation map, not a replacement for the live tool schemas.
@@ -19,10 +20,12 @@ are a human navigation map, not a replacement for the live tool schemas.
 
 Clients on your computer (Claude Code, Codex, Cursor, Gemini CLI) authenticate
 with a personal access token or a machine token sent as
-`Authorization: Bearer <token>`. Cloud apps (Claude.ai, Cowork, ChatGPT) sign in
+`Authorization: Bearer <token>`. Cloud apps that support remote MCP OAuth can sign in
 through OAuth and receive short-lived access tokens bound to this installation's
 `/mcp` address; they need a public HTTPS address and an administrator's
-permission. See [Connect AI Agents](../integrations/connect-ai-agents).
+permission. Availability in Claude.ai, Cowork, ChatGPT, or another cloud client
+depends on that provider's current connector support and account settings.
+See [Connect AI Agents](../integrations/connect-ai-agents).
 
 Tools forward the original bearer token to the application API, which enforces
 the operation's role/capability policy, account/tenant boundary, and project
@@ -45,6 +48,10 @@ For workflow work:
 6. `job_status`
 7. `job_logs`, `job_messages`, `job_errors`
 
+`workflow_validate` checks the stored definition statically: `execution_verified`
+is always false, and `unperformed_checks` lists what it did not prove. A valid
+result does not establish that execution or external effects will succeed.
+
 Published webhook entrypoints are not an MCP surface: external systems call
 `/webhook/workflows/{entry_key}`, and MCP clients launch a workflow directly by
 project and workflow ID with `workflow_trigger`.
@@ -66,7 +73,7 @@ current boundary.
 
 | Tool | Purpose |
 |---|---|
-| `project_list` | List visible projects. |
+| `project_list` | List visible projects from the API's first page, requesting at most 200; this tool has no pagination arguments. |
 | `project_jobs(project_name, limit=10, page=1, status="")` | List the project's jobs you may see, newest first, one page of `limit` (at most 50). `status` takes one status, a comma list or a status group key; `total` and `total_pages` tell whether more pages exist. |
 
 ### Workflows
@@ -74,8 +81,8 @@ current boundary.
 | Tool | Purpose |
 |---|---|
 | `workflow_list(project_name, enabled_only=true, include_validation=false)` | List workflows linked to a project. |
-| `workflow_validate(workflow_id, project_name="")` | Validate workflow readiness and contract issues. |
-| `workflow_contract(workflow_id, project_name)` | Read the normalized public workflow contract. |
+| `workflow_validate(workflow_id, project_name="")` | Validate workflow readiness and contract issues statically. |
+| `workflow_contract(workflow_id, project_name)` | Read the normalized public workflow contract, including an accessible disabled draft linked to the project. |
 | `workflow_suggestions(workflow_id, project_name="")` | Get repair suggestions for one workflow. |
 | `workflow_trigger(project_name, workflow_id, payload=None, client_context=None, test_mode=false, files=None)` | Start a workflow in a concrete project. Pass declared inputs in `payload`. File inputs go in `files` (`input_name`, `filename`, `mime_type`, strict `content_base64`; up to 10 files, 1 MiB decoded in total). Returns `job_id`. |
 | `workflow_stats(project_name, workflow_id)` | Show run statistics of a workflow linked to the project. |
@@ -139,11 +146,11 @@ schema tools need `read:*` or `admin:all`; `model_options` needs
 | `skill_list(search=None, enabled_only=false)` | List skills, disabled ones included by default. |
 | `skill_get(skill_id)` | Read one skill's editable settings, even when it is disabled. |
 | `skill_create(skill)` | Create one skill under exactly `skill["skill_id"]`; it is saved disabled by default. |
-| `skill_update(skill_id, changes)` | Change only the fields in `changes`; every field sent replaces the stored value. |
+| `skill_update(skill_id, changes)` | Change only the fields in `changes`; `null` never clears a field, and every field sent replaces the stored value. |
 | `skill_inputs_set(skill_id, inputs)` / `skill_outputs_set(skill_id, outputs)` | Replace the whole expected input or output list. Invalid items are refused and nothing changes. |
 | `skill_validate(skill_id)` | Check readiness without changing anything. |
-| `skill_set_enabled(skill_id, enabled)` | Set the enabled state exactly. Disabling is refused while enabled workflows depend on an agent using the skill. |
-| `workflow_set_enabled(workflow_id, enabled, expected_revision)` | Enable or disable a workflow at the revision read with `workflow_definition`. Enabling needs a valid readiness result and does not run the workflow. |
+| `skill_set_enabled(skill_id, enabled)` | Set the enabled state exactly. Enabling needs a valid readiness result; disabling is refused while enabled workflows depend on an agent using the skill. |
+| `workflow_set_enabled(workflow_id, enabled, expected_revision)` | Enable or disable a workflow at the revision read with `workflow_definition`. Enabling needs a valid readiness result and compatible callers, and does not run the workflow. |
 | `model_options()` | List the LLM providers and models the account may select, without secrets. |
 
 A create keeps the requested ID. A taken ID is refused with
@@ -166,15 +173,19 @@ no version check: read the object right before changing it. A valid
 | `workflow_draft_save(project_name, bundle_yaml, resolutions=None)` | Atomically create one disabled draft; never overwrite. |
 
 Use the existing `platform.workflow_bundle.v1` format with one explicit workflow ID
-and only `use_existing` or `map_existing` resolutions. Validation and save share
+and only `use_existing` or `map_existing` resolutions. Draft authoring rejects
+bundles containing hook bindings; use workflow import to restore those bindings.
+Validation and save share
 application preparation and validation. Save requires administrator creation
 authority; an admin user's scoped PAT needs `admin:all`, project-name resolution
 needs `projects.read`, and machine tokens remain operators. Keep the same ID on retry;
 inspect conflicts rather than automatically renaming: a display name already
 used by another workflow is refused with `registry_name_conflict` and its
 matches. Drafts are inspected with
-`workflow_list(..., enabled_only=false)` or the editor: project-scoped
-`capability_describe` and `workflow_contract` currently return 404 for disabled workflows.
+`workflow_list(..., enabled_only=false)`, `workflow_definition`,
+`workflow_contract`, or the editor. Project-scoped `workflow_validate` and
+`workflow_suggestions` also accept accessible disabled drafts;
+`capability_describe` still hides disabled workflows.
 These tools do not install dependencies, enable or run drafts. Enable deliberately
 after human review before editor Test Run, which may cause external effects.
 
@@ -247,8 +258,8 @@ Return actual filters, window, coverage and report ID when persisted.
 
 ## Errors
 
-A refused call is a tool error with `ok: false` and an `error` object. Its
-`code` is the application's own domain code when the route has one, so the agent
+An application API refusal is a tool error with `ok: false` and an `error`
+object. Its `code` preserves the application's code when available, so the agent
 can tell what to fix, for example:
 
 | Code | Meaning |
@@ -258,14 +269,18 @@ can tell what to fix, for example:
 | `workflow_id_conflict` | A workflow with that ID already exists. |
 | `workflow_revision_conflict` | The workflow changed since you read it; read it again and reapply. |
 
-Otherwise `code` names the HTTP outcome: `invalid_request` (400),
-`unauthorized` (401), `forbidden` (403), `not_found` (404), `conflict` (409),
-`validation_error` (422),
-`rate_limited` (429) or `service_unavailable` (503). `message` is a readable
-sentence, `status_code` the HTTP status and `details` the route's own error
-payload, such as validation `issues`. `workflow_import` returns only its
-blocking dependencies. Report a permission error as an error; do not retry with
-a wider token unless a person decides to.
+When the route supplies no usable code, the MCP adapter falls back to
+`invalid_request` (400), `unauthenticated` (401), `forbidden` (403),
+`not_found` (404), `conflict` (409), `validation_failed` (422),
+`rate_limited` (429), `dependency_unavailable` (503), or `app_api_error`
+for other statuses. A supplied application code can instead be `unauthorized`,
+`validation_error`, or `service_unavailable` for the corresponding status.
+`message` is a readable sentence and `status_code` the HTTP status.
+Most tools retain the route's error details. Workflow authoring/editing tools
+return selected safe fields, with validation `issues` directly on `error`;
+name conflicts retain selected `details`. `workflow_import` exposes only its
+blocking dependencies from the import preflight details. Report a permission
+error as an error; do not retry with a wider token unless a person decides to.
 
 ## Safety
 
@@ -273,7 +288,7 @@ Treat MCP tools as operational capabilities. Use read tools first, inspect
 context, then call write/control tools only when the role, scope, and expected
 effect are clear.
 
-The server registers 72 tools as of 0.9.7, matching
+The reviewed main source registers 72 tools, matching
 `core/entrypoints/mcp/server_tool_scopes.py`. Discovery is request-local and filters
 tools by any-of token scopes before returning `tools/list`; the application API
 still enforces role, tenant, project, workflow, and capability policy on every

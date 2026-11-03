@@ -163,10 +163,12 @@ See [Upgrade Reference](upgrade).
 
 `clone create` captures allowlisted product state in an encrypted `.fsclone`
 archive. `clone restore <archive>` destructively replaces that state on an
-already installed target. Both require fully enabled manual maintenance,
-matching profiles, and a compatible Linux CPU platform. Both source and target
-must have verified official installed identities. A checkout source installation
-must complete its explicit official release transition before Clone is available.
+already installed target. Both require fully enabled manual maintenance.
+Source and target must have matching profiles, matching data placement
+(host directories or Docker volumes), and the same normalized Linux CPU
+architecture. Both source and target must have verified official installed
+identities. A checkout source installation must complete its explicit official
+release transition before Clone is available.
 
 Restore preserves target-local domain, ports, TLS, and installation identity.
 It activates the archive's exact official release through the shared release

@@ -25,6 +25,9 @@ AI agents alike:
   `frontend-standard.md`, `security-standard.md`, `configuration-standard.md`);
 - the ADRs in `docs/architecture/adr/`.
 
+The commands and verification policy below reflect current `main`; they do not
+establish that a particular release has been published.
+
 ## 1. Find or open an issue
 
 Search the [issues](https://github.com/Flow-Steward/flow-steward-app/issues)
@@ -41,6 +44,9 @@ Security vulnerabilities go privately to `security@flow-steward.org`, never to
 a public issue or pull request.
 
 ## 2. Fork, clone and branch
+
+You need Git, GitHub access (the examples use `gh`), Docker with Compose v2,
+and `pre-commit` for the local hooks.
 
 ```bash
 gh repo fork Flow-Steward/flow-steward-app --clone
@@ -59,17 +65,19 @@ git rebase upstream/main
 
 ## 3. Install the Development environment
 
-Develop on a Development installation, never on a production one:
+Develop on a Development installation, never on a production one. Select
+Scalable explicitly: the default Compact profile requires Production.
+Run the installer as the deployment owner, without `sudo`:
 
 ```bash
-./install.sh --environment development --file-storage bundled
+./install.sh --environment development --deployment-profile scalable --file-storage bundled
 ./flow-steward status
 ./flow-steward doctor
 ```
 
 Development installs the core, the frontend and the `fs-test-runner` and
 `fs-audit` containers used by tests and quality gates. Docker with Compose v2
-is the only host requirement. `./flow-steward environment show` tells which
+runs the product and tests. `./flow-steward environment show` tells which
 environment is installed. Hot reload and the Compose helpers are described in
 [Local Development](local-development).
 
@@ -83,8 +91,11 @@ environment is installed. Hot reload and the Compose helpers are described in
    CLI, MCP and other transports; `core/application/` owns business logic and
    repositories; `core/infrastructure/` owns technical adapters. Frontend code
    lives in `assets/frontend/` and reuses the existing components.
-4. **Database changes** after 1.0 are SQL files in
-   `db/migrations/YYYYMMDDHHMMSS_slug.sql`. `db/schema/` is the 1.0 baseline.
+4. **Database changes** use SQL files in
+   `db/migrations/YYYYMMDDHHMMSS_slug.sql`. `db/schema/` is the 1.0 baseline,
+   but installed databases never re-read it. Changes to a released baseline,
+   including the 0.9.x baseline, also need an idempotent migration and an
+   updated `baseline_schema_fingerprint` in `db/released_migrations.json`.
 5. **Documentation**: update the guides in the same pull request when behavior,
    a command, an API or a setting changes. An architectural decision needs an
    ADR.
@@ -100,35 +111,68 @@ cd assets/frontend
 npx --no-install eslint --fix <changed-ts-or-tsx-files>
 ```
 
+Inspect the diff and return to the repository root before running the gate.
+
 ## 5. Verify in three tiers
 
 All tiers run inside the disposable `fs-audit` container through
 `./core/entrypoints/cli/scripts/lint.sh`. A test run on the host is not
-evidence. [Quality And Testing](quality-and-testing) lists every check.
+evidence. Tier 1 runs locally; Tier 2 and Tier 3 run on disposable
+GitHub-hosted Linux runners in the public source repository. Local Docker
+runs of those gates remain a diagnostic or fallback option.
+[Quality And Testing](quality-and-testing) describes the checks; the repository's
+current testing standard defines their ownership and evidence rules.
 
 | Tier | When | Command |
 |---|---|---|
 | 1 — iteration | while fixing; stops at the first failure | `./core/entrypoints/cli/scripts/lint.sh --checks targeted-tests --test-paths "auto tests/unit/<regression_test>.py"` |
 | 1 — frontend | when you changed `assets/frontend/` | `./core/entrypoints/cli/scripts/lint.sh --checks frontend-targeted-tests --test-paths auto` |
-| 2 — commit | before every commit; the pre-commit hook runs it | `./core/entrypoints/cli/scripts/lint.sh --fast` |
-| 3 — pull request | once, from the final commit | `./core/entrypoints/cli/scripts/lint.sh --full` |
+| 2 — pushed change | after every public branch push | `./core/entrypoints/cli/scripts/lint.sh --fast` |
+| 3 — merge | from the final committed public candidate, before merge to main | `./core/entrypoints/cli/scripts/lint.sh --full` |
 
 `auto` picks the tests related to your diff against `main`. Add by path what
 the import graph cannot see, such as runtime, database or extension tests.
-Diagnose a failure before you run it again.
+The pre-commit hooks run affected backend and frontend Tier 1 tests with
+`auto:HEAD`, selecting the current commit's delta. Those results do not replace
+the remote gates.
 
-`--full` runs the complete backend suite to the end: group the failures by
-root cause and fix them as one batch, then run `--full` again. Database,
-authentication, security, runtime, extension-framework and deployment changes
-always need Tier 3, however small the diff.
+The `Remote quality pilot` workflow runs Tier 2 after public branch pushes.
+Its manual `release` mode runs the cumulative pre-merge gate; `release-sonar`
+also runs the disposable Sonar pilot. The workflow is restricted to the public
+`Flow-Steward/flow-steward-app` repository, so a fork push alone does not produce
+that official evidence. Coordinate the public candidate with a maintainer.
+A pull request may report Tier 3 as pending, but it must pass before merge.
 
-GitHub Actions are disabled in the repository. Your local gate result is the
-evidence reviewers see, so keep the exact commands, exit codes and commit SHA.
+Before expensive verification, integrate current main into the candidate.
+Recheck main after verification and immediately before merge; if it advances
+beyond the candidate, integrate it and verify the new SHA again.
+
+`--full` validates or refreshes Tier 2 evidence for the candidate, runs the
+Tier 3 checks and validates the cumulative result. The backend suite runs to
+the end: group failures by root cause and fix them as one batch. Before another
+full gate, run the failed and affected tests using `auto:<failed-sha>` plus
+explicit failed backend test paths. For frontend retries, use either
+`auto:<failed-sha>` or an explicit list that includes failed files and affected
+consumers; do not combine both forms in one selection.
+
+Database, authentication, security, runtime, extension-framework and deployment
+changes always need Tier 3 before merge, however small the diff. Substantial
+core changes also require full frontend/backend Sonar analysis; the disposable
+pilot does not replace the existing Sonar release check until its baseline and
+gates are reconciled.
+
+Keep exact commands, exit codes, achieved tiers, candidate SHA and remote run
+links. Check each run's repository, workflow, event, head SHA and conclusion;
+the workflow configuration alone does not prove a run succeeded. A result for
+another commit is not evidence for yours, except where the registry explicitly
+allows reuse through a matching input fingerprint. Report blocked or unrun
+checks explicitly.
 
 ## 6. Commit
 
-Commit after Tier 2 passes. Never use `--no-verify`. Write a one-line summary
-of what changes, in plain words, for example
+Commit after the local Tier 1 checks pass. Never use `--no-verify`. Review and
+stage regenerated tracked artifacts explicitly; the hooks do not stage them
+for you. Write a one-line summary of what changes, in plain words, for example
 `Keep every lane's writes when parallel lanes finish together`, and a body that
 says why. Reference the issue with `Refs #<number>`.
 
@@ -157,8 +201,9 @@ Fixes #<issue>
 
 ## Verification
 - Regression test: `tests/unit/<file>.py::<test>` (failed before, passes now)
-- `lint.sh --checks targeted-tests --test-paths "auto ..."`: exit 0
-- `lint.sh --full` on <commit SHA>: exit 0
+- Tier 1: `lint.sh --checks targeted-tests --test-paths "auto ..."`: exit 0
+- Tier 2: `lint.sh --fast` on <public commit SHA>: <result and run link>
+- Tier 3: `lint.sh --full` on <public commit SHA>: <result and run link, or pending before merge>
 - Screenshots: <before / after, for UI changes>
 
 ## Risk and not verified
@@ -168,16 +213,19 @@ Fixes #<issue>
 ## 8. Review and merge
 
 Answer every review comment, either with a change or with a reason. Push
-fixes as new commits on the same branch. Rerun Tier 1 for the touched area and
-`--fast` before each commit, then `--full` once on the final commit, and update
-the verification section with the new SHA before asking for another review.
+fixes as new commits on the same branch. Rerun Tier 1 for the touched area,
+let the local hooks pass before committing, and obtain remote Tier 2 evidence
+after every public branch push. Update the verification section with the new
+SHA and any pending checks before asking for another review.
 
-A maintainer merges the pull request. Do not merge your own.
+Before merge, obtain a clean cumulative `--full` result for the final public
+candidate with current main integrated. Recheck main and the evidence before
+merging. A maintainer merges the pull request. Do not merge your own.
 
 ## With an AI agent
 
 The [Flow Steward Developer package](../integrations/agent-plugin) includes the
-`flow-steward-contribute-code` skill. It follows this page: issue first,
-Development environment, regression test, the three tiers, and a pull request
-with evidence. The agent still needs your approval to push and to open the
-pull request.
+`flow-steward-contribute-code` skill for this process. Follow the repository's
+current `AGENTS.md` and canonical standards when the skill's embedded steps
+lag behind them, including the verification tiers above. Agent permissions
+also depend on your task instructions and client settings.

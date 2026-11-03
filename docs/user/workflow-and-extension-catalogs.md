@@ -17,13 +17,14 @@ one possible kind of entry. Available entries grow as publishers add releases.
 |---|---|---|
 | Workflow Catalog | A reusable workflow, including the child workflows it calls when included in its bundle. | **Workflows › Catalog** tab. |
 | Extension Catalog | An installable version of an extension that adds tools, providers, data connectors, or other declared capabilities. | **Extensions › Catalog** tab. |
-| MCP catalog | A curated MCP server you connect with your own credentials. | **MCP › Catalog** tab. |
+| MCP catalog | A curated MCP server you connect with your own credentials when required. | **MCP › Catalog** tab. |
 | Local workflows | The workflows already created or imported into your installation. | **Workflows › Workflows** tab. |
 | Installed extensions | Your installation's extension configuration, enabled state, and health. | `Extensions`, using its installed-extension controls. |
 
 All three catalogs filter by category, search, and mark recently added entries
-**New**. The Extension and MCP catalogs sort **A–Z** or **Recently added** and
-switch between a grid and a list.
+**New**. The Extension and MCP catalogs support **A–Z** and **Recently added**
+sorting and switch between a grid and a list. Sort controls depend on the entries
+and their available dates.
 
 A catalog listing and a local installation are different states. Creating a
 workflow from the catalog makes local drafts; installing an extension makes its
@@ -52,9 +53,11 @@ Administrators create workflows; operators can browse the configured catalog.
    then **View workflow**.
 8. Review the local drafts, validate their contracts, configure credentials and
    connections, and check project bindings, triggers, and external effects.
-9. Enable only the reviewed workflows needed for execution, then run a controlled
-   administrator **Test Run** and inspect the job. A disabled workflow cannot run;
-   test mode can still make real external calls.
+9. Enable reviewed child workflows before the workflows that call them, including
+   any reused children that are disabled. A workflow cannot be enabled while a
+   workflow it calls is disabled. Enable only the reviewed workflows needed for
+   execution, then run a controlled administrator **Test Run** and inspect the
+   job. A disabled workflow cannot run; test mode can still make real external calls.
 
 Catalog workflows are independent copies. Later catalog changes do not update,
 merge, or overwrite your local workflow. To adopt a newer version, create and
@@ -98,8 +101,9 @@ the [Extension Operator Guide](../integrations/extension-operator-guide).
 2. Filter by category or sign-in type, or search. Each server shows who
    publishes it: **Official** when the vendor publishes it, **Community**
    otherwise.
-3. Choose **Connect** and follow the connection form with your own credentials.
-   A connected server shows **Connected** in the catalog.
+3. Choose **Connect** and follow the connection form with your own credentials
+   when required. Some servers need no sign-in. A connected server shows
+   **Connected** in the catalog.
 
 The catalog never changes connectors you already have. See
 [Tools and MCP](tools-and-mcp) and
@@ -112,6 +116,8 @@ The catalog never changes connectors you already have. See
 Catalog contributions are reviewed through the catalog repositories. Uploading
 YAML into your own Flow Steward instance creates a local workflow; it does not
 publish it to everyone. Follow each repository's current submission instructions.
+The submission steps below reflect the guidance in the product source; external
+repository checks and publication schedules may change.
 
 ### Contribute a workflow
 
@@ -125,7 +131,8 @@ publish it to everyone. Follow each repository's current submission instructions
    `workflows/<category>/<workflow_id>.yaml`, choosing a category from its
    `categories.json`.
 4. Open a pull request and fix what the **Validate submission** check reports.
-   The repository rebuilds its index after the merge; do not edit the index.
+   The repository's documented process rebuilds its index after the merge;
+   do not edit the index.
 5. Publish a later version as a new file with a higher version; published files
    never change.
 
@@ -141,9 +148,11 @@ Validate it, then publish a GitHub Release tagged `v<version>` with the
 archive. For the first listing, open a pull request in the
 [official Extension Catalog](https://github.com/Flow-Steward/extensions#share-an-extension)
 that adds one file, `extensions/<extension_id>.yaml`, holding your repository
-URL. Later versions need only a new tag: the catalog checks listed repositories
-every five minutes. Its generated index and release records are never edited by
-hand.
+URL. For later versions, publish a new release with a new tag. The product's
+submission guidance describes a catalog check every five minutes that lists
+releases passing validation; check the catalog repository for its current
+schedule and results. Its generated index and release records are never edited
+by hand.
 
 Step-by-step guide: [Publish an Extension](../developer/publish-extension).
 Start building with [Build An Extension](../integrations/build-an-extension) or
@@ -157,17 +166,27 @@ Found a bug in Flow Steward itself, or missing a feature? See
 
 ## Configure a catalog or troubleshoot availability
 
-Standard configuration points to the official workflow and extension indexes.
-Administrators can choose their own HTTPS indexes through
-`FS_WORKFLOW_TEMPLATE_CATALOG_URL` and `FS_EXTENSION_CATALOG_URL`; an explicitly
-empty value disables the corresponding catalog. Apply configuration changes to
-the owning application processes and restart them as required by your deployment.
+Standard configuration points to the official workflow, extension, and MCP
+indexes. Administrators can choose their own HTTPS indexes through
+`FS_WORKFLOW_TEMPLATE_CATALOG_URL`, `FS_EXTENSION_CATALOG_URL`, and
+`FS_MCP_CATALOG_URL`; an explicitly empty value disables the corresponding
+catalog. Apply configuration changes to the owning application processes and
+restart them as required by your deployment.
 
-The two catalogs are independent. Their server-side indexes are cached per process
-for one hour; the next request refreshes an expired index. A refresh failure can
-serve a previously cached index marked stale. There is no background catalog
-refresh service in the application. Index refreshes do not install artifacts or
-modify local workflows or extensions.
+On main, all three catalogs keep independent, process-local indexes. Each
+server-side catalog read revalidates its index with the host using conditional
+HTTP requests; a **304 Not Modified** response reuses the parsed index. A new
+index replaces the previous one only after the whole document validates. A
+refresh failure can serve the last good index marked stale, with a 10-second
+cooldown before another attempt. Without a cached index, a failed read reports
+the catalog unavailable. Extension update notices use a separate check that can
+reuse a result for one hour; **Check again** bypasses that window. These behaviors
+describe the source on main and do not establish which published release includes
+them.
+
+There is no background catalog refresh service in the application. Index
+refreshes do not install artifacts or modify local workflows, extensions, or
+MCP connectors.
 
 If an expected entry is absent, check your configured index, filters, catalog
 availability, and whether the release has been published. If creation or install

@@ -7,8 +7,13 @@ description: User-facing map of the main Flow Steward capabilities and where to 
 # Feature Catalog
 
 This catalog explains the capabilities users can enable, configure, or operate
-in Flow Steward. Use it as the release overview before jumping into deeper
+in Flow Steward. Use it as a capability overview before jumping into deeper
 workflow, configuration, and reference pages.
+
+This overview describes current public source behavior on main; it does not
+establish that every capability is available in a published release. External
+catalog availability and third-party AI client compatibility depend on the
+configured services and client versions.
 
 Release-planning and audit matrices are maintained outside the public site.
 Use this catalog for reader navigation and the owning reference page for exact
@@ -34,23 +39,26 @@ Each feature page should answer the same questions:
 | Projects and workspaces | Workspaces group a client, team, or data boundary; projects inside them hold rules, datasets, jobs, settings, workflow bindings, and scoped runtime context. |
 | Jobs | Jobs are workflow runs with status, logs, messages, approvals, artifacts, costs, and final reports. |
 | Workflow Catalog | [Find ready-made workflows](workflow-and-extension-catalogs), review requirements, and create independent local drafts; contribute through the catalog repository. |
-| Extension Catalog | Browse Extensions > Catalog for published integrations, install or update a reviewed release, and contribute your own extension. |
+| Extension Catalog | Browse Extensions > Catalog for integrations, install or update a compatible catalog release with archive size and SHA-256 verification, and contribute your own extension. |
 | Workflow Builder | Administrators compose steps, Groups, parallel lanes, For each loops and hooks on a canvas, with keyboard Undo/Redo and one Apply per change set; see [Workflow Builder](workflow-builder). |
 | Workflow Test Run | Administrator-only durable test-job submission from the workflow builder; it may execute external effects. |
 | Incoming Webhooks | External systems can start workflow runs through configured webhook entrypoints with auth, content-type limits, source restrictions, and input mapping. |
-| Scheduled Jobs | Administrators create or edit schedules from a linked workflow's Schedules tab after saving an enabled interface with the Schedule trigger on its Smart setup tab. The project's Scheduled jobs page supports run-now, pause/resume, and deletion, plus an administrator workflow selector leading to the editor. Overlap protection is automatic; API clients use the authenticated internal API with the required authority. |
+| Scheduled Jobs | Administrators create or edit schedules from a linked workflow's Schedules tab after saving an enabled workflow and an enabled interface with the Schedule trigger on its Smart setup tab. The project's Scheduled jobs page supports run-now, pause/resume, and deletion, plus an administrator workflow selector leading to the editor. Overlap protection is automatic; API clients use the authenticated internal API with the required authority. |
 | Human Approval | An Approval step pauses the run for a person; its Approved and Rejected outcomes decide what runs next. |
+| Wait Steps | A Wait step pauses durably for a configured duration in milliseconds and resumes through the internal timer dispatcher; a zero duration completes without pausing. |
+| Control Flow and Variables | If and Switch steps select branches; Set variable stores values; Stop success and Stop fail end a run. For each bodies support Break, Continue, and Collect. |
 | Notifications | Project routes can send workflow, job, approval, failure, or operational events to configured providers. |
 | Agents and Skills | Agent steps run a selected agent/skill contract. Inputs and outputs become workflow variables that the UI can surface automatically. |
 | Connector Steps | Connector steps call installed tools or extensions through operation schemas and project connections. |
 | HTTP Request Steps | Workflows can call HTTP APIs with method, URL, headers, body templates, auth references, timeout, and expected status handling. |
 | Dataset Query Steps | Steps can query project datasets and place scoped rows or summaries into workflow state. |
+| Data and File Steps | Transform, Template, and File from Base64 steps shape values, render text, and create files. Tabular feed steps inspect, read, transform, validate, combine, compare, and write tabular datasets, with snapshot operations for repeatable comparisons. |
 | Nested Workflows | A workflow can invoke another workflow, map child inputs/outputs, collect artifacts, and enforce child timeout/cancel behavior. |
 | Artifacts | Runs can produce files and structured outputs backed by memory, local filesystem storage, bundled S3-compatible storage, or external S3-compatible storage. |
 | Search | Global and project search help users find supported product entities within their permissions. Search covers the registered product categories; project KB and repository code are outside the public search contract. |
 | Project context | Project rules and assigned connections support internal context assembly. Shared workflow knowledge supports runtime and discovery services; project KB pages and MCP memory tools are outside the public interface. |
 | External workflow authoring | Connected agents discover local contracts and validate/save disabled drafts through shared application services. |
-| PII and Security Policy | Security policy can scan, redact, pseudonymize, or allow sensitive data across inbound, outbound, tool, and indexing surfaces. |
+| PII and Security Policy | Security policy can scan, redact, pseudonymize, or allow sensitive data across inbound, outbound, and tool surfaces. |
 | Upload Policy | Operators can configure allowed MIME types, file extensions, max file size, and max file count. |
 | Logs and Runtime Journal | Runtime logs, job messages, security findings, notification deliveries, and watchdog journals explain what happened. |
 | Trash and Retention | Deleted records can be listed, restored, planned for purge, or purged according to retention settings. |
@@ -58,7 +66,7 @@ Each feature page should answer the same questions:
 | Queue and Retry/DLQ | Queue controls help operators inspect pending work, retry failed items, and understand delivery failures. |
 | Extensions and Packs | External or self-hosted extensions add tools, notification providers, task providers, and reusable integration packs. |
 | MCP Server | The API-backed transport exposes 72 project, workflow, authoring, agent and skill, job, report, and notification tools. |
-| AI agent connections | **Settings → Account → AI agents** connects Claude Code, Codex, Cursor, Gemini CLI, Claude.ai, Cowork and ChatGPT with the Operator or Developer skill package. See [Connect AI Agents](../integrations/connect-ai-agents). |
+| AI agent connections | **Settings → Account → AI agents** provides connection setup for Claude Code, Codex, Cursor, Gemini CLI, Claude.ai, Cowork and ChatGPT with the Operator or Developer skill package. See [Connect AI Agents](../integrations/connect-ai-agents). |
 | CLI | Plain by default; supports installation operations, doctor/repair, configuration, release checks/upgrades, encrypted Clone, product commands, and local quality tooling with profile-specific availability. |
 
 ## Supported entrypoints and runtime boundaries

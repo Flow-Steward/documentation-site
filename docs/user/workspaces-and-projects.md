@@ -13,7 +13,7 @@ Think of a workspace as the place where one client or organization is managed.
 That client may have several projects: a CRM, a public website, an internal
 service, a data pipeline, and a mobile app. Each project can run its own
 workflows and jobs, while the workspace keeps shared data connections, datasets,
-registry records, and lifecycle decisions in one place.
+and workspace lifecycle decisions in one place.
 
 ```text
 Workspace: Acme Corp
@@ -23,6 +23,9 @@ Workspace: Acme Corp
   Workflows: bound to the projects where they are allowed to run
 ```
 
+The instructions below describe current behavior on main; they do not establish
+which published release includes it.
+
 ## Workspace responsibilities
 
 A workspace owns:
@@ -30,13 +33,13 @@ A workspace owns:
 - the client, team, environment, or operating boundary;
 - child projects;
 - reusable datasets and data connections;
-- project availability for shared resources;
-- registry records that should be managed together;
+- project availability for shared data resources;
 - workspace-level search and navigation context.
 
-Use one workspace when one team can share the same registry and data policy. Use
-separate workspaces when teams need separate data boundaries, provider access, or
-operational ownership.
+Use one workspace when one team can share the same data policy. Use separate
+workspaces when teams need separate workspace data boundaries or operational
+ownership. Review provider access and authorization separately; a workspace
+assignment alone does not define every resource's access policy.
 
 Create separate workspaces when a user should be able to answer "which client or
 operating boundary am I working in?" before they choose a project.
@@ -82,21 +85,26 @@ Good workspace boundaries include:
 
 ## Add a project
 
-[![Create project form with workspace, workflow, data-connection, model-routing, and agent-rule sections](/img/screenshots/2026-10-04/project-create-form.png)](/img/screenshots/2026-10-04/project-create-form.png)
+[![Project creation form captured on 2026-10-04 with workflow, data-connection, model-routing, and agent-rule sections](/img/screenshots/2026-10-04/project-create-form.png)](/img/screenshots/2026-10-04/project-create-form.png)
 
-*The current Create project form. This fixture intentionally has no enabled workflow to select, so the workflow rows show the disabled state rather than a successful binding.*
+*Historical capture from 2026-10-04. This fixture intentionally had no enabled workflow to select, so the workflow rows showed the disabled state rather than a successful binding. The current New project dialog asks only for a name and workspace; other settings are configured after creation.*
 
 1. Open `Projects` and choose `New project`.
-2. Enter the name and description, and select the workspace.
-3. Choose default provider/model and linked workflows only when the project
-   needs them. Project creation does not require a Git repository or project type.
-4. Save, then open the project edit page.
-5. Review project metadata, provider access, and workflow bindings.
-6. Attach datasets from the edit page's `Datasets` tab when the project should
-   query structured data.
-7. Assign workspace data connections and review project rules/tools as needed.
-8. Configure notification routes if the project should send approvals or status
-   updates to a provider such as Telegram.
+2. Enter the name and select the workspace. If only one workspace is available,
+   it is shown automatically. Project creation does not require a Git repository
+   or project type.
+3. Choose `Create`, then open the project configuration.
+4. Add the description in `Overview` and review workflow bindings in `Workflows`.
+5. Choose a default provider/model and per-agent overrides in `Models` when
+   needed.
+6. Attach datasets from the `Datasets` tab when the project should query
+   structured data. Dataset bindings save independently of `Save Project`.
+7. Assign workspace data connections and review project rules as needed. In
+   `Policy`, `Save Project` saves project rules; the execution policy uses its
+   own `Save policy` button.
+8. Review the `Notifications` overview and follow its configuration links if the
+   project should send approvals or status updates. Available providers depend
+   on the configured integrations.
 
 [![Project overview with project metadata and configuration navigation](/img/screenshots/2026-10-04/project-overview.png)](/img/screenshots/2026-10-04/project-overview.png)
 
@@ -122,25 +130,25 @@ same client.
 9. Review jobs by project when you need to understand what happened on one
    target.
 
-This keeps shared client context discoverable without giving every workflow
-access to every data source.
+This keeps shared client context discoverable while allowing dataset access to
+be limited by project.
 
 ## Move a project to another workspace
 
-Move a project when the operating boundary changes, for example when a project
-is transferred to another client workspace or split into a dedicated team
-workspace.
+The current project edit screen shows the workspace as read-only, with the note
+`Set when the project was created.` It does not provide a workspace move control.
+Choose the workspace carefully when creating a project.
 
-1. Open the project edit screen.
-2. Change the workspace assignment.
-3. Save the project.
-4. Review datasets and data connections because access is workspace-scoped.
-5. Recheck workflow bindings and notification routes.
-6. Review project rules for the new operating boundary.
+The application update contract on main accepts a workspace change to an active
+workspace within the caller's scope. Such a change must also account for assigned
+data connections: cross-workspace connection assignments are rejected, so old
+assignments cannot simply be carried into the new workspace.
 
-Datasets belong to a workspace. If the moved project still needs similar data in
-the new workspace, create or attach an equivalent dataset there instead of
-assuming the old dataset will follow the project.
+Workspace-owned datasets remain in their original workspace. If a project is
+reassigned through the application API, review its dataset access, data
+connections, workflow bindings, notification routes, and project rules. Create
+or attach equivalent workspace-owned datasets in the destination rather than
+assuming the old datasets will follow the project.
 
 ## Project context
 
@@ -155,14 +163,17 @@ See [Project Context](project-knowledge-and-code-intelligence) and
 
 ## Attach datasets to a project
 
-1. Open the project.
+1. Open the project configuration.
 2. Open the `Datasets` tab.
-3. Select available datasets.
-4. Save the dataset bindings.
+3. Select available, enabled datasets.
+4. Save the dataset bindings using this section's own save control.
 
 A project can use workspace-wide datasets automatically. Specific-project
 datasets must be explicitly selected.
 
-Only datasets from the same workspace are available. To give a project access to
-data from a different operating boundary, create a deliberate connection and
-dataset in the project's workspace.
+Ordinary workspace-owned datasets must belong to the project's workspace.
+The catalog also supports immutable extension-projected datasets that resolve
+connections in project scope within the same account; these are an exception to
+the ordinary workspace filter and remain subject to access checks. To give a
+project access to ordinary data from a different operating boundary, create a
+deliberate connection and dataset in the project's workspace.

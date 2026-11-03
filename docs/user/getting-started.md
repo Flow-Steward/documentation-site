@@ -18,9 +18,13 @@ Choose the path that matches what you have.
 
 ## Install a local instance
 
-This sequence runs in a Flow Steward application checkout on the machine that
-will host Docker. For Railway, Fly.io, or Render with a prebuilt image, follow
+This sequence runs in a full Git clone of the Flow Steward application repository
+on the machine that will host Docker. Supported hosts are Linux and macOS on
+amd64 or arm64; Windows uses Docker Desktop with Linux containers and Git Bash
+or WSL. Allow at least 4 GiB of free disk space for images, volumes and build output.
+For Railway, Fly.io, or Render with a prebuilt image, follow
 the provider guide instead; those deployments do not need a local Docker daemon.
+Provider availability and requirements must be checked with the provider.
 A DigitalOcean Droplet follows this Docker-host sequence over SSH.
 
 Before running `./install.sh`, install and start Docker with **Linux containers**
@@ -59,7 +63,8 @@ installer-built images after an intentional source update; see
 [Installation And Updates](installation-and-updates). A host Python runtime
 and model-provider credentials are not required for core readiness.
 
-Open the bootstrap URL printed by the installer. For the default local endpoint:
+Open the bootstrap URL printed by the installer in your browser. The default
+local product endpoint is `https://localhost:8099`; on macOS you can open it with:
 
 ```bash
 open https://localhost:8099
@@ -68,6 +73,9 @@ open https://localhost:8099
 Complete first-administrator setup in the web interface. Do not invent or reuse
 an old `/auth/bootstrap` payload; the current installer supplies the applicable
 bootstrap URL and, for non-loopback setup, the owner-only token handoff.
+Treat a token-bearing setup link as a secret and use it within 60 minutes.
+If the token expires before setup is complete, rerun `./install.sh` to obtain a
+replacement link. After creating the administrator account, sign in.
 
 ## Confirm your access
 
@@ -82,7 +90,9 @@ Before a first workflow, confirm:
 The core installer applies the canonical schema baseline and seed. Old
 `tooling db init-db` and demo-data commands are not public commands. To use
 ready-made automation, open the [Workflow Catalog](workflow-and-extension-catalogs)
-and create a local workflow draft; installing demo data is not required.
+and create a local workflow draft as an administrator; installing demo data is
+not required. Catalog access depends on its configured external source being
+available, and a template may require compatible extensions before creation.
 
 ## What to read next
 

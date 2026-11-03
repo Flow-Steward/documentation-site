@@ -14,6 +14,9 @@ commit `eb1626b05d06ca893a451560df2b5e95b972c47e`, returning the declared
 `normalized` output. A separate provider-free approval variant also completed
 with its approved output; disallowed and stale decisions returned HTTP 409.
 These are local installed checks, not production, MCP, or SSE acceptance.
+They are historical observations, not verification of a current deployment.
+The request contracts below reflect public source behavior available on main;
+they do not establish that a release containing that behavior has been published.
 
 ## Credentials and scopes
 
@@ -71,8 +74,13 @@ Keep the returned `job_id` for the next steps.
 HTTP 200 accepts this asynchronous launch; it does not mean execution has
 completed. The response supplies `project_id`, `job_id`, `status`, `queue`, and
 `deduplicated`. Reuse the same idempotency key for an identical retry; use a new
-key only for a deliberately new run. The API does not accept a task summary,
-caller task ID, or file uploads in this request.
+key only for a deliberately new run. The API does not accept a task summary or
+caller task ID in this request. It also accepts bounded `client_context` and,
+for workflows declaring file inputs, a JSON `files` array with `input_name`,
+`filename`, optional `mime_type`, and strict base64 `content_base64`. Uploads
+are limited to 10 entries and 1 MiB of decoded bytes in total, with one upload
+per input name. Supply actual file bytes rather than a path or fabricated
+artifact reference. This smoke fixture needs no files.
 
 `test_mode` is not a general external-effect sandbox. Safety here comes from
 the reviewed provider-free fixture.
@@ -84,9 +92,12 @@ GET /api/jobs/{JOB_ID}
 Authorization: Bearer <FLOW_STEWARD_TOKEN>
 ```
 
-Wait for a terminal state and inspect the returned outputs. The expected output
-variable is `normalized: {"message":"hello"}`. Assert that value as well as
-`completed`; a completed job without the declared output does not pass this check.
+Use the nested `workflow_run` field as the stable integration projection.
+Wait for `workflow_run.terminal` and inspect `workflow_run.result.outputs` on
+success. The expected output is
+`workflow_run.result.outputs.normalized: {"message":"hello"}`. Assert that
+value as well as `workflow_run.status == "completed"`; a completed job without
+the declared output does not pass this check.
 
 For durable state events:
 

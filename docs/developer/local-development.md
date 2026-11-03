@@ -6,7 +6,9 @@ description: Common commands for developing Flow Steward locally.
 
 # Local Development
 
-Use the Flow Steward application repository for these commands.
+Use the Flow Steward application repository for these commands. This page
+describes the reviewed source on main; it does not establish availability in a
+published release.
 
 This page is for contributors changing Flow Steward code. Operators installing
 or updating a stack should use
@@ -17,18 +19,22 @@ contribution sequence, from the issue to a merged pull request, see
 ## Install the Development environment
 
 Develop on a Development installation, never on a production one. From a full
-clone of the application repository:
+clone of the application repository, explicitly select the Scalable topology;
+Compact is production-only:
 
 ```bash
-./install.sh --environment development --file-storage bundled
+./install.sh --environment development --deployment-profile scalable --file-storage bundled
 ./flow-steward status
 ./flow-steward doctor
 ```
 
 Development is one complete preset: the core plus the frontend, and the
 `fs-test-runner` and `fs-audit` containers kept ready for tests and quality
-gates. Mailpit and SonarQube are available on demand. Docker with Compose v2 is
-the only host requirement; the quality gates and tests run in containers.
+gates. Mailpit and SonarQube are available on demand. The container workflow
+requires Docker with Compose v2, a Bash/POSIX shell environment, and standard
+POSIX utilities. Run the installer as a non-root deployment owner with Docker
+access. On Windows, use Git Bash or WSL. The quality gates and tests run in
+containers.
 
 Check or change the installed environment with:
 
@@ -37,8 +43,12 @@ Check or change the installed environment with:
 ./flow-steward environment switch development
 ```
 
-Install the pre-commit hook once per clone; it runs the Tier 2 gate before each
-commit:
+The environment switch preserves the installed release and does not change the
+deployment topology; use a Scalable installation for Development.
+
+With `pre-commit` available on the host, install the hook once per clone. The
+configured hooks synchronize environment artifacts, check the repository
+boundary, and run Tier 1 affected backend and frontend tests against `HEAD`:
 
 ```bash
 pre-commit install --hook-type pre-commit
@@ -55,7 +65,8 @@ not in developer workflow notes.
 
 ## Compose helpers
 
-The canonical Compose project name is `flow-steward`.
+The helpers below use the `flow-steward` Compose project name. Use them for the
+local Scalable development stack.
 
 ```bash
 fs-compose() {
@@ -75,11 +86,15 @@ Start the standard stack:
 fs-compose up -d --build
 ```
 
-Start the development stack:
+Start the development stack with frontend hot reload:
 
 ```bash
 FS_AUTO_RELOAD=1 fs-compose-dev --profile development up -d --build
 ```
+
+The development override is a thin compatibility layer that defaults
+`FS_MCP_AUTH_DISABLED` to `1` for `fs-app` and `fs-mcp`. The frontend service and
+its reload setting live in the base Compose file.
 
 ## CLI
 
@@ -112,15 +127,20 @@ that next invocation and does not reconfigure running application services.
 
 ## Frontend
 
-Set `FS_AUTO_RELOAD=1` and enable the `development` profile. This starts:
+Set `FS_AUTO_RELOAD=1` and enable the `development` profile to start
+`fs-frontend` with Vite HMR on host
+`http://localhost:${FRONTEND_HOST_PORT:-15173}/app/` (container port `5173`).
+Without the reload setting, the frontend container remains idle.
 
-- `fs-app` with `uvicorn --reload`
-- `fs-frontend` with Vite HMR on host
-  `http://localhost:${FRONTEND_HOST_PORT:-15173}/app/` (container port `5173`).
+The backend startup script supports `uvicorn --reload` when
+`FS_AUTO_RELOAD=1` reaches its container environment. At this revision, the base
+and development Compose files forward this variable only to `fs-frontend`;
+the command above does not enable backend reload. Backend reload requires an
+explicit local Compose override supplying `FS_AUTO_RELOAD=1` to `fs-app`.
 
 There is no `fs-tailwind` service in the pinned Compose contract.
 
-Frontend workspace commands:
+Frontend workspace commands, when Node and npm are available in your shell:
 
 ```bash
 cd assets/frontend
@@ -130,6 +150,9 @@ npm run test
 npm run build
 npm run test:e2e
 ```
+
+For the container workflow, use the registered frontend quality checks below
+and the checks described in [Quality And Testing](quality-and-testing).
 
 ## Test runner
 
@@ -144,10 +167,17 @@ historical E2E filename from documentation.
 ./core/entrypoints/cli/scripts/lint.sh --checks frontend-targeted-tests --test-paths auto
 ```
 
-For a long current E2E or UI pack, use the dedicated `fs-test-runner` wrapper
-only after confirming the pack still exists in the checkout. The canonical
-selection and evidence rules live in the repository's `AGENTS.md` and
-`docs/standards/testing-standard.md`; see
+Frontend automatic selection uses Vitest's related-test graph. To select
+frontend targets explicitly, pass existing `src/` paths relative to
+`assets/frontend`; do not combine those paths with `auto` in the frontend
+check.
+
+For a long current E2E or UI pack, use the dedicated
+`core/entrypoints/cli/scripts/run_test_runner.sh` wrapper only after confirming
+the pack still exists in the checkout. It runs the supplied command in
+`fs-test-runner`, targeting the live app at `http://fs-app:8099` by default.
+The canonical selection and evidence rules live in the repository's `AGENTS.md`
+and `docs/standards/testing-standard.md`; see
 [Quality And Testing](quality-and-testing) for contributor-facing examples.
 
 ## Quality gate
@@ -168,13 +198,15 @@ Tier 2 intermediate gate:
 ./core/entrypoints/cli/scripts/lint.sh --fast
 ```
 
-Tier 3 final local gate:
+Final local gate from the final committed state. The wrapper refreshes or
+reuses Tier 2 evidence for the same commit SHA, runs the Tier 3 delta, and
+validates cumulative evidence:
 
 ```bash
 ./core/entrypoints/cli/scripts/lint.sh --full
 ```
 
-`--audit` is a compatibility alias for the same Tier 3 gate, not a separate
+`--audit` is a compatibility alias for that same final gate, not a separate
 production-readiness, CI, or Tier 4 audit:
 
 ```bash

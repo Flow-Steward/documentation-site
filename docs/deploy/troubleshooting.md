@@ -39,6 +39,10 @@ Common boundaries:
 Correct only the reported cause, then rerun `./install.sh` to resume. Do not use
 obsolete `./install.sh status` or `doctor` subcommands.
 
+If status reports an interrupted lifecycle operation, preserve its journal and
+log and follow its reported recovery command. A running operation should be
+allowed to finish; an unfinished journal alone does not mean it is still running.
+
 ## Services are unhealthy
 
 On Scalable:
@@ -58,6 +62,10 @@ Inspect the first unhealthy dependency. Production Compose requires immutable
 role image/provenance values, `FS_METRICS_TOKEN` when metrics are enabled,
 production PII/security material, worker MCP identity, and service-specific
 configuration. Do not add model credentials merely to clear an optional warning.
+
+In Monitoring, check observation freshness, readiness and health separately.
+Stale or missing observations and **Not checked** readiness/health are not evidence
+that a service is healthy.
 
 ## Storage fails readiness
 
@@ -109,9 +117,11 @@ local-development override, not the production default.
 
 ## Evidence limit
 
-These checks are source-backed at
-`62a95e3456d3a692092b5a04daecca504c3f97b1` (2026-10-04). No new installation,
-repair, or provider deployment was executed in this documentation pass.
+These checks were reviewed against public source on main at
+`750d4a7d073591dad067fb5cefe937d1f88a9fc4`. This source review does not establish
+that the behavior is in a published release or verify current provider state.
+No installation, repair, or provider deployment was executed in this documentation
+pass.
 
 ## Related pages
 

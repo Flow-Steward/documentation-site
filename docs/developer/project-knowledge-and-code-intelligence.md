@@ -7,16 +7,20 @@ description: Current project context and the boundary between internal memory an
 # Project Context
 
 Project rules and assigned data connections provide scoped context for workflow
-agents. Update them through the project configuration screens. Inspect Jobs for
-execution evidence: logs, messages, events, approvals, outputs, and artifacts.
+agents. Update them through the project configuration screens. Edit Project rules
+on the Policy tab and use Save Project; the execution policy has its own Save
+policy button. Inspect Jobs for execution evidence: logs, messages, events,
+approvals, outputs, and artifacts.
 
 ## Current public surfaces
 
 The project Knowledge Base page and the built-in MCP tools `kb_search`,
-`kb_write`, `project_profile_get`, and `project_profile_update` have been removed.
+`kb_write`, `project_profile_get`, and `project_profile_update` have been removed
+from the current source on main.
 Use `project_list` for project discovery and workflow/job tools for contracts and
 execution evidence. There is no replacement public KB editor or MCP memory CRUD
-contract in this release.
+contract in that source. These statements describe the reviewed source on main;
+availability in a published release has not been verified.
 
 Core also has no repository code indexing, code search, code graphs,
 schema-index snapshots, automatic/manual reindex, or application-code generation.
@@ -26,10 +30,11 @@ This page keeps its historical URL so existing links explain the current scope.
 ## Internal memory
 
 The application still maintains canonical memory and workflow knowledge used by
-runtime context assembly and deterministic workflow discovery. Project-profile synchronization uses
-stable account/project IDs and includes project rules plus assigned connection
-metadata. Exact project-profile retrieval does not fall back to another account
-or project.
+runtime context assembly and deterministic workflow discovery. Project-profile
+synchronization uses stable account/project IDs and includes project rules plus
+assigned connection metadata. The synchronized profile includes at most the first
+2,000 characters of project rules. Exact project-profile retrieval does not fall
+back to another account or project.
 
 Internal storage and retrieval services are not a public knowledge-management
 feature. Dataset introspection and scoped queries remain separate supported

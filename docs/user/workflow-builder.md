@@ -7,10 +7,11 @@ description: Build workflows on the canvas with steps, Groups, parallel lanes, F
 # Workflow Builder
 
 A workflow is a set of **steps** connected by one **execution graph**. There are
-no phases and no hidden steps: what you see on the canvas is what runs. This page
-walks through the builder as of Flow Steward 0.7.27. The examples were built in
-the UI of a fresh installation; the workflow names are examples, not shipped
-content.
+no phases: the canvas shows the execution graph. The instructions below describe
+behavior available on main at the reviewed source revision; availability in a
+published release has not been verified. The screenshots record examples captured
+on Flow Steward 0.7.27 on 2026-10-23 in a fresh local installation. Their workflow
+names are examples, not shipped content.
 
 Open **Workflows**, choose a workflow and **Open builder**. **Create workflow**
 asks for a display name, a workflow ID and a description, then opens an empty
@@ -26,20 +27,25 @@ side. Captured on 0.7.27 in a fresh local installation.*
 ## The canvas
 
 - **Start** marks the entry and lists the configured triggers and the declared
-  inputs. Every path ends at a **Finish** step, **Stop · success** or
-  **Stop · fail**. A step with no continuation is a validation issue, never an
-  implicit success.
+  inputs. Every root path ends at a **Finish** step, **Stop · success** or
+  **Stop · fail**. Container bodies end at their own exit, and Break and Continue
+  end a loop path. A missing required continuation is a validation issue, never
+  an implicit success.
 - A step leaves through named **outcomes**: Next for most steps, True and False
   for If, one port per case plus Default for Switch, Approved and Rejected for
   Approval. Drag from an outcome to the step that runs next, or pick the target
   under **Connections** in the step's drawer. A label on a connection names the
   outcome it carries.
 - The **On error** port below a card routes a failure to another step (a red
-  dashed line). Without it, an unhandled error fails the run; it never follows
-  the Next connection.
+  dashed line). An unhandled error fails the run by default. A configured error
+  policy can instead retry, continue or await approval; a failure does not
+  automatically follow Next merely because that connection exists.
 - Moving a card never changes what runs next. **Auto layout** arranges the
   cards; the zoom controls and **Fit to screen** (Shift+1) sit in the bottom
   toolbar next to **Test Run**.
+
+The **Interface** button in the header opens the workflow interface. Clicking
+the workflow name opens its settings.
 
 ### Add a step
 
@@ -58,6 +64,14 @@ step goes:
 *Add step lists every kind with one line on what it does. Type to filter by
 name, kind or family.*
 
+### Copy, paste and duplicate
+
+With the canvas focused, use **Ctrl+C**, **Ctrl+X** and **Ctrl+V** to copy, cut
+and paste a supported selection, or **Ctrl+D** to duplicate it (use ⌘ on a Mac).
+Paste accepts a builder selection copied by Flow Steward. Cut, paste and
+duplicate stage structural changes that need **Apply changes**; placement and
+editing permissions still apply. Text fields keep their own shortcuts.
+
 ### Apply, discard, undo
 
 Structural edits — adding, deleting or moving steps and groups, connections and
@@ -75,8 +89,9 @@ before discarding it.
   puts its reverse into the unapplied set; the server changes only on your next
   **Apply changes**.
 - **The edit session lives in the browser tab.** Your copy, its Undo/Redo
-  history and unsaved form values survive a reload of the same tab; another tab
-  has its own session. Secrets typed into a form are never kept.
+  history and unsaved form values survive a reload of the same tab when browser
+  storage is available; another tab has its own session. Secrets typed into a
+  form are never kept in the edit session.
 - **Someone else saved meanwhile.** The builder keeps your copy and opens
   **Compare your copy with the server**: **Keep my version** saves yours as a
   new revision, **Accept the server version** drops your copy, **Decide later**
@@ -84,7 +99,8 @@ before discarding it.
 
 **More › Show legend** opens the legend: every kind with its one-line
 description and what each kind of connection means. **More** also holds
-**History**, **Export YAML** and **Workflow automation**.
+**History**, **Export YAML** and **Workflow automation**. Note images are not
+included in YAML exports; upload them again after importing.
 
 [![Builder with the Legend panel open on the right, listing Actions, Data, Flow and Finish kinds](/img/screenshots/2026-10-23/builder-legend.png)](/img/screenshots/2026-10-23/builder-legend.png)
 
@@ -129,9 +145,10 @@ There is no code step. To run your own logic, build it as an extension action
 and call it with **Extension tools**; see
 [Custom code](../reference/workflow-step-kinds#custom-code-code-step).
 
-While a run waits at an Approval, a Wait timer or a child workflow it holds no
-worker. Every run uses the revision it pinned before its first step, so editing
-a workflow never changes a run in progress.
+While a run waits at an Approval or a Wait timer it holds no worker. A serial
+Invoke workflow also pauses durably while its child runs; an Invoke inside a
+parallel lane uses a blocking wait. Every run uses its pinned revision, so
+editing a workflow never changes a run in progress.
 
 [![Invoice approval example: a Group with two steps, an If step, an Approval step and two Stop steps](/img/screenshots/2026-10-23/builder-invoice-approval.png)](/img/screenshots/2026-10-23/builder-invoice-approval.png)
 
@@ -177,22 +194,23 @@ Apply or discard pending canvas changes first.
 ## Parallel lanes
 
 **Parallel lanes** is a Group whose lanes run side by side. The group continues
-on Next when **all** lanes have finished. Name the lanes in the group drawer
-(**Lane IDs**); **Lanes running at once** limits how many run together (the
-project's concurrency cap when empty).
+on Next when **all** lanes have finished successfully. Name the lanes in the
+group drawer (**Lane IDs**); **Lanes running at once** limits how many run
+together (the project's concurrency cap when empty).
 
 - Each lane has its own **Add step to lane …** and ends at **End of the lane**.
 - A lane holds action and data steps: Agent, the tool kinds, HTTP request,
   Invoke workflow, DataSet, Transform, Tabular feed, File from base64,
   Template, Set variable and Batch. If, Switch, Approval, Wait and Stop steps
-  are refused in a lane, and so is an Invoke of a child workflow that waits for
-  an approval.
+  are refused in a lane, and so is an Invoke whose child invocation chain
+  contains an Approval or Wait step.
 - Lanes never read each other's results. Steps after the group read all of them.
 
 **How lane results merge.** Each lane lands only the values it changed, at any
 depth. If one lane writes `state.result.a` and another writes `state.result.b`,
-the step after the group sees `state.result` with both fields. When two lanes
-write the same field, the lane that comes later in lane order wins.
+the step after the group sees `state.result` with both fields. Results merge by
+step position within a lane, then by lane order. When two results write the
+same field, the later result in that merge order wins.
 
 ## For each and Inline loop
 
@@ -204,8 +222,10 @@ from 0.
 
 - Items run one at a time. With a lanes body, the lanes of one item run in
   parallel; items never do.
-- An empty list runs nothing and the For each continues at once. A single value
-  that is not a list counts as one item.
+- An empty list, null or a missing value runs nothing and the For each continues
+  at once. Any other value that is not a list counts as one item; an object is
+  not expanded into its fields. A DataSet cursor is refused: provide a ready
+  collection.
 - At most `FS_DATASET_QUERY_MAX_RUNTIME_ROWS` items (1000 by default) are
   walked; the run reports when the list was truncated.
 - The last step inside leads to **Next item**. **Add step** at the bottom of
@@ -216,7 +236,7 @@ from 0.
 An **Inline loop** is the same container drawn inside its own card, for a few
 simple steps.
 
-Three steps exist only inside a For each:
+Three steps exist only directly inside a sequence For each body:
 
 | Step | Effect |
 |---|---|
@@ -238,11 +258,12 @@ or one an extension installs — be adjusted per project without copying it.
 
 An administrator declares a hook with **Add step › Groups › Hook** at the root
 of the workflow, before or after a Group or For each. The Hook kind is offered
-only when the installation runs in development mode
-(`ENVIRONMENT=development`); a production installation fills hooks but does not
-declare new ones. In the hook's drawer the author describes the place, the
-inputs it receives, which of them its steps may change, and which output-only
-fields they may add.
+only when the installation runs in Development mode. At least one server marker
+(`ENVIRONMENT` or `FS_STACK_ENVIRONMENT`) must be set, and every present marker
+must be `development` or `local_development`. A production installation can fill
+hooks and edit retained declarations, but cannot declare new ones. In the hook's
+drawer the author describes the place, the inputs it receives, which of them
+its steps may change, and which output-only fields they may add.
 
 ### Fill a hook (project)
 
@@ -254,12 +275,15 @@ workflow on its **Projects** tab first. Until a project is chosen, the hook's
 1. Choose the project in the builder header.
 2. Use **Add step** inside the hook frame exactly as inside a Group: any kind,
    including an Invoke workflow step to run a workflow of your own, a Group or a
-   For each. The last step leads to **End of the hook**.
+   For each. The last step leads to **End of the hook**. Hook declarations
+   themselves remain root-only in the author workflow.
 3. **Apply changes**.
 
 A workflow installed by an extension is read-only (**View workflow
 (read-only)**), but each project can still fill its hooks there, and extension
-updates keep them in place.
+updates keep them in place. An update that removes a bound hook or changes its
+contract is blocked unless a compatible binding has been staged for that
+release.
 
 [![Read-only extension workflow in the builder with the Docs examples project selected and one step inside the Adjust the order hook](/img/screenshots/2026-10-23/builder-hook.png)](/img/screenshots/2026-10-23/builder-hook.png)
 
@@ -270,7 +294,8 @@ workflow cannot be changed.*
 The hook's header opens its drawer. **Smart setup** explains what the hook
 receives, what its steps may change or add, and when it runs; **Clear the hook**
 removes all of its steps at once (as one unapplied change that Undo or Discard
-brings back). **Test Run** runs only the hook's steps on typed inputs.
+brings back). **Test Run** runs only the hook's steps on typed inputs; add a
+step before testing an empty hook.
 
 [![Hook drawer listing what the hook receives, what its steps may change and add, and a Clear the hook button](/img/screenshots/2026-10-23/hook-drawer.png)](/img/screenshots/2026-10-23/hook-drawer.png)
 
@@ -282,7 +307,7 @@ brings back). **Test Run** runs only the hook's steps on typed inputs.
   no step set keeps the input of that name. The values are checked against the
   hook's contract and published at `state.hooks.<hook_id>.output` for the steps
   after it. The author's own variables never change.
-- A run uses the hook steps that were saved when it started.
+- A run uses the hook binding revision pinned when the job was submitted.
 
 Behind the canvas, a project's hook steps live in a hidden workflow of that
 project, created by the first step you add. The workflow page's **Hooks** tab
@@ -305,7 +330,9 @@ results*.
   each other's returned file.
 - Unticking removes the output; the file stays usable inside the workflow.
 - A parent workflow maps the file in its Invoke workflow step's **Returned files
-  mapping**. Job Details list the file's name, content type, size and SHA-256.
+  mapping**. Job Details show returned files with their names and available
+  size and content-type information, plus download or preview controls when
+  available.
 
 [![File from base64 step added at the bottom of a Group, with Return from workflow ticked and the output key invoice_pdf](/img/screenshots/2026-10-23/return-from-workflow.png)](/img/screenshots/2026-10-23/return-from-workflow.png)
 
@@ -315,8 +342,9 @@ the end of the Group. The change was discarded after the capture.*
 ## The workflow page
 
 The workflow page shows the header actions (**Enable**/**Disable**, **Open
-builder** or **View workflow (read-only)**) and these tabs. `?tab=` in the
-address opens one directly.
+builder** or **View workflow (read-only)**) and these tabs according to your
+permissions. Smart setup, Webhook, Schedules, Automation and History are shown
+only to administrators and authors. `?tab=` in the address opens a tab directly.
 
 | Tab | What it holds |
 |---|---|
@@ -324,10 +352,10 @@ address opens one directly.
 | **Projects** | The projects the workflow is linked to. A workflow runs only in a linked project; select projects and **Save project bindings**. |
 | **Hooks** | Only when the workflow declares hooks: each hook and its steps in the chosen project. |
 | **Smart setup** | Status, the workflow interface, trigger channels, inputs and outputs. |
-| **Webhook** | Only when the **Incoming Webhook** channel is on: the webhook URL, credential and payload mapping. See [Incoming Workflow Webhooks](../integrations/incoming-workflow-webhooks). |
-| **Schedules** | Only when the **Schedule** channel is on: schedules per linked project. |
+| **Webhook** | Only when the workflow interface is enabled and the **Incoming Webhook** channel is on: the webhook URL, credential and payload mapping. See [Incoming Workflow Webhooks](../integrations/incoming-workflow-webhooks). |
+| **Schedules** | Only when the workflow interface is enabled and the **Schedule** channel is on: schedules per linked project. |
 | **Automation** | Event rules that resume, approve, reject or cancel a job, or send a notification. |
-| **History** | Every saved revision with its author and time. Open a revision to compare it with the one before and **Restore** it as a new revision. |
+| **History** | Saved revisions with their authors and times. Open a revision to compare it with the one before and, when restorable, **Restore** it as a new revision. |
 
 [![Workflow page of an extension workflow with all eight tabs: Overview, Projects, Hooks, Smart setup, Webhook, Schedules, Automation and History](/img/screenshots/2026-10-23/workflow-page-tabs.png)](/img/screenshots/2026-10-23/workflow-page-tabs.png)
 
@@ -341,8 +369,11 @@ Overview, Projects, Smart setup, Automation and History.*
 
 Restore takes back the steps, groups, connections, settings, name and
 description of the chosen revision; it keeps whether the workflow is enabled,
-its notes, schedules, webhooks, automation rules and hook steps as they are now.
-History is never rewritten: Restore always adds a new revision.
+its notes, input secrets and sample files, schedules, webhooks, automation rules
+and hook steps as they are now. History is never rewritten: Restore always
+adds a new revision. Installed extension definitions and revisions using the
+removed phase-based format cannot be restored. Restored content is validated;
+an enabled workflow accepts only a ready definition.
 
 ## Related pages
 

@@ -9,12 +9,15 @@ description: Operate Flow Steward queues and recover failed or stuck work safely
 Queues control when accepted work can run. Retries and dead-letter queues help
 Flow Steward recover from transient failures without hiding persistent problems.
 
+The controls and delivery behavior below are supported by the reviewed main
+source; availability in a published release depends on the version you deploy.
+
 ## Signals to watch
 
 | Signal | Why it matters |
 |---|---|
-| Ready queue depth | Work is accepted faster than workers can process it. |
-| Active leases | Workers currently own jobs or steps. |
+| Ready queue depth | A growing backlog can indicate insufficient worker capacity or work waiting for project execution slots. |
+| Active leases | Unexpired project execution slots currently held by workers; this is not a count of individual steps. |
 | Stuck jobs | Work stopped progressing past the expected runtime window. |
 | Retry rate | A dependency may be flaky or a workflow may be misconfigured. |
 | Dead-letter rate | Events or runtime tasks exceeded retry policy or failed permanently. |
@@ -28,7 +31,7 @@ Flow Steward recover from transient failures without hiding persistent problems.
 
 1. Open `Monitoring`.
 2. Check services and worker liveness.
-3. Compare ready queue depth with active leases.
+3. Compare ready queue depth with active leases. In the Overview's **Queue delivery** card, distinguish queued, retrying, dead-lettered, and failed-after-delivery jobs. Open attention jobs to inspect their failure details and delivery retry counts.
 4. Open the oldest pending or running jobs.
 5. Inspect job logs, messages, runtime journal, and structured errors.
 6. Check extension health, model provider status, dataset availability, and
@@ -39,6 +42,18 @@ Flow Steward recover from transient failures without hiding persistent problems.
    review.
 
 ## Retry safely
+
+RabbitMQ delivery retries are separate from workflow execution retries. The
+project policy's `retry_max_attempts` controls delivery retries after the first
+attempt and defaults to `2`. Delivery failures before execution retry up to that
+limit, then become dead-lettered and require intervention. Permanent delivery
+failures can be dead-lettered immediately. Delivery failures recorded by the
+worker mark the job `triage_needed` when dead-lettered.
+
+The project policy fields `retry_strategy`, `retry_backoff_initial_seconds`, and
+`retry_backoff_max_seconds` do not control RabbitMQ delivery retries; delivery
+retry backoff timing is not applied. A workflow failure after a worker claims the
+job is a separate execution failure, not evidence that delivery failed.
 
 Retry when the failure was transient and the step is safe to run again. Examples
 include provider timeouts, temporary network failures, missing worker capacity,
@@ -51,13 +66,16 @@ approval callbacks, or repeated writes before replaying work.
 ## Dead-letter review
 
 Dead-lettered records need operator attention because normal retry policy has
-already failed.
+been exhausted or a permanent failure prevents normal delivery.
 
 There is no universal record-level DLQ requeue control in the current
 Monitoring UI. Recovery is owned by the affected subsystem:
 
 - for an eligible event, open its Events detail and use **Redrive failed
-  dispatches**; see [Events And Redrive](events-and-redrive);
+  dispatches**; this requires operator-level authorization, a `failed` or
+  `dead_lettered` event, and at least one failed or dead-lettered dispatch.
+  The action requeues eligible dispatches for that event; see
+  [Events And Redrive](events-and-redrive);
 - for a job, use the state- and policy-specific retry, restart, cancel, or
   watchdog recovery exposed on that job;
 - watchdog kill/retry is administrator-only, and retrying an active job can
@@ -73,6 +91,11 @@ For each dead-lettered record:
 5. Leave unrecoverable records in the DLQ with an incident note.
 
 ## Concurrency changes
+
+The project's Policy form exposes **Concurrency cap** (`concurrency_cap`, minimum
+`1`). Workers acquire project execution leases, and a new lease is refused when
+the project's active lease count reaches its cap. Raising the cap permits more
+project execution slots; actual throughput also depends on available workers.
 
 Treat concurrency as a production control, not a tuning trick. Increasing it can
 raise provider load, model cost, database pressure, queue contention, and the

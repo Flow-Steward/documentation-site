@@ -10,9 +10,10 @@ Use this guide when running `./install.sh` from a Flow Steward checkout on your
 computer or VPS. It explains the actual question labels, what to enter, and
 where to find the values. Start with [Installation](installation) for obtaining
 the checkout; use [Installer Reference](../reference/installer) for automation
-flags. This guide describes application revision
-`1a66a0490e` (version 0.7.27), reviewed against the installer source on
-2026-10-26.
+flags. This guide describes behavior available on main at application revision
+`750d4a7d073591dad067fb5cefe937d1f88a9fc4`, reviewed against the installer source on
+2026-11-03. This source review does not establish that a release containing this
+behavior has been published.
 
 ## Before starting
 
@@ -87,10 +88,11 @@ multi-container runtime**. Compact requires Production.
 | Pick | When |
 |---|---|
 | **Compact** (default) | One server, one team, and you want the fewest moving parts. The whole application (web, API, MCP, workers, control plane) runs in one runtime container next to PostgreSQL and RabbitMQ. You scale it by raising **Compact worker processes**. This is the right answer for most installations and for every first trial. |
-| **Scalable** | You need each role in its own container: separate worker containers you can add (`./flow-steward config set --worker-replicas N`), a separate MCP backend, and the full `./flow-steward stack` and `config` command set for changing an installed system. Pick it when you expect to grow the worker pool or change ingress/TLS/storage after installation without reinstalling. |
+| **Scalable** | You need each role in its own container: separate worker containers you can add (`./flow-steward config set --worker-replicas N` then `./flow-steward config apply --confirm`), a separate MCP backend, and the full `./flow-steward stack` and `config` command set for changing an installed system. Pick it when you expect to grow the worker pool or change ingress/TLS/storage after installation without reinstalling. |
 
 You can switch later with `./install.sh --deployment-profile scalable` (or
-`compact`) on an installed system; take a complete backup first.
+`compact`) on an installed system; take a complete backup first. Switching to
+Compact still requires the installed environment to be Production.
 
 ### All questions at a glance
 
@@ -143,6 +145,13 @@ set up later, in the browser or with `./flow-steward`:
 - **Memory or CPU size.** There is no memory profile question. Capacity is the
   worker count: **Compact worker processes**, or worker containers on Scalable
   after installation.
+
+**Host settings** is also not a plain questionnaire question. When an error
+names an operator-settable host setting, supply it as
+`./install.sh --setting NAME=VALUE`. This works on either profile, including an
+installed system, and restarts the runtime when a value changes. Use an empty
+value (`--setting NAME=`) to reset that setting to its default. This option does
+not replace the ingress, TLS or storage questions.
 
 ## How the questions work
 
@@ -232,8 +241,10 @@ For the **installer**, the JSON keys are exactly:
 
 Create the file privately, do not commit it, and restrict its permissions to
 `0600` or stricter. It must not be a symbolic link. The installer reads it,
-keeps credentials out of the configuration review, and later probes storage
-with a write/read/delete cycle; read-only bucket access is insufficient.
+keeps credentials out of the configuration review, and later checks bucket
+access and writes/deletes a probe object; read-only bucket access is
+insufficient. This probe does not verify object downloads, so the application
+also needs appropriate read access.
 The later storage-transition interface has a different credential-file format;
 use the format documented for the command you are running.
 
@@ -504,9 +515,7 @@ Traefik** for **Ingress owner**. For **Network and TLS**, choose **Existing
 Traefik resolver** if Traefik obtains the certificate, or **Existing Traefik
 certificate** if a matching certificate is already loaded.
 
-Answer these questions from the Traefik deployment's existing configuration:
-
-| Exact question | Default | What it means |
+| Exact question | Default and visibility | What to enter |
 |---|---|---|
 | **Existing Traefik network** | None; required | Exact Docker network name shared with the running Traefik. Use the network discovery commands above. |
 | **Traefik HTTPS entrypoint** | `websecure`; advanced | Name of the entrypoint receiving HTTPS; not `443` and not the hostname. |
@@ -636,7 +645,15 @@ checks Docker, disk, network/ports and source material, writes installation
 state and durable secrets, prepares images, starts dependencies/runtime,
 checks schema and worker identity, and verifies health, storage and routing.
 It does not ask for an AI-provider API key or an administrator password during
-this questionnaire. The first image build can take time; keep the session open.
+this questionnaire. Image preparation can take time; keep the session open.
+
+For a fresh Production installation, a clean checkout exactly at its local
+`v<VERSION>` tag selects official images only after checking the published
+stable release and matching commit. Missing publication, unavailable registries,
+or an incomplete image set stops that path with `release_images_unavailable`;
+it does not silently fall back to a source build. Other checkouts build from
+source. The installer announces which mode it selected. `VERSION` alone does
+not establish that a release or its images are available.
 
 On a normal checkout installation, including loopback, successful output contains **NEXT STEP: CREATE
 THE FIRST ADMINISTRATOR** and a one-time URL ending in
@@ -692,17 +709,23 @@ chain, or firewall is correct. Complete those public checks yourself. Follow the
 Rerun `./install.sh` from the **same checkout** after a recoverable failure.
 The installer classifies the state before acting. A fresh installation asks
 questions; a resumable one uses its recorded configuration, asks nothing, and
-checks each step's postconditions. An installed one verifies the installation,
-starts stopped services and, when the checkout has moved to a newer commit,
-rebuilds and updates it (prints `Updated from <old> to <new>.`). Rerunning is
-therefore not a read-only diagnostic—use `status` and `doctor` to inspect first.
+checks each step's postconditions. An installed one verifies the installation
+and starts stopped services. For installer-built Production images, moving the
+checkout to a different commit can rebuild and update the runtime (prints
+`Updated from <old> to <new>.` when the previous revision is known). Images
+chosen or pinned by the operator are left in place; the installer warns if they
+lag behind the checkout. An installation recorded as an official release keeps
+its official release identity on a bare rerun. Rerunning is therefore not a
+read-only diagnostic—use `status` and `doctor` to inspect first.
 See [Installation and Updates](../user/installation-and-updates#update-a-checkout-installation)
 before updating.
 
-A rerun does not ask the questions again and does not change your answers. On
-an installed Compact the only option it applies is `--worker-processes`; any
-other option that differs from the installed value stops with
-`installed_setting_not_applied` (`--deployment-profile` switches the profile).
+A rerun does not ask the questions again. On an installed Compact it can apply
+`--worker-processes`; on either profile it can apply operator-settable host
+settings with `--setting NAME=VALUE`. A changed host setting is recorded and the
+runtime restarted; `--setting NAME=` resets it to its default. Other options
+that differ from the installed values stop with `installed_setting_not_applied`,
+except that `--deployment-profile` switches the profile.
 
 Do not remove `.flow-steward`, environment files, or Docker volumes to get past
 an error. Their relationship identifies your installation and its durable keys.
@@ -719,12 +742,14 @@ read the reported cause and use `./flow-steward doctor` before further action.
 | `insufficient_disk_space` | Free at least 4 GiB in the checkout's file system and rerun. |
 | `cancelled` | You answered No at **Apply this change?**, or ran a fresh non-interactive install without `--confirm`. |
 | `installed_setting_not_applied` | You passed an option that a rerun does not change. Rerun without it; on Scalable use `./flow-steward config set` and `config apply --confirm`. |
+| `installer_setting_invalid` | Correct the host-setting name/value supplied through `--setting`; only operator-settable host settings are accepted. |
+| `release_images_unavailable` | Read the reported publication, commit or registry cause. Retry when the matching stable release and images are available, or deliberately use a checkout that does not select the release-tag path for a source build. |
 | `release_migration_required` | The update carries a database migration; follow [Update a checkout installation](../user/installation-and-updates#update-a-checkout-installation). |
 | `repository_unreadable` | Required files of the checkout are missing or unreadable; restore the checkout and rerun. |
 | `traefik_network_missing` / `traefik_network_unattached` | Verify the exact existing network and the running proxy's membership. An empty network cannot route the site. |
 | Traefik default certificate or no router | Recheck hostname, DNS, entrypoint spelling, Docker provider/constraints, network selection, and resolver or loaded certificate. |
 | S3 credential failure | Check file path/mount, regular-file status, private permissions, and installer JSON keys; do not print credentials in logs. |
-| S3 probe failure | Verify endpoint, region, bucket and write/read/delete permissions; confirm the storage service is reachable from the deployment. |
+| S3 probe failure | Verify endpoint, region, bucket access, and object write/delete permissions; confirm the storage service is reachable from the deployment. Also grant the read access the application needs. |
 | Apache/Nginx 502 | Verify Host vs Docker placement and backend table. `127.0.0.1` inside a proxy container is not the VPS host. |
 | MCP works poorly or discovery returns 404 on Scalable | Route both `/mcp` and the OAuth protected-resource discovery prefix to the MCP backend; preserve authorization and streaming. |
 | UI loads but live job progress fails | Check Nginx Upgrade headers or Apache's `/ws/` rule and WebSocket tunnel module. |
@@ -741,19 +766,20 @@ Default operator-relevant paths, relative to the checkout, are:
 | `.flow-steward/logs/install-*.log` | Owner-only installer logs; use the exact log path printed on failure |
 | `.flow-steward/stack.toml` | Active non-secret deployment settings (your answers) |
 | `.flow-steward/pending-config.json` | Pending configuration changes, when present |
-| `.flow-steward/compose.env` | Generated Compose values; rewritten on every run; can contain sensitive runtime settings |
+| `.flow-steward/compose.env` | Generated Compose values; can contain sensitive runtime settings |
 | `.env.prod` / `.env` | Production/development environment, created by the installer, including generated passwords and keys |
 | `.flow-steward/runtime/` | Runtime material, including bundled-storage/bootstrap state |
 | `.flow-steward/secret-output/bootstrap-token` | Private first-administrator setup token |
 | `.ssl/cert.pem` / `.ssl/key.pem` | Default local/provided certificate paths |
 
-Do not edit these by hand. The installer rewrites the keys it owns in
-`.env.prod` (or `.env`) and regenerates `compose.env` on every run, so a manual
-change to them is lost or no longer matches the running containers. Change
-settings with `./flow-steward config set` and `config apply --confirm`
-(Scalable), `./install.sh --worker-processes N` (Compact), or a profile switch.
-Back up `.env.prod` together with the database: it holds the keys that decrypt
-stored secrets.
+Do not edit these by hand. The installer and configuration commands manage
+keys in `.env.prod` (or `.env`) and generate `compose.env`; manual changes can
+be overwritten or no longer match the recorded configuration and running
+containers. Change settings with `./flow-steward config set` and
+`config apply --confirm` (Scalable), `./install.sh --worker-processes N`
+(Compact), `./install.sh --setting NAME=VALUE` (host settings on either profile),
+or a profile switch. Back up `.env.prod` together with the database: it holds
+the keys that decrypt stored secrets.
 
 A deliberately configured `FS_INSTALLER_STATE_DIR` changes the installer state
 root; follow the printed paths. Do not include secret files in support

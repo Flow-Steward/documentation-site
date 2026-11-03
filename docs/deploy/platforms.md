@@ -8,9 +8,13 @@ description: Choose a Compact provider guide or a Docker-host installation and r
 
 This page explains shared provider requirements and manual configuration.
 Start with the dedicated installation guide where one is available. The source
-contracts below were reviewed at `62a95e3456d3a692092b5a04daecca504c3f97b1`.
+contracts below were reviewed on main at `750d4a7d073591dad067fb5cefe937d1f88a9fc4`;
+this does not establish that a release containing them has been published.
 Provider acceptance recorded in the upstream guides uses its own dated image
-pins; it is not a deployment of every later source revision.
+pins; it is not a deployment of every later source revision. Provider-specific
+settings, CLI flags, service capabilities, and linked installation helpers were
+not independently validated by this source review. Confirm them against the
+linked provider references and the helper you intend to run before deployment.
 
 | Platform | Installation guide | Local prerequisites |
 | --- | --- | --- |
@@ -45,9 +49,10 @@ Prepare all volumes and variables before the first runtime start:
 
 The extended database image is built from
 `infra/docker/postgres-extended/Dockerfile`. Generic PostgreSQL or pgvector-only
-hosting is insufficient: the canonical schema also requires Apache AGE. Verify
-extension support and required database privileges before substituting a managed
-database. Keep database and broker ports private.
+hosting is insufficient: the canonical schema requires `age`, `vector`,
+`pg_trgm`, and `unaccent`. Verify extension support and required database
+privileges before substituting a managed database. Keep database and broker
+ports private.
 
 Use these Compact settings, replacing every placeholder with that provider's
 private service address or secret. Set both the connection URLs and matching
@@ -98,10 +103,11 @@ hook without the same `/data` volume is not an equivalent bootstrap environment.
 ### Guided fresh-project installation
 
 Use the [Railway installation guide](installation#railway-compact-in-dependency-order)
-and [downloadable helper](/examples/railway/deploy-compact.sh). The current helper
-handles sign-in and empty-project setup, starts PostgreSQL then RabbitMQ, and
-connects Compact only after its dependencies are ready. It refuses a populated
-project and is not an update or resume tool. Review its fixed image digests;
+and [downloadable helper](/examples/railway/deploy-compact.sh). The guide describes
+a helper that handles sign-in and empty-project setup, starts PostgreSQL then
+RabbitMQ, and connects Compact only after its dependencies are ready. It is
+intended for a fresh project, not updates or resuming an interrupted installation.
+Review the helper's behavior and fixed image digests before running it;
 these provider release pins are distinct from a local source build.
 
 ```bash
@@ -248,7 +254,7 @@ If logs say an earlier link is still valid, use that earlier link or wait for
 its expiry before restarting. Preserve all backing services and volumes. The checkout installer has a separate
 setup-link handoff described in the [Installer Walkthrough](installer-walkthrough).
 
-Current Compact images contain an in-container management command:
+Compact images built from the reviewed source contain an in-container management command:
 
 ```bash
 flow-steward --help
@@ -260,10 +266,10 @@ flow-steward database status
 Run it in the provider's live container shell with the existing `/data` mount.
 It loads saved runtime settings without requiring you to extract secret files.
 The historical [Railway admin wrapper](/examples/railway/admin-compact.sh)
-(`static/examples/railway/admin-compact.sh`) is a fallback for older images:
-`bash admin-compact.sh users list`. It requires Railway CLI and SSH access;
-optional selectors are `FS_RAILWAY_SERVICE` (default `compact`),
-`FS_RAILWAY_PROJECT`, `FS_RAILWAY_ENVIRONMENT`, and `FS_RAILWAY_IDENTITY_FILE`.
+(`static/examples/railway/admin-compact.sh`) is documented as a fallback for older
+images: `bash admin-compact.sh users list`. Confirm its requirements and selectors
+in the linked script before use; this wrapper is separate from the current
+in-container command.
 
 Host installation, Compose stack/config management, and Docker quality commands
 are unavailable in this provider shell. `doctor` can report configuration but

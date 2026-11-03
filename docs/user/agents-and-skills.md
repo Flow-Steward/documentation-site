@@ -25,6 +25,11 @@ Use an agent record to describe:
 - expected inputs and outputs;
 - change history.
 
+The base skill defines what the agent does. Secondary skills describe additional
+abilities it may use along the way. An agent workflow step derives its skill
+from the agent: runtime selection uses the base skill, falling back to the first
+bound skill when no base skill is set.
+
 ## Skill
 
 A skill is a reusable ability that an agent can apply in a workflow. Examples
@@ -44,8 +49,11 @@ Use a skill record to describe:
 
 Tools are executable capabilities. Agents may reason about what should happen,
 but tools perform concrete operations such as querying a scoped dataset,
-generating a report, or invoking an installed provider action. Built-in public
-KB tools and repository code tools are unavailable.
+generating a report, or invoking an installed provider action. Runtime provider
+tools require enabled project ToolProvider bindings backed by enabled
+`tool_provider` extensions. Assigning a skill does not itself grant tools:
+effective tool IDs come from the agent's attached tools and workflow step
+`add_tools` or `remove_tools` overrides.
 
 Think of the relationship this way:
 
@@ -68,15 +76,15 @@ review.
 
 [![Agents catalog with search, filters, and agent records](/img/screenshots/2026-10-04/agents-catalog.png)](/img/screenshots/2026-10-04/agents-catalog.png)
 
-*The Agents catalog in a synthetic workspace.*
+*The Agents catalog in a synthetic workspace on October 4, 2026. Screenshots on this page illustrate that dated fixture, not current provider availability.*
 
 1. Open `Registry`.
 2. Open `Agents`.
 3. Choose `Agent` to create a new record, or open an existing agent.
-4. Set the ID, display name, role description, and instructions.
-5. Define expected inputs and outputs when the detail page exposes those fields.
-6. Attach skills that the agent may use.
-7. Save changes.
+4. Set the ID, display name, role description, and instructions. Agent IDs must start with a lowercase letter and contain only lowercase letters, digits, or underscores.
+5. Define the agent's own inputs and outputs in `I/O`. Inherited skill and tool fields are read-only and show their source; editing the agent's own fields does not change shared skills.
+6. In `Skills`, choose a base skill and any secondary skills, then choose `Save skills`.
+7. Review allowed tools in `Tools` and save each edited section with its own save control.
 8. Run a low-risk workflow to confirm the agent produces the expected messages
    and artifacts.
 
@@ -97,12 +105,12 @@ review.
 1. Open `Registry`.
 2. Open `Skills`.
 3. Choose `Skill` to create a new record, or open an existing skill.
-4. Describe the skill in product terms.
+4. Describe the skill in product terms and save its configuration. Use `Instructions` for execution guidance, one instruction per line, and choose `Save instructions`.
 5. Open the `I/O` tab.
-6. Add required inputs with clear field names and descriptions.
-7. Add expected outputs.
-8. Save inputs and outputs.
-9. Check the `Agents` tab to confirm who can use the skill.
+6. Add inputs with clear field names, types, and descriptions. Mark required inputs explicitly; new inputs default to optional.
+7. Add expected outputs. New outputs default to required. Field types include `text`, `json`, `list`, `number`, and `boolean`.
+8. Choose `Save Inputs` and `Save Outputs` separately.
+9. Check the `Agents` tab to see which agents use the skill. Manage assignments from the agent's `Skills` tab.
 
 ## Input and output principles
 
@@ -136,7 +144,7 @@ multiple agents and tools.
 
 ## Review history
 
-Use registry history when a workflow starts behaving differently after a
+Use the record's `Changelog` tab when a workflow starts behaving differently after a
 configuration change. Agent and skill history should answer:
 
 - what changed;

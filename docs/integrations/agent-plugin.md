@@ -5,41 +5,51 @@ description: The Flow Steward Operator and Developer skill packages for AI agent
 
 # Agent Skill Packages
 
-Since Flow Steward 0.9.7 the agent skills come as two packages. Install either
-one or both; neither needs the other.
+Flow Steward provides two agent skill packages. Install either one or both;
+neither needs the other.
 
 - **Flow Steward Operator** (`flow-steward-operator`) is for people who build
   and run automations by talking to an AI agent. The agent works through your
   installation's MCP server, so it needs access: a personal access token, or
-  OAuth sign-in for cloud apps.
+  OAuth sign-in for cloud apps. Offline workflow conversion additionally needs
+  a terminal, Python and file access.
 - **Flow Steward Developer** (`flow-steward-developer`) is for developers who
   build extensions or change the core code. It works in a terminal with the
   Flow Steward CLI, the extension SDK, Git and Docker, and needs no MCP
-  connection and no token.
+  connection and no Flow Steward token.
 
-Both are version 1.0.0, first released with Flow Steward 0.9.7. They replace the single
-`flow-steward` plugin (1.1.0) that earlier documentation offered for download.
-Remove that plugin before installing the new packages so the client does not
-see the same skills twice.
+On main, Operator is version **1.0.1** and Developer is version **1.0.0**.
+These source versions do not establish that matching release downloads have
+been published; check the selected release's assets before downloading. If you
+still have the earlier single `flow-steward` plugin installed, remove it before
+installing the new packages so the client does not see the same skills twice.
 
 Downloads, checksums, supported clients and installation steps are on
 [Connect AI Agents](connect-ai-agents#download). Your installation's
 **Settings → Account → AI agents** page shows the same steps with your address
-filled in.
+filled in. Client support and verification vary; check the package's
+[compatibility matrix](https://github.com/Flow-Steward/flow-steward-app/blob/main/docs/agent-skills/COMPATIBILITY.md).
+Historical checks of Operator 1.0.0 do not verify Operator 1.0.1 or its
+four-skill inventory. Cloud-client operation against a live installation,
+including access to the offline converter's required runtime, remains unverified.
 
 ## Skills
 
 | Skill | Package | Use | Page |
 | --- | --- | --- | --- |
 | `flow-steward-workflow-authoring` | Operator | Find what exists, create skills and agents, compose, validate and save workflows as disabled drafts, enable and run them on request, change existing workflows, repair disabled objects, and answer questions about runs, errors, approvals and reports. | [Tools And MCP](../user/tools-and-mcp) |
+| `flow-steward-migrate-workflow` | Operator | Convert supported n8n exports into disabled drafts, assess Make or Activepieces exports, and identify adaptations and setup blockers. | See migration example below. |
 | `flow-steward-publish-workflow` | Operator | Share a workflow as a template in the public catalog `Flow-Steward/workflows`. | [Publish a Workflow Template](../developer/publish-workflow) |
 | `flow-steward-extension-authoring` | Developer | Build or change an extension against the target release's manifest, SDK and CLI lifecycle, and validate and test it. | [Extension Authoring Skill](extension-authoring-skill) |
 | `flow-steward-publish-extension` | Developer | Release an extension, and later versions, and list it in the public catalog `Flow-Steward/extensions`. | [Publish an Extension](../developer/publish-extension) |
 | `flow-steward-contribute-code` | Developer | Fix a bug or propose an improvement in `Flow-Steward/flow-steward-app`, from the issue to a reviewed pull request. | [Contributing Code](../developer/contributing) |
 | `flow-steward-report-issue` | Both | Report a bug or request a feature on GitHub with the System Diagnostics report, without changing anything. | [Report a Bug](../user/file-an-issue) |
 
-The packages hold instructions only. They contain no address, no token, no
-hooks and no dependencies. Only the Claude Code manifest of the Operator
+The packages contain no installation address, token or hooks. Developer holds
+instructions; Operator also bundles an offline n8n converter, references and
+examples. The converter requires Python 3.12+ and `PyYAML==6.0.3`, pinned in
+its `scripts/requirements.txt`; use a separate local environment rather than
+changing platform dependencies. Only the Claude Code manifest of the Operator
 package declares the Flow Steward MCP server, and it asks you for the address
 and the token; in every other client you add the server yourself. Updating a
 package never changes your connection.
@@ -60,23 +70,26 @@ Each package archive extracts to one plugin root:
 | `plugin.json` | Agent Plugins 1.0.0 clients and the OpenAI plugin directory |
 | `.claude-plugin/plugin.json` | Claude Code and Claude.ai |
 | `.cursor-plugin/plugin.json` | Cursor |
-| `gemini-extension.json` | Gemini CLI |
+| `gemini-extension.json` | Gemini CLI; added when building the package archive |
 | `skills/<name>/SKILL.md` | Every client |
 
 Install that root directory, not only `.claude-plugin/` and not the whole
 application repository. The marketplace archive
-`flow-steward-agent-skills-<version>.zip` holds both packages as a Claude Code
+`flow-steward-agent-skills-<Core version>.zip` holds both packages as a Claude Code
 marketplace named `flow-steward`.
 
 ## Check that it works
 
 For the Operator package:
 
-1. The client lists the three skills.
+1. The client lists the four skills.
 2. The Flow Steward MCP server is connected and its tool list contains the
    tools your token allows, for example `project_list` and `workflow_list`.
 3. Ask: "List my Flow Steward projects and their enabled workflows." The agent
    should use the MCP tools and report a permission error as an error.
+
+Skill discovery does not establish that the client can run the offline converter;
+check its terminal, Python and file access separately.
 
 For the Developer package, the client lists the four skills. Ask, in a Flow
 Steward application checkout: "Which checks does the extension quality gate
@@ -88,13 +101,14 @@ run?" The agent should answer from the checkout's `docs/standards/` and
 You can instead copy a whole folder from a package's `skills/` directory into
 the client's own skills directory: `~/.agents/skills/`, `~/.cursor/skills/` or
 `~/.claude/skills/`, or the project equivalents. Copy
-`flow-steward-workflow-authoring` together with its `references/` folder. Do
-not install the same skill both as a plugin and as a standalone skill.
+`flow-steward-workflow-authoring` together with its `references/` folder. For
+`flow-steward-migrate-workflow`, keep its `references/`, `scripts/` and `assets/`
+folders too. Do not install the same skill both as a plugin and as a standalone skill.
 
 ## Update
 
-Each release raises the package `version`. Replace the reviewed package files
-with the new release, run the client's update step (listed on
+Replace the reviewed package files with the selected release, run the client's
+update step (listed on
 [Connect AI Agents](connect-ai-agents#update-and-remove)), restart or reload the
 client, and check the skills listing again. Codex loads a cached installed copy:
 compare the installed files with the new ones before relying on the update.
@@ -132,6 +146,23 @@ limitation. This example depends on your installed integrations; it does not
 establish that an attachment reader or Shopify operation is available. Validation
 is separate from execution; enablement and scheduling require their own supported,
 authorized path. See [workflow authoring](../reference/mcp#workflow-authoring).
+
+**Migrate an external workflow**
+
+> Inspect this exported n8n workflow and prepare a complete disabled Flow Steward
+> draft with a source-to-target mapping and setup blockers. Leave connections
+> unbound where setup is deferred; do not import or run it.
+
+Expect a complete disabled draft when the behavior can be represented, or a
+mapping and explicit blockers. An unbound draft is not ready to import or run.
+The bundled offline converter handles a qualified subset of n8n JSON and writes
+new local YAML and mapping-report files; it does not call providers or save to
+Flow Steward. Unsupported constructs need explicit agent-assisted adaptation.
+Make and Activepieces use that mapping/adaptation path, not the n8n parser.
+Conversion leaves `target_validation=required` and `runtime_verified=false`:
+target validation, import, execution and live external checks are separate.
+Saving or importing requires the existing authoring authority and authorization;
+conversion does not authorize execution, extension installation or publication.
 
 **Create a skill and an agent**
 
@@ -211,5 +242,6 @@ evidence after you approve. See [Contributing Code](../developer/contributing).
 
 Installing a skill does not grant permissions. Draft save and agent or skill
 changes need an administrator user with `admin:all`; machine tokens remain
-operators. Report generation needs `reports.write` even with `persist=false`.
+operators. Report generation needs `reports.write` or a supported broader scope,
+even with `persist=false`.
 Enablement, execution and approval remain deliberate, authorized actions.

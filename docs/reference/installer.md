@@ -7,8 +7,8 @@ description: Exact installation options, defaults, visibility, and resume behavi
 # Installer Reference
 
 For help choosing each answer, use [Answer the Installer Questions](../deploy/installer-walkthrough).
-This reference is checked against application revision `1a66a0490e`
-(version 0.7.27) on 2026-10-26. The field contract is
+This reference is checked against application revision `750d4a7d073591dad067fb5cefe937d1f88a9fc4`
+on main on 2026-11-03; this does not establish release publication. The field contract is
 `core/application/installer/spec.py`; the private adapter is
 `core/entrypoints/cli/installer.py`.
 
@@ -40,6 +40,16 @@ is not a production sizing recommendation. Linux servers, Docker Desktop on
 macOS, and Windows through WSL or Git Bash are the supported launch
 environments.
 
+For a fresh Production installation, a clean checkout exactly at its
+`v<VERSION>` tag selects official product images only after verifying the
+published stable release, matching commit and image set. Failure to retrieve or
+verify that release stops with `release_images_unavailable`; it does not fall
+back to a source build. Other checkouts build product images from source.
+Resumed source installations keep their source-build mode; recorded official
+installations retain their official release identity. The installer announces
+which mode it selected. Availability of a particular published release or
+registry image was not verified for this reference.
+
 ## Global options
 
 | Option | Meaning |
@@ -53,7 +63,8 @@ environments.
 | `--confirm` | Confirm the fresh-install plan. |
 | `-h`, `--help` | Show launcher/private installer help. |
 
-Plain mode uses numbered choices and asks visible advanced fields directly.
+Plain mode uses numbered choices and asks visible advanced fields directly,
+except the command-line-only `--setting` input described below.
 Command-line values skip their corresponding plain questions. Review is
 **Review pending change:** followed by **Apply this change?**, default No.
 Conditional visibility controls questions, not whether incompatible CLI values
@@ -62,7 +73,8 @@ are valid; model validation enforces the combinations below.
 ## Installation fields
 
 “Always” means no field visibility condition. “Advanced” applies to the
-full-screen form; it does not hide the question in plain mode.
+full-screen form; it does not hide the question in plain mode, except for
+**Host settings**, which plain mode never asks.
 
 | Exact label | Option | Displayed default / values | Visible when |
 |---|---|---|---|
@@ -81,6 +93,7 @@ full-screen form; it does not hide the question in plain mode.
 | Public host (domain or IP) | `--public-host` | `localhost` | Always |
 | Public port | `--public-port` | `8099` | Always |
 | Plain-HTTP redirect port | `--redirect-http-port` | `8080` | Bundled Traefik; advanced |
+| Host settings | `--setting` | No overrides by default; `NAME=VALUE` assignments | Advanced; never asked in plain mode |
 | Reverse-proxy backend host | `--reverse-proxy-backend-host` | `127.0.0.1`; validator requires this exact value | `reverse_proxy` TLS |
 | Reverse-proxy backend port | `--reverse-proxy-backend-port` | `18099` | `reverse_proxy` TLS |
 | Reverse-proxy MCP port | `--reverse-proxy-mcp-port` | `18100`; separate MCP host backend is used by Scalable | Existing reverse proxy; advanced |
@@ -97,6 +110,16 @@ full-screen form; it does not hide the question in plain mode.
 | Extension installer origin | `--extension-installer-origin` | `http://fs-extension-installer:8099` | Always; advanced |
 | Certificate path | `--certificate-path` | `.ssl/cert.pem` | Always; advanced |
 | Private key path | `--private-key-path` | `.ssl/key.pem` | Always; advanced |
+
+`--setting 'NAME=VALUE,OTHER_NAME=VALUE'` accepts only non-secret host settings
+marked operator-settable by the environment manifest. A comma starts another
+assignment only when followed by an uppercase `NAME=`; other commas remain in
+the value. Use an empty value (`--setting NAME=`) to reset a setting to its
+environment-specific default. Invalid names or disallowed values fail with
+`installer_setting_invalid` (exit 3). On an installed system, changed host
+settings are merged into the active configuration and the runtime is restarted
+on either profile. This option does not accept deployment fields such as
+`public_host` or installer-owned secrets.
 
 Compact storage: the **File storage** default, `bundled`, is the Scalable
 default. On Compact, that default becomes `local_fs` unless `--file-storage` is
@@ -189,8 +212,10 @@ The installer S3 file is regular, not a symlink, with permissions `0600` or
 stricter, and contains `access_key` and `secret_key`. Do not substitute the
 `aws_access_key_id` / `aws_secret_access_key` format used by a later lifecycle
 storage-transition command. Production S3 endpoints require HTTPS; HTTP requires
-both Development and `--allow-insecure-s3-http`. Storage verification needs
-write/read/delete access.
+both Development and `--allow-insecure-s3-http`. Fresh S3 verification checks
+bucket access with `HeadBucket`, then writes and deletes a temporary object;
+it does not test reading object contents. Installed-system verification uses
+the read-only bucket check.
 
 `--extension-installer-origin` is a credential-free internal HTTP origin with
 an explicit port and no path, query, or fragment. Keep its default for the
@@ -213,12 +238,13 @@ HTTPS site; see the walkthrough's
 [Nginx and Apache examples](../deploy/installer-walkthrough#4b-apache-or-nginx-already-runs-on-the-vps-host).
 The installer does not install/reload that external configuration.
 
-Source limitation: the reverse-proxy readiness probe targets a host backend
-port even with Docker placement, whose overlay publishes no host backend port.
-That can block completion of the Docker Apache/Nginx branch; it remains
-unverified end to end for this revision. Host reverse-proxy verification checks
-private HTTP, so successful installer output is not proof of external HTTPS,
-DNS or firewall correctness.
+Source limitation: the normal containerized installer's reverse-proxy readiness
+probe targets a host backend port even with Docker placement, whose overlay
+publishes no host backend port. That can block completion of the Docker
+Apache/Nginx branch; it remains unverified end to end for this revision.
+The normal host reverse-proxy verification checks private HTTP, so successful
+installer output is not proof of external HTTPS, DNS or firewall correctness.
+The host-Python development fallback instead probes the public URL directly.
 
 ## State classification and resume
 
@@ -245,37 +271,47 @@ update behavior and supported deployment changes.
 
 1. Finishes an interrupted profile switch, or switches profile when
    `--deployment-profile` names the other profile.
-2. On Compact, applies `--worker-processes N` when it differs (prints
-   `Compact worker processes: <old> -> <new>.`). This is the only setting a
-   rerun changes. Any other option whose value differs from the installed one
-   stops with `installed_setting_not_applied` (exit 7) before anything changes.
-   On Scalable the message names `./flow-steward config set ...` and
-   `config apply --confirm` as the way to change it.
+2. Checks for options it cannot apply. Apart from the profile switch,
+   `--setting` on either profile and `--worker-processes` on Compact are the
+   supported rerun changes. Other differing installation options stop with
+   `installed_setting_not_applied` (exit 7). This check follows profile-switch
+   handling, so a combined request is not guaranteed to leave the profile
+   unchanged. On Scalable the message names `./flow-steward config set ...`
+   and `config apply --confirm` as the way to change other settings.
+   A changed Compact worker count prints
+   `Compact worker processes: <old> -> <new>.`; changed host settings are
+   recorded and restart the runtime.
 3. Compares the checkout's commit with the revision the running images were
-   built from. When they differ it runs the update steps: preflight, image
-   build, a migration check against the database, core start, schema check,
-   worker identity, runtime, health and CLI runtime. The output says
-   `Updated from <old> to <new>.`
+   built from. For source-built installations, when they differ it runs the
+   update steps: preflight, image build, a migration check against the database,
+   core start, schema check, worker identity, runtime, health and CLI runtime,
+   followed by storage, route and bootstrap verification. The output says
+   `Updated from <old> to <new>.` when both revisions are known. Official
+   installations also honor their recorded release identity; a rerun does not
+   discover the latest remote release.
 4. Otherwise starts stopped services, verifies health, storage, the public
    route and bootstrap, and prints `Flow Steward is already installed.` An
    expired first-administrator link is reissued while no administrator exists.
 
 If the update carries a database migration, step 3 stops with
-`release_migration_required` (exit 8) before any running service is restarted.
-Image variables such as `FS_COMPACT_IMAGE` or `FS_APP_IMAGE` set in the shell
-mark those images as yours: they are not rebuilt, and the run warns that the
-runtime is behind the checkout.
+`release_migration_required` (exit 8) before the update restarts running
+services. A rollback to a release that does not know the database's migration
+history stops with `database_newer_than_release` (exit 8). Image variables such
+as `FS_COMPACT_IMAGE` or `FS_APP_IMAGE` set in the shell mark those images as
+yours: they are not rebuilt, and the run warns when the runtime is behind the
+checkout.
 
 ## Environment variables read by the launcher
 
-`./install.sh` forwards only these variables from your shell into the installer
-container. Everything else is an answer or option above.
+`./install.sh` forwards the following installation variables from your shell
+into the installer container. Host settings must be supplied with `--setting`;
+other installation answers use the options above.
 
 | Variable | Effect |
 |---|---|
 | `FS_COMPOSE_PROJECT_NAME` | Docker Compose project name for a new installation (default `flow-steward`). Use a unique name for a second installation on the same host; it is recorded and reused. |
-| `HTTP_PORT`, `POSTGRES_HOST_PORT`, `RABBITMQ_AMQP_HOST_PORT`, `RABBITMQ_MANAGEMENT_HOST_PORT`, `SEAWEEDFS_S3_HOST_PORT`, `SEAWEEDFS_MASTER_HOST_PORT`, `MCP_HOST_PORT`, `FRONTEND_HOST_PORT`, `MAILPIT_*_PORT`, `SONAR_PORT` | Host port overrides for the Compose services that publish one. Prefer `--redirect-http-port` over `HTTP_PORT`. |
-| `FS_COMPACT_IMAGE`, `FS_APP_IMAGE`, `FS_WORKER_IMAGE`, `FS_CONTROL_IMAGE`, `FS_CLI_IMAGE`, `FS_FRONTEND_IMAGE`, `MCP_IMAGE`, `POSTGRES_IMAGE` and `FS_COMPACT_IMAGE_REGISTRY_REF`, `FS_COMPACT_IMAGE_REVISION`, `FS_COMPACT_IMAGE_PLATFORM` | Use these existing images instead of building them. Leave unset for a normal checkout installation. |
+| `HTTP_PORT`, `POSTGRES_HOST_PORT`, `RABBITMQ_AMQP_HOST_PORT`, `RABBITMQ_MANAGEMENT_HOST_PORT`, `SEAWEEDFS_S3_HOST_PORT`, `SEAWEEDFS_MASTER_HOST_PORT`, `NEO4J_HTTP_HOST_PORT`, `NEO4J_BOLT_HOST_PORT`, `MCP_HOST_PORT`, `FRONTEND_HOST_PORT`, `MAILPIT_SMTP_PORT`, `MAILPIT_WEB_PORT`, `MAILPIT_HTTP_PORT`, `SONAR_PORT` | Host port overrides for the Compose services that publish one. Prefer `--redirect-http-port` over `HTTP_PORT`. |
+| `FS_COMPACT_IMAGE`, `FS_APP_IMAGE`, `FS_WORKER_IMAGE`, `FS_CONTROL_IMAGE`, `FS_CLI_IMAGE`, `FS_FRONTEND_IMAGE`, `MCP_IMAGE`, `POSTGRES_IMAGE` and `FS_COMPACT_IMAGE_REGISTRY_REF`, `FS_COMPACT_IMAGE_REVISION`, `FS_COMPACT_IMAGE_PLATFORM` | Supply existing product images for source/prebuilt installation paths. Leave unset for normal automatic image selection; verified official-release selection supplies its own image environment. |
 | `FS_RELEASE_REPOSITORY`, `FS_RELEASE_REGISTRIES` | Where official releases and their images are looked up. |
 | `AWS_CA_BUNDLE` | Extra CA bundle for an external S3 endpoint. |
 | `NO_COLOR`, `TERM` | Terminal output. |
@@ -285,6 +321,8 @@ exact `sha256:` image to reuse), `FS_INSTALLER_STATE_DIR` (state root, default
 `.flow-steward`), `FS_INSTALLER_HEARTBEAT_SECONDS` (progress heartbeat while the
 installer image builds, default 5), and `FS_INSTALLER_USE_HOST_PYTHON=1` with
 `PYTHON_BIN` (development fallback without the installer container).
+The launcher also reads Docker context/configuration inputs, including
+`DOCKER_CONFIG` and `DOCKER_CERT_PATH`, for its Docker access and read-only mounts.
 
 ## Exit codes
 
@@ -292,13 +330,13 @@ installer image builds, default 5), and `FS_INSTALLER_USE_HOST_PYTHON=1` with
 |---|---|
 | `0` | Installed, updated, or already installed and verified. |
 | `2` | Invalid usage, such as a subcommand. |
-| `3` | Validation failed: an invalid value or ingress/TLS pair, or a bad file path. |
+| `3` | Validation failed: an invalid value or ingress/TLS pair, a bad file path, or an invalid host setting. |
 | `4` | Precondition failed: run as root, port in use, not enough disk. |
 | `5` | A required file or repository path is unreadable. |
-| `7` | Docker, Compose or another dependency is unavailable, the host is unsupported, or a setting cannot be applied by a rerun. |
+| `7` | Docker, Compose or another dependency is unavailable, the host is unsupported, official release images cannot be verified, or a setting cannot be applied by a rerun. |
 | `8` | A step failed after it started, such as a health or schema check. |
-| `9` | Recovery required: the installation state needs inspection before a retry. |
-| `10` | Cancelled or interrupted, including a fresh non-interactive run without `--confirm`. |
+| `9` | Ambiguous installation state: inspect the reported identity, configuration or secrets before retrying. |
+| `10` | Cancelled or interrupted, including a fresh non-interactive run without `--confirm`; also refusal to resume a journal already marked `recovery_required`. |
 | `70` | Unexpected internal error; read the printed log path. |
 | `127` | The Docker CLI or a required POSIX utility (`awk`, `sed`, `stat`, ...) is not on `PATH`. |
 
@@ -311,8 +349,9 @@ Default paths are relative to the checkout:
 - `.flow-steward/stack.toml`, `pending-config.json`, and `compose.env`: active,
   pending and generated deployment state.
 - `.env.prod` or `.env`: runtime environment created by the installer, with
-  generated passwords and keys. Keys the installer owns are rewritten on every
-  run; other lines are kept.
+  generated passwords and keys. Installer-owned keys are rewritten when the
+  corresponding configuration/secrets steps regenerate the environment;
+  a verified rerun can skip those steps. Other lines are kept.
 - `.flow-steward/runtime/`: runtime material including bundled-storage
   credentials and bootstrap-token state.
 - `.flow-steward/secret-output/bootstrap-token`: owner-only setup-token output.
@@ -320,9 +359,9 @@ Default paths are relative to the checkout:
   installer-managed state.
 
 On Linux with systemd and the system Docker daemon, a successful Compact
-installation also asks for sudo and installs
-`flow-steward-<compose-project>.service` to start the installation after a
-reboot; see [Linux VPS automatic startup](../deploy/installation#linux-vps-automatic-startup).
+installation also asks for sudo when host service setup or refresh is needed
+and installs `flow-steward-<compose-project>.service` to start the installation
+after a reboot; see [Linux VPS automatic startup](../deploy/installation#linux-vps-automatic-startup).
 
 An explicit `FS_INSTALLER_STATE_DIR` relocates the installer state root; use the
 printed paths. Do not hand-edit installer-owned environment keys, `stack.toml`,
@@ -342,9 +381,10 @@ with a 15-minute lifetime. No AI-provider credential is required to install core
 ## Verification boundary
 
 This is a source review, not a new installation acceptance run. Docker-proxy
-readiness and Compact storage normalization have the limitations named
-above. No live VPS, external proxy, ACME CA, or S3 service was changed or tested
-for this documentation pass. Run `./flow-steward status` and
+readiness has the limitation named above; Compact storage normalization follows
+the rules in the installation fields section. No live VPS, external proxy,
+ACME CA, S3 service, or release registry was changed or tested for this
+documentation pass. Run `./flow-steward status` and
 `./flow-steward doctor`, open `https://<host>/health/ready` in a browser, and
 use the walkthrough's browser, WebSocket and MCP checks before treating a
 deployment as ready.

@@ -7,29 +7,32 @@ description: Make an exact first read-only call to the built-in MCP server.
 # Connect An AI Client With MCP
 
 :::tip[Use the AI agents page]
-Since 0.9.7, **Settings → Account → AI agents** sets up Claude Code, Codex,
-Cursor, Gemini CLI, Claude.ai, Cowork and ChatGPT for you, with your MCP address
-filled in and a token created when the client needs one. See
+**Settings → Account → AI agents** provides client-specific setup steps for
+Claude Code, Codex, Cursor, Gemini CLI, Claude.ai, Cowork and ChatGPT, with your
+MCP address filled in and personal-token creation for clients that use it. See
 [Connect AI Agents](connect-ai-agents). This page is the manual, protocol-level
 check.
 :::
 
-The production gateway exposes stateless streamable HTTP at
-`<public-base-url>/mcp`. The exact protocol example below uses the candidate's
-modern protocol version `2026-07-28`; live client execution was not performed
-for this documentation pass.
+The production gateway routes `<public-base-url>/mcp` to the built-in stateless
+streamable HTTP server. This page describes behavior available on main; it does
+not establish which published release includes it. The exact protocol example
+below uses `2026-07-28`. Live client execution and current third-party client
+compatibility were not verified for this documentation pass.
 
 ## Before you start
 
-This check uses a personal access token, as clients on your computer do. Cloud
-apps (Claude.ai, Cowork, ChatGPT) cannot send a token; they sign in through
-OAuth instead, as described in
+This check uses a personal access token, as the local-client setup steps do.
+The cloud-app setup paths (Claude.ai, Cowork, ChatGPT) use OAuth sign-in instead,
+as described in
 [Cloud AI apps](connect-ai-agents#cloud-ai-apps-claudeai-cowork-chatgpt).
 
-Set `FLOW_STEWARD_URL` and `FLOW_STEWARD_TOKEN`. The first tool requires any
-one project-read family scope: `projects.read`, `projects:*`, `read:*`, or
-`admin:all`. Use `projects.read` for this check. The token's account/project
-allowlists still apply after discovery.
+Set `FLOW_STEWARD_URL` to your public base URL and `FLOW_STEWARD_TOKEN` to your
+personal access token. The first tool requires project-read authority, for
+example `projects.read`, `projects:*`, `read:*`, or `admin:all`; scope matching
+also accepts `*:read` and `*:*`. Use `projects.read` for this check. The token's
+account/project restrictions and the caller's application permissions still
+apply after discovery.
 
 Client UIs may express the same server as:
 
@@ -52,13 +55,15 @@ schema. There is no public `setup-codex-mcp` CLI command.
 
 ## Connect and discover protocol support
 
-Add the server to your client and connect. The client sends `server/discover`
-first. The result advertises `2026-07-28` under `supportedVersions` and includes
-server capabilities. Modern requests are stateless and do not require an MCP
-session ID.
+Add the server to your client and connect. For the modern protocol check, send
+`server/discover` first. The result advertises `2026-07-28` under
+`supportedVersions` and includes server capabilities. Modern requests are
+stateless and do not require an MCP session ID. Compatible legacy clients may
+instead use `initialize`; the source includes a `2025-11-25` initialization
+contract with a session ID and `notifications/initialized`.
 
-If you write your own client, every request is an HTTP `POST` to `/mcp` with
-these headers:
+If you write your own modern client, send each request as an HTTP `POST` to
+`/mcp` with these headers:
 
 ```http
 POST /mcp
@@ -75,14 +80,16 @@ Mcp-Method: server/discover
    "io.modelcontextprotocol/clientCapabilities": {}}}}
 ```
 
-For `tools/list` and `tools/call`, change `Mcp-Method` and `method` to match;
-a `tools/call` request also sends the tool name in an `Mcp-Name` header.
+For `tools/list` and `tools/call`, change `Mcp-Method` and `method` to match.
+Keep the protocol `_meta` in `params` on each request. A `tools/call` request
+also sends the tool name in an `Mcp-Name` header.
 
 ## List allowed tools
 
 Open the client's tool list for the `flow-steward` server (the client calls
 `tools/list`). The list is request-local and scope filtered. It is normal for a
-`projects.read` token to see fewer than the 72 tools the server registers.
+`projects.read` token to see only a subset of the registered tools. Discovery
+filters by token scopes; the application API still authorizes each call.
 
 ## Call `project_list`
 
@@ -92,8 +99,15 @@ Ask the client to call `project_list`. It takes an empty argument object:
 {"name": "project_list", "arguments": {}}
 ```
 
-A successful JSON-RPC result contains MCP `content` carrying only projects the
-token may read. Use only a returned project name for subsequent project-scoped calls.
+For a manual modern request, put these fields in `params` alongside `_meta`,
+set `method` and `Mcp-Method` to `tools/call`, and set `Mcp-Name` to
+`project_list`.
+
+A successful JSON-RPC result contains MCP `content` with a JSON text envelope
+whose `ok` is `true` and whose `data` contains the project list. Only projects
+the token may read are returned. This tool requests the first page of at most
+200 projects; it does not provide a pagination argument. Use only a returned
+project name for subsequent project-scoped calls.
 
 ## Continue to workflow discovery
 
@@ -101,7 +115,8 @@ The read-only connection check is complete after `project_list`. To inspect a
 workflow, use a token with `workflows.read` as well as the project access needed
 to resolve its name, then call `workflow_list` with the returned `project_name`.
 Inspect `workflow_contract` before a deliberate launch through
-`workflow_trigger`; launching requires `workflows.write`.
+`workflow_trigger`; launching requires `workflows.write` or broader workflow-write
+authority, plus the caller's application permissions and project access.
 
 Project-profile and Knowledge Base tools are no longer exposed. Do not call
 `project_profile_get`, `project_profile_update`, `kb_search`, or `kb_write`.
@@ -110,22 +125,28 @@ Project-profile and Knowledge Base tools are no longer exposed. Do not call
 
 The **Flow Steward Operator** package teaches a connected client how to work
 with Flow Steward: workflows, agents and skills, runs, approvals and reports.
-Basic MCP discovery and calls work without it. The package does not configure
-credentials or start another server; it reuses this authenticated connection.
-Download it and see the per-client steps in
-[Connect AI Agents](connect-ai-agents#download).
+Basic MCP discovery and calls work without it. The package contains no
+credentials and starts no additional server. Its Claude plugin manifest can
+ask for your server address and token; other clients use the connection you
+configure separately. See the download options and per-client steps in
+[Connect AI Agents](connect-ai-agents#download). Package installation support
+and availability in third-party directories must be checked for your client.
 
 ## Cleanup and troubleshooting
 
 Remove the server from the client and revoke the temporary token after the
 check. Keep configs containing tokens out of source control.
 
-- Empty discovery: confirm `projects.read` and token allowlists before widening
+- Empty tool list: confirm `projects.read`. If `project_list` returns no projects,
+  check account/project restrictions and application permissions before widening
   credentials.
-- `403`: the tool or project needs a scope/allowlist the token does not hold.
-  The error's `code` names the reason; see [MCP errors](../reference/mcp#errors).
-- JSON-RPC invalid params: use `{}` for `project_list`; consult `tools/list`
-  for the exact schema of every subsequent tool.
+- `403` or a tool result with `isError: true`: the tool or project may need a
+  scope, permission or project access the token does not hold. API-backed tool
+  failures carry an `ok: false` envelope in the error content; inspect its
+  `error.code` and message. See [MCP errors](../reference/mcp#errors).
+- JSON-RPC invalid params: use `{}` for `project_list` arguments; consult
+  `tools/list` for the exact schema of every subsequent tool. Manual modern
+  requests must also retain their protocol `_meta`.
 - Protocol error: rediscover versions; do not silently reuse a version from a
   different deployment.
 

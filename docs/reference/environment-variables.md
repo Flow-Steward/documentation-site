@@ -14,6 +14,10 @@ This page is the public, compact reference. The application repository also
 ships a generated environment catalog with owners, defaults, example files, and
 runtime read locations.
 
+The contracts below describe current public source on main. They do not establish
+availability in a published release or the configuration of a running provider
+deployment. Check your deployed revision and effective process environment.
+
 ## Environment review boundary
 
 The documentation review on 2026-10-04 recorded **430 names in 24 groups**
@@ -135,7 +139,8 @@ the relevant deployment environment and recreate affected services; this does
 not make them arbitrary `config set` fields. `FS_INSTALLATION_ID`,
 `FS_MONITORING_EXPECTATIONS`, and `FS_MONITORING_DEPENDENCIES` describe installation
 identity and topology; preserve installer-generated values rather than inventing
-new ones to clear a monitoring warning.
+new ones to clear a monitoring warning. On managed platforms, provision one
+`FS_INSTALLATION_ID` UUID before first start and retain it across upgrades.
 
 ## Workflow-entrypoint request transport
 
@@ -147,7 +152,7 @@ These historically named controls are consumed by
 |---|---:|---|
 | `FS_TASK_UPLOAD_MAX_CONCURRENT_PREPARATIONS` | 4 | Total concurrent request preparations; integer clamped to 1–64. |
 | `FS_TASK_UPLOAD_MAX_CONCURRENT_PREPARATIONS_PER_ACCOUNT` | 2 | Per-account count, 1–64 and no greater than total. |
-| `FS_TASK_UPLOAD_MAX_CONCURRENT_PREPARATIONS_PER_PRINCIPAL` | 2 | Per entrypoint ID plus auth mode, not per logged-in user; 1–64 and no greater than both account and total. |
+| `FS_TASK_UPLOAD_MAX_CONCURRENT_PREPARATIONS_PER_PRINCIPAL` | 2 | Per entrypoint key plus auth mode, not per logged-in user; 1–64 and no greater than both account and total. |
 | `FS_TASK_UPLOAD_BODY_READ_TIMEOUT_SECONDS` | 120 seconds | Multipart and non-multipart body receipt only; clamped to 5–3,600 seconds. |
 
 Admission exhaustion returns HTTP 429; body-read timeout returns HTTP 408.
@@ -175,7 +180,7 @@ verify the actual service environment. See [API Reference](api.md#authentication
 
 | Variable | Default | Contract |
 |---|---:|---|
-| `FS_DATASET_QUERY_MAX_RUNTIME_ROWS` | 1,000 | Deployment maximum for rows materialized by one `dataset_query`. An explicit value must be a positive whole number; blank, invalid, zero, or negative fails. There is no code-level upper clamp. A missing step `row_limit` becomes `min(100, maximum)`; a request above the maximum fails before fetch. |
+| `FS_DATASET_QUERY_MAX_RUNTIME_ROWS` | 1,000 | Deployment maximum for rows materialized by one `dataset_query` and items walked by one For each pass. An explicit value must be a positive whole number; blank, invalid, zero, or negative fails. There is no code-level upper clamp. A missing or blank step `row_limit` becomes `min(100, maximum)`; a request above the maximum fails before fetch. For each takes the first N items of a longer collection and reports truncation. |
 | `FS_INVOKE_WORKFLOW_MAX_DEPTH` | 5 | Maximum `invoke_workflow` chain depth. Invalid, blank, zero, or negative uses 5; any positive integer is accepted. Exceeding it fails with `invocation_depth_exceeded` before child execution. |
 
 Both variables lack explicit production Compose app bindings and Compact child
@@ -191,7 +196,7 @@ are held in workflow state; preview rows are a separate display boundary. See
 | `.env.example` | Local development baseline. |
 | `.env.example.prod` | Minimal production stack baseline. |
 | `.env.example.memory` | Memory backend override examples. |
-| `.env.example.ops` | Observability, auth, email, runtime, retention, DB tuning, and artifact storage knobs. |
+| `.env.example.ops` | Observability, auth, runtime, retention, DB tuning, and artifact storage knobs. |
 | `.env.example.quality` | Sonar and quality-tool settings. |
 | `.env.example.test` | E2E, Nightfire, and test-runner settings. |
 
@@ -207,9 +212,16 @@ keys it owns on every run.
 
 Use `./install.sh` for a fresh or resumable installation. After installation,
 on Scalable use `./flow-steward config show`, `config validate`, `config set`, and
-`config apply` for the typed configuration fields those commands expose. They
-do not accept arbitrary environment-variable names. Other settings require the
-deployment's supported environment source and recreation of affected services.
+`config apply` for the typed configuration fields and approved host settings
+those commands expose. `config set NAME=VALUE` accepts typed field names and
+non-secret manifest entries marked `operator_settable`; it rejects arbitrary
+environment-variable names. Current approved host settings include
+`FS_AGENT_TEXT_FILE_EXTENSIONS` and `FS_ALLOW_PRIVATE_REMOTE_URLS`. On Compact,
+set approved host settings from the installation folder with
+`./install.sh --setting NAME=VALUE`; the installer records them and restarts the
+runtime. An empty host-setting value resets it to its default. Other settings
+require the deployment's supported environment source and recreation of affected
+services.
 
 ## Variables most users touch
 
@@ -221,8 +233,9 @@ deployment's supported environment source and recreation of affected services.
 | `FS_DEFAULT_TEMPERATURE` | Default model temperature. |
 | `APP_PORT` | Application listener/Compose port input, depending on topology. Compact serves public traffic through `PORT` / `FS_RUNTIME_HTTP_PORT`; do not use `APP_PORT` to change that public router. |
 | `FS_PUBLIC_BASE_URL` | Public origin used for links, redirects, and trusted deployment URLs. |
-| `FS_SECRET_KEY` | Secret key for auth/session signing. Must be strong in production. |
+| `FS_SECRET_KEY` | Application signing key, also used for encrypted attachment storage. Must be strong in production. |
 | `ENCRYPTION_KEY` | Stable AES-GCM key for encrypted stored secrets. |
+| `FS_BACKUP_ENCRYPTION_KEY` | Durable encryption key required for protected backups; retain it to restore those backups. Secret. |
 | `FS_AUTH_TRUSTED_ORIGINS` | Allowed public origins for browser-facing auth flows. |
 | `FS_AUTH_BOOTSTRAP_ENABLED` | Enables the first-admin bootstrap flow. Disable after setup in production. |
 | `MCP_BEARER_TOKEN` | Token used by local MCP clients such as Codex sessions. |
@@ -245,17 +258,19 @@ deployment's supported environment source and recreation of affected services.
 
 ## Memory and search backends
 
-Canonical memory records live in Postgres. Optional vector and graph services are
-indexes and must be selected explicitly.
+Canonical memory records live in Postgres. Vector and graph indexes use the
+selected backends; current runtime defaults are `postgres_pgvector` and
+`postgres_age`. The memory example overlay explicitly selects `null` for vector
+search, so applying that overlay disables it.
 
 | Variable | Purpose |
 |---|---|
-| `FS_MEMORY_PROFILE` | Overall memory profile, commonly `postgres_unified`. |
-| `FS_MEMORY_REPOSITORY_BACKEND` | Repository-memory backend. |
-| `FS_MEMORY_KNOWLEDGE_BACKEND` | Knowledge-memory backend. |
-| `FS_MEMORY_TEXT_SEARCH_BACKEND` | Text search backend, commonly `postgres_fts`. |
-| `FS_MEMORY_VECTOR_BACKEND` | Vector backend, commonly `postgres_pgvector`. |
-| `FS_CONTEXT_GRAPH_BACKEND` | Context graph backend, commonly `postgres_age`. |
+| `FS_MEMORY_PROFILE` | Overall memory profile, currently `postgres_unified`. |
+| `FS_MEMORY_REPOSITORY_BACKEND` | Repository-memory backend, currently `postgres`. |
+| `FS_MEMORY_KNOWLEDGE_BACKEND` | Knowledge-memory backend, currently `postgres`. |
+| `FS_MEMORY_TEXT_SEARCH_BACKEND` | Text search backend: `postgres_fts` or `postgres_trgm`. |
+| `FS_MEMORY_VECTOR_BACKEND` | Vector backend: `postgres_pgvector` or `null`. |
+| `FS_CONTEXT_GRAPH_BACKEND` | Context graph backend: `postgres_age` or `null`. |
 | `FS_PGVECTOR_DSN` | Optional DSN override for pgvector. |
 
 ## Authentication and access
@@ -270,7 +285,7 @@ indexes and must be selected explicitly.
 | `FS_AUTH_PASSWORD_MIN_LENGTH` | Minimum password length. |
 | `FS_AUTH_LOGIN_MAX_ATTEMPTS` | Login attempts before lockout. |
 | `FS_AUTH_LOGIN_LOCKOUT_SECONDS` | Lockout duration. |
-| `FS_AUTH_PASSWORD_RESET_ENABLED` | Enables password reset. |
+| `FS_AUTH_PASSWORD_RESET_ENABLED` | Enables password reset; email delivery also requires a connected email notification extension. |
 | `FS_AUTH_PASSWORD_RESET_TTL_MINUTES` | Password reset token lifetime. |
 | `FS_AUTH_PASSWORD_RESET_MAX_ATTEMPTS` | Password reset attempts before lockout. |
 | `FS_AUTH_PASSWORD_RESET_LOCKOUT_SECONDS` | Password reset lockout duration. |
@@ -311,7 +326,7 @@ exist, and no cross-provider fallback is implied.
 | `FS_DEFAULT_PROVIDER` | Default provider. |
 | `FS_DEFAULT_MODEL` | Default model. |
 | `FS_DEFAULT_TEMPERATURE` | Default model temperature. |
-| `FS_LLM_REQUEST_TIMEOUT_SECONDS` | Optional timeout for model requests. |
+| `FS_LLM_REQUEST_TIMEOUT_SECONDS` | Optional positive timeout cap in seconds for model requests, also used when a caller supplies no positive timeout. Blank, invalid, or non-positive values supply no cap. |
 
 ## MCP
 
@@ -344,6 +359,7 @@ not this standalone Docusaurus site. The default FastAPI `/openapi.json`,
 | `FS_ATTACHMENT_MAX_FILES` | Stored-attachment count policy; see [workflow-run inputs and attachments](limits-and-file-formats.md#workflow-run-inputs-and-attachments). This does not make the JSON-only workflow-run API an upload endpoint. |
 | `FS_ALLOWED_ATTACHMENT_MIMES` | MIME policy, including the generic-binary exception described in [Default formats and type matching](limits-and-file-formats.md#default-formats-and-type-matching). |
 | `FS_ALLOWED_ATTACHMENT_EXTENSIONS` | Filename-extension policy and empty-list behavior; see [Default formats and type matching](limits-and-file-formats.md#default-formats-and-type-matching). |
+| `FS_AGENT_TEXT_FILE_EXTENSIONS` | Comma-separated suffixes agents may read as text; blank uses `txt,md,markdown,json,xml,csv,tsv,yaml,yml,rtf`. This is separate from upload allowlists and does not override binary MIME checks. |
 | `FS_EXTENSION_DEBUG_PAYLOADS` | Enables extension payload debug details. Keep off normally. |
 | `FS_EXTENSION_PAYLOAD_REDACT_KEYS` | Sensitive keys redacted from extension payloads. |
 | `FS_EXTENSION_PAYLOAD_REDACT_EXACT_KEYS` | Exact sensitive keys redacted from extension payloads. |
@@ -358,6 +374,7 @@ not this standalone Docusaurus site. The default FastAPI `/openapi.json`,
 |---|---|
 | `ARTIFACT_STORAGE_BACKEND` | Artifact backend: `memory`, `s3`, or `local_fs`. |
 | `ARTIFACT_S3_ENDPOINT_URL` | S3-compatible endpoint URL. |
+| `ARTIFACT_S3_PUBLIC_ENDPOINT_URL` | Optional public endpoint URL passed to the S3 adapter for client-facing access. |
 | `ARTIFACT_S3_BUCKET` | Artifact bucket. |
 | `ARTIFACT_S3_ACCESS_KEY` | S3 access key. Secret. |
 | `ARTIFACT_S3_SECRET_KEY` | S3 secret key. Secret. |
@@ -394,20 +411,19 @@ not this standalone Docusaurus site. The default FastAPI `/openapi.json`,
 | `FS_PROCESS_METRICS_HOST` | Metrics listener host. |
 | `FS_WORKER_METRICS_PORT` | Worker metrics port. |
 | `FS_CONTROL_METRICS_PORT` | Control metrics port. |
-| `SYSTEM_EMAIL_ENABLED` | Enables system email. |
-| `SYSTEM_EMAIL_PROVIDER` | Email provider, such as `smtp`. |
-| `SYSTEM_EMAIL_FROM_ADDRESS` | Sender address. |
-| `SYSTEM_EMAIL_SMTP_HOST` | SMTP host. |
-| `SYSTEM_EMAIL_SMTP_PORT` | SMTP port. |
-| `SYSTEM_EMAIL_SMTP_USERNAME` | SMTP username. |
-| `SYSTEM_EMAIL_SMTP_PASSWORD` | SMTP password. Secret. |
-| `SYSTEM_EMAIL_ANYMAIL_CONFIG_JSON` | Anymail provider config JSON. Secret if it contains credentials. |
+
+System email uses a connected email notification extension, such as an SMTP
+extension. The platform selects the oldest enabled eligible connection; it has
+no built-in mail transport configured through `SYSTEM_EMAIL_*` variables.
+Without an eligible connection, system email is unavailable and the sign-in page
+hides the password-reset link. Configure delivery and its credentials through
+the extension connection.
 
 ## Runtime controls and retention
 
 | Variable | Purpose |
 |---|---|
-| `CONTROL_LOOPS_ENABLED` | Enables control-plane loops in the control-plane service. |
+| `CONTROL_LOOPS_ENABLED` | Gates loops started inside the application lifespan. Shipped app roles set this to `0` and expect a dedicated control-plane process. |
 | `FS_WATCHDOG_ENABLED` | Enables watchdog loop. |
 | `FS_WATCHDOG_INTERVAL_SECONDS` | Watchdog interval. |
 | `FS_WATCHDOG_AUTO_APPLY` | Allows watchdog to apply configured repairs. |
@@ -415,13 +431,13 @@ not this standalone Docusaurus site. The default FastAPI `/openapi.json`,
 | `FS_SCHEDULED_JOBS_INTERVAL_SECONDS` | Scheduled-job scan interval. |
 | `FS_DASHBOARD_ROLLUP_ENABLED` | Enables dashboard rollup generation. |
 | `FS_DASHBOARD_ROLLUP_INTERVAL_SECONDS` | Dashboard rollup interval. |
-| `FS_RETENTION_LOGS_DAYS` | Log retention days. |
-| `FS_RETENTION_MESSAGES_DAYS` | Message retention days. |
-| `FS_RETENTION_TRASH_DAYS` | Trash retention days. |
+| `FS_RETENTION_LOGS_DAYS` | Default action-log retention days for accounts without a saved retention policy. |
+| `FS_RETENTION_MESSAGES_DAYS` | Default job-log (agent message) retention days for accounts without a saved retention policy. |
+| `FS_RETENTION_TRASH_DAYS` | Default trash retention days for accounts without a saved retention policy. |
 | `FS_RETENTION_JOBS_DAYS` | Job retention days. |
 | `FS_RETENTION_EVENTS_DAYS` | Event retention days. |
 | `FS_RETENTION_RETRY_QUEUE_DAYS` | Retry queue retention days. |
-| `FS_RETENTION_TERMINAL_JOB_CHECKPOINTS_DAYS` | Terminal checkpoint retention days. |
+| `FS_RETENTION_TERMINAL_JOB_CHECKPOINTS_DAYS` | Default terminal checkpoint retention days for accounts without a saved retention policy. |
 | `FS_WORKSPACES_ROOT` | Workspace artifact root for local prune operations. |
 | `FS_WORKSPACE_MAX_AGE_DAYS` | Max age before workspace artifacts are eligible for pruning. |
 
@@ -483,7 +499,8 @@ not this standalone Docusaurus site. The default FastAPI `/openapi.json`,
 `SECURITY_SCAN_MODE` accepts exactly `monitor`, `enforce_standard`,
 `enforce_strict`, or `disabled`. An invalid value falls back to the
 environment-dependent default: `enforce_standard` in production and `monitor`
-elsewhere. `monitor` scans and logs without blocking, although persisted-data
+elsewhere. With no environment marker, the security configuration assumes
+production. `monitor` scans and logs without blocking, although persisted-data
 redaction still applies. `disabled` turns off secret, injection, and PII
 detection and should not be used as a production bypass.
 
@@ -519,5 +536,6 @@ settings and their effects.
 For each upgrade, compare the target manifest **and** its readers, check that
 the selected Compose/provider configuration forwards the setting, and recreate
 the affected process. Preserve secrets in the deployment's supported secret
-source. A variable accepted by the runtime is not automatically an arbitrary
-key supported by `flow-steward config set`.
+source. A variable accepted by the runtime is accepted by
+`flow-steward config set NAME=VALUE` only when it is an approved host setting;
+typed deployment fields use their own public field names or options.

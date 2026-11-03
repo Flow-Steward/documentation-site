@@ -11,11 +11,14 @@ parallel lanes, For each loops and hooks where needed. Operators use workflows t
 turn repeatable work into a controlled process. The canvas itself is described in
 [Workflow Builder](workflow-builder).
 
+This page describes behavior supported on main. Availability in published
+releases has not been verified; installed releases may differ.
+
 ## Create a workflow
 
 [![Local workflow list showing workflow records and their states](/img/screenshots/2026-10-04/workflows-catalog.png)](/img/screenshots/2026-10-04/workflows-catalog.png)
 
-*The local workflow list opens workflows already in this installation. Create workflow provides access to the separate Workflow Catalog. The records shown are synthetic test data.*
+*The workflow list captured on 2026-10-04 shows synthetic test data. In the current UI, Create workflow opens a blank form; the separate Catalog tab provides templates.*
 
 1. Open **Workflows**.
 2. Choose **Create workflow**, or open an existing workflow to edit it.
@@ -25,8 +28,9 @@ turn repeatable work into a controlled process. The canvas itself is described i
    [Workflow Builder](workflow-builder).
 5. Declare inputs and outputs under **Interface** (or the **Smart setup** tab).
 6. Link the projects that may run it on the **Projects** tab.
-7. Check **Diagnostics** for validation issues, then enable the workflow.
-8. Run a test job before using the workflow for production work.
+7. Check **Diagnostics** and resolve validation issues.
+8. Run a test job while the workflow remains disabled, then review trigger
+   channels and effects before enabling it for production work.
 
 [![Workflow overview with status, validation, and workflow actions](/img/screenshots/2026-10-04/workflow-overview.png)](/img/screenshots/2026-10-04/workflow-overview.png)
 
@@ -34,18 +38,19 @@ turn repeatable work into a controlled process. The canvas itself is described i
 
 ## Start from the Workflow Catalog
 
-The **Workflow Catalog** contains ready-made reusable workflows, including
-operational automation and examples from Flow Steward and community contributors.
+The **Workflow Catalog** lets operators browse reusable workflow templates.
 It is the **Catalog** tab next to **Workflows**; **Create workflow** starts from
 scratch. Operators can browse; creating a workflow requires an administrator.
-Standard configuration uses the official catalog. If it is disabled, creation
-opens the ordinary form.
+Standard configuration uses the official catalog. If it is disabled, the Catalog
+tab is absent and the ordinary creation form remains available. Live catalog
+contents and availability depend on the configured catalog and have not been
+verified here.
 
 Open an entry, review its requirements, then choose **Use template**. Select
 a project and resolve the dependency preflight before **Create draft**. Catalog
 creation uses the import portability checks and saves independent disabled drafts,
 including bundled children. Configure connections and credentials, validate, and
-review triggers and effects before enabling and testing them. Later catalog
+review triggers and effects before testing and enabling them. Later catalog
 updates do not overwrite your local workflows.
 
 See [Workflow and Extension Catalogs](workflow-and-extension-catalogs) for the
@@ -83,8 +88,10 @@ install dependencies, enable, execute, schedule or publish. Creation requires ex
 administrator authority; machine tokens remain operators. Read access and launch grants
 are not creation grants. Validation reports unperformed execution checks separately.
 Inspect a saved draft in the manual editor or `workflow_list` with `enabled_only=false`.
-A user reviews and enables it when appropriate before Test Run; Test Run can cause
-external effects. See [MCP Reference](../reference/mcp#workflow-authoring) for exact arguments.
+An administrator can Test Run a valid disabled draft before enabling it; Test Run
+can cause external effects. Draft authoring does not restore hook bindings; use
+workflow import for bundles that carry them. See [MCP Reference](../reference/mcp#workflow-authoring)
+for exact arguments.
 
 ## Step kinds
 
@@ -102,10 +109,11 @@ step-autonomy policy may impose its own approvals.
 
 ## Run a workflow
 
-Use the administrator **Test Run** in the workflow builder, the public
+Use the administrator builder's **Test Run** or **Run workflow**, the public
 workflow-run API, built-in MCP `workflow_trigger`, or a configured webhook or
-provider trigger. Each path requires the matching workflow trigger channel,
-project binding, role, and declared inputs.
+provider trigger. Ordinary runs require the matching workflow trigger channel,
+project binding, role, and declared inputs. The administrator Test Run path can
+test a valid disabled draft without enabling its ordinary trigger channels.
 
 The public CLI has workflow discovery/validation commands but no task-submit or
 workflow-run command.
@@ -121,25 +129,24 @@ regular operators.
 
 1. Open `Registry`.
 2. Open `Workflows`.
-3. Select the workflow.
-4. Confirm the header shows the workflow as enabled and valid, or review any
-   validation warnings first.
-5. If the workflow needs a project context, check that a project is already
-   linked in the URL or in the workflow page. If not, use the `Project context`
-   selector in the test-run drawer.
-6. Choose `Test Run` from the workflow header.
+3. Select the workflow and open its builder.
+4. Apply pending changes and resolve validation errors. The workflow may remain
+   disabled for Test Run.
+5. Choose the linked project context. If one is not already selected, use the
+   `Project context` selector.
+6. Choose `Test Run` from the builder toolbar.
 7. Fill `Test Run Summary` with the request you want the workflow to handle.
 8. Fill any generated `Workflow inputs`. Required inputs are marked in the
-   drawer.
-9. Choose `Test Run`.
-10. Follow the accepted job in the embedded **Job Details** view or open its
-    full Job Details page.
+   launch dialog. Review configured test files and any kept test outputs.
+9. Choose `Start test run`.
+10. Follow the accepted job on the canvas and in the builder's results view, or
+    open its full Job Details page.
 
 The durable job view can show:
 
 - final status;
 - workflow ID and project ID;
-- execution ID or ephemeral session label;
+- execution ID;
 - final report;
 - final result preview;
 - approval decision controls;
@@ -148,10 +155,16 @@ The durable job view can show:
 - per-step trace rows;
 - raw payload details for debugging.
 
-Submission returns a durable job/thread asynchronously. The older **Latest
-workflow test run** result panel is a fallback only when no job ID is available;
-do not rely on its approval controls for the normal queued-job path. Approval
-labels in Job Details depend on the active gate kind.
+Submission returns a durable job/thread asynchronously. The builder shows compact
+results for the selected, verified test job. Legacy payload results are a fallback;
+use the selected job's current approval gate when making decisions. Approval
+labels depend on the active gate kind.
+
+A kept test output replaces an eligible step's execution with stored output
+values during a workflow test. It does not affect real runs and is not included
+in workflow exports. Decision and control-flow steps still run. A successful test
+that uses kept outputs does not prove that the replaced steps work against their
+real dependencies.
 
 `Test Run` can execute real model calls, tool calls, dataset queries, HTTP
 requests, child workflows, and extension actions. Use demo data or a low-risk
@@ -163,6 +176,19 @@ requests, including writes, and configured model calls may incur provider costs.
 Only extension effects declared with `test_mode_behavior: suppress` are
 suppressed through the host's effect-suppression path; this is not a universal
 runtime sandbox and does not suppress every extension action or HTTP step.
+
+### Start an ordinary run from the builder
+
+The launch dialog also offers **Run workflow** to administrators. This requires
+an enabled workflow, an enabled project link, and an enabled interface admitting
+the `ui` trigger channel. Apply edits first: the request pins the saved revision
+and refuses a revision conflict.
+
+Fill the workflow inputs and summary, upload actual files for declared file
+inputs, and acknowledge that the run can create external changes and use live
+credentials. Choose **Run workflow**, then open the returned job in Job Details.
+This path uses the saved workflow and actual uploads; it does not use test files
+or kept test outputs and does not enter Test Run history.
 
 ## Start an explicit workflow run
 
@@ -260,14 +286,14 @@ Typical export and import flow:
 10. Review dependency status before applying the import.
 11. Resolve missing or conflicting references.
 12. Choose `Import workflow`.
-13. Open the imported workflow and run validation/preflight while it remains
-    disabled.
+13. Open the imported workflow, validate it, and use a controlled Test Run while
+    it remains disabled.
 
-The backend rejects an actual Test Run of a disabled workflow with HTTP 422.
-This means validation can precede enablement, but execution cannot. Review
-trigger channels, schedules, webhooks, bindings, credentials, and side effects
-before enabling. Use an isolated provider-free fixture for target execution;
-do not enable an effectful import merely to bypass the guard.
+Current main allows an administrator Test Run of a valid disabled workflow.
+Ordinary runs still require enablement. Review trigger channels, schedules,
+webhooks, bindings, credentials, and side effects before enabling. Test Run can
+cause external effects even while the workflow is disabled; use an isolated
+provider-free fixture for target execution.
 
 The import preflight can report these dependency states:
 
@@ -315,14 +341,21 @@ systems.
 
 | Field | Purpose |
 |---|---|
-| `trigger_channels` | Where the workflow can be launched: UI, API, schedule, webhook, MCP, or another workflow. |
-| `input_mode` | Whether inputs are free-form, schema-backed, or generated from workflow contracts. |
-| `strict_inputs` | Rejects unknown or incomplete inputs when the workflow must be predictable. |
+| `enabled` | Enables the public interface; separate from the workflow's own enabled state. |
+| `trigger_channels` | Where the workflow can be launched: UI, API, schedule, webhook, MCP, or another workflow. The public workflow-run API uses the MCP channel. |
+| `input_mode` | Form fields (`fields`), custom JSON schema (`json_schema`), or raw JSON payload (`passthrough`). |
+| `strict_inputs` | Rejects undeclared fields in form-field mode. Required inputs remain governed by their declarations. |
 | `expected_inputs` | Named user inputs with type, label, requirement, default, and help text. |
-| `output_mode` | How final outputs are exposed to the caller and UI. |
+| `input_schema` | The custom input schema in JSON-schema mode; the public contract also exposes a schema generated for the selected input mode. |
+| `output_mode` | Derived from the declared variable outputs and returned files. |
 | `expected_outputs` | Named outputs that downstream users or child callers can rely on. |
-| `expected_artifacts` | Files or structured artifacts the workflow should produce. |
-| `side_effects` | Declares whether the workflow can write code, call external systems, send notifications, or mutate state. |
+| `returned_files` | File outputs derived from step results marked **Return from workflow**, with stable output keys and source steps. |
+
+Declare returned files on the producing step's result. Existing
+`expected_artifacts` declarations are legacy compatibility data and must resolve
+to exactly one producing result; they are not the current file-authoring surface.
+The old descriptive `side_effects` rows do not provide an enforced safety boundary.
+Review the actual steps and their configured effects.
 
 Good contracts make explicit workflow launches, `Test Run`, MCP calls, and nested workflow
 invocation safer because the UI can generate the right fields and the runtime
@@ -368,9 +401,10 @@ object shape must match the selected step's current contract.
 
 Use **Parallel lanes** only when the lanes have no ordering dependency on each
 other. The group continues when all lanes finish. Each lane lands only the values
-it changed; when two lanes write the same field, the later lane in lane order
-wins. Lanes never read each other's results; the steps after the group read all
-of them. If, Switch, Approval, Wait and Stop steps are refused in a lane. Inspect
+it changed. Results merge by step position and then lane order; later writes in
+that merge order win when they change the same field. Avoid competing writes.
+Lanes never read each other's results; the steps after the group read the merged
+results. If, Switch, Approval, Wait and Stop steps are refused in a lane. Inspect
 per-lane results and trace data in the job. See
 [Workflow Builder › Parallel lanes](workflow-builder#parallel-lanes).
 
@@ -403,7 +437,9 @@ Create the webhook:
 5. Enable the webhook.
 6. Add a description that names the source system, such as `GitHub issue intake`
    or `PagerDuty incident trigger`.
-7. Choose an auth mode.
+7. Choose an auth mode. For a signed webhook, configure the source's signature
+   format and signed-payload recipe, and import its signing secret or use a
+   generated secret as appropriate.
 8. Choose allowed content types.
 9. Set body, file, and file-count limits.
 10. Choose whether the caller must send an `Idempotency-Key`.
@@ -411,8 +447,9 @@ Create the webhook:
 12. Add exact IPs or CIDR ranges when the caller has stable source addresses.
 13. Map external payload fields to workflow inputs.
 14. Choose `Create webhook`.
-15. Copy the public URL and the one-time credential reveal.
-16. Store the credential in the source system secret manager.
+15. Copy the public URL and any one-time generated credential reveal. Imported
+    signing secrets are write-only and are not revealed back.
+16. Store any generated credential in the source system secret manager.
 17. Use the generated cURL or the source system test delivery to send a low-risk
     payload.
 18. Review the dry-run result or created job before enabling production traffic.
@@ -425,7 +462,8 @@ Configuration fields:
 
 | Setting | Purpose |
 |---|---|
-| `auth_mode` | Bearer token, HMAC SHA256, shared secret header, or basic auth. |
+| `auth_mode` | Bearer token, HMAC SHA256, shared secret header, basic auth, or configurable signed-webhook verification (`webhook_signature`). |
+| `auth_config` | Authentication details; signed webhooks configure signature parsing, encoding, signed-payload recipe, and optional timestamp tolerance. |
 | `allowed_content_types` | JSON, multipart, form, or text payloads accepted by this webhook. |
 | `source_restrictions` | Exact IP or CIDR allowlists when the caller is known. |
 | `max_body_bytes` | Maximum request body size. |
@@ -445,6 +483,10 @@ Supported mapping selector roots are:
 | `form.` | Form fields. |
 | `files` | Uploaded file references. |
 
+Mapping targets must be declared Expected Inputs. In strict form-field mode,
+unknown JSON body fields can also be rejected; map the external envelope fields
+that the workflow needs and dry-run a representative payload.
+
 After a webhook exists, the selected trigger panel lets you copy the public URL,
 rotate the credential, regenerate the URL, dry-run a payload, or delete the
 webhook.
@@ -455,7 +497,9 @@ deliveries but does not remove historical jobs or delivery evidence.
 
 Provider triggers are related but separate. They come from extensions that
 declare `workflow_triggers[]` and should be used when the provider integration
-owns the trigger lifecycle instead of a generic public webhook.
+owns the trigger lifecycle instead of a generic public webhook. Verify the
+provider's current signing and delivery requirements against its own documentation;
+examples in the UI do not certify current provider compatibility.
 
 ## HTTP request steps
 
@@ -478,20 +522,21 @@ credential references so secrets can be rotated and redacted.
 ## Nested workflows
 
 Use `invoke_workflow` when a reusable child workflow should run inside a parent
-workflow.
+workflow. Configure the child workflow ID and map declared inputs, outputs, and
+returned files through the step's current contract.
 
-Configure:
+For a serial invocation, the child is a separate durable job. The parent parks
+without holding a worker until that child finishes, then validates and maps its
+result. A stale completion for another wait or child does not advance the parent.
 
-- child workflow id;
-- input mapping from parent state to child inputs;
-- output mapping from child result to parent state;
-- artifact mapping;
-- timeout and cancel behavior;
-- inline or asynchronous execution behavior when supported.
-
-Deployment-level controls include `FS_INVOKE_CHILD_TIMEOUT_SECONDS`,
-`FS_INVOKE_CHILD_TIMEOUT_CAP_SECONDS`, `FS_INVOKE_CHILD_POLL_SECONDS`,
-`FS_INVOKE_CHILD_CANCEL_ON_TIMEOUT`, and `FS_INVOKE_INLINE_EXECUTION`.
+Invocations from parallel lanes, and their descendants, use the finite child
+execution path. Such children cannot pause for human approval or waits.
+Deployment-level controls for that finite path include
+`FS_INVOKE_CHILD_TIMEOUT_SECONDS`, `FS_INVOKE_CHILD_TIMEOUT_CAP_SECONDS`,
+`FS_INVOKE_CHILD_POLL_SECONDS`, `FS_INVOKE_CHILD_CANCEL_ON_TIMEOUT`, and
+`FS_INVOKE_INLINE_EXECUTION`. The inline setting does not turn a normal serial
+invocation into an inline call. `FS_INVOKE_WORKFLOW_MAX_DEPTH` bounds nested
+invocation depth, and recursion checks reject cycles in the invocation chain.
 
 ## Artifacts
 

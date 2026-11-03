@@ -21,7 +21,7 @@ developers should build against.
 | Let Flow Steward call external tools | External MCP catalog, extension action, or HTTP request step. |
 | Add provider-native tasks, notifications, callbacks, tools, or datasets | Extension bundle. |
 | Generate a typed API client | Curated OpenAPI schema. |
-| Follow live job progress | WebSocket or server-sent event stream. |
+| Follow live job progress | Public job-scoped server-sent event stream, or app WebSocket. |
 
 ## OpenAPI surfaces
 
@@ -33,7 +33,8 @@ Use the curated schemas instead:
 | Public integration API | `/openapi-public.json` | `/docs/api` |
 | Internal app API | `/openapi-internal.json` | `/docs/internal` |
 
-Both schemas require authentication by default. See
+Both schemas and Swagger UIs are disabled by default. When enabled, they require
+authentication by default. See
 [API Reference](../reference/api) and
 [Environment Variables](../reference/environment-variables) for the flags that
 enable the docs surfaces.
@@ -41,7 +42,8 @@ enable the docs surfaces.
 ## Start work from an API client
 
 Use the public workflow-run API when the caller is a trusted integration that should
-start a Flow Steward job directly.
+start a Flow Steward job directly. Authenticate with a bearer token; obtain the
+project ID out of band, since project discovery is not part of the public schema.
 
 Key public routes:
 
@@ -50,11 +52,16 @@ Key public routes:
 | `POST /api/workflow-runs` | Start an explicit project/workflow with declared inputs. |
 | `GET /api/jobs` | List jobs visible to the caller. |
 | `GET /api/jobs/{job_id}` | Read job status and result metadata. |
+| `GET /api/jobs/{job_id}/approval` | Read the current approval gate. |
 | `POST /api/jobs/{job_id}/cancel` | Cancel a running job. |
 | `POST /api/approvals/{thread_id}` | Decide an approval gate. |
 | `GET /api/projects/{project_id}/workflow-catalog` | Discover callable workflows for a project. |
 | `GET /api/projects/{project_id}/workflow-entrypoints` | Discover workflow entrypoints. |
 | `GET /api/projects/{project_id}/workflows/{workflow_id}/contract` | Read a workflow input/output contract. |
+
+Workflow launch accepts an optional `Idempotency-Key` header to return the same
+job for an identical retry. Approval decisions require an `Idempotency-Key` and
+the current `approval_id`, together with an `approved` value or `action`.
 
 Prefer schema-backed request generation from `/openapi-public.json` over copying
 examples by hand.
@@ -71,7 +78,8 @@ Operator setup happens in the workflow UI:
 3. Create an incoming webhook.
 4. Map `body.`, `headers.`, `query.`, `form.`, or `files` selectors to expected
    workflow inputs.
-5. Copy the generated public URL and one-time credential reveal.
+5. Copy the generated public URL and, for generated credentials, the one-time
+   credential reveal.
 
 Developer-facing routes:
 
@@ -87,9 +95,11 @@ Developer-facing routes:
 | `GET /api/workflows/{workflow_id}/triggers/webhooks/{entry_key}/deliveries` | Inspect webhook delivery history. |
 | `POST /webhook/workflows/{entry_key}` | Public ingress route called by the external system. |
 
-Supported auth modes are bearer token, HMAC SHA256, shared secret header, and
-basic auth. Store generated secrets in the source system's secret manager. Do
-not hard-code them in workflow text or documentation.
+Supported auth modes are bearer token, HMAC SHA256, shared secret header,
+basic auth, and configurable webhook signature verification (`webhook_signature`).
+The signature mode can accept a provider-issued signing secret; imported secrets
+are stored without being revealed back. Store generated secrets in the source
+system's secret manager. Do not hard-code them in workflow text or documentation.
 
 ## Move workflows between environments
 
@@ -107,14 +117,15 @@ Routes:
 | `POST /api/workflows/import/preflight` | Validate the YAML bundle and dependency resolutions. |
 | `POST /api/workflows/import/apply` | Import the workflow as disabled draft after preflight. |
 
-Preflight is required before importing a workflow into the target environment. It tells the target environment
-whether dependencies are resolved, missing, conflicting, protected, or require
-mapping.
+Run preflight before applying an import to inspect dependencies that are resolved,
+missing, conflicting, protected, or require mapping. Apply reruns preflight itself;
+it does not rely on a separate prior HTTP call as proof of validation.
 
 ## Integrate AI clients through MCP
 
-The built-in Flow Steward MCP server exposes project discovery, workflow,
-job diagnostic/control, report, and notification tools to MCP clients.
+The built-in Flow Steward MCP server exposes project discovery, workflow
+authoring and portability, agent and skill authoring, job diagnostic/control,
+report, and notification tools to MCP clients.
 It forwards the caller's bearer to the application API, which owns authorization
 and operation contracts. Repository code-search, code-graph and database-schema
 indexing sit outside this built-in MCP surface.
@@ -180,12 +191,20 @@ Use realtime surfaces for operator displays and long-running integrations:
 
 | Route | Purpose |
 |---|---|
-| `/ws/jobs/{job_id}` | Job updates. |
-| `/api/events` | Event list and filtering. |
-| `/api/events/{event_ref}/redrive` | Redrive a supported event after review. |
+| `GET /api/events/stream?job_id={job_id}` | Public server-sent event stream for one job's workflow state. |
+| `/ws/jobs/{job_id}` | App WebSocket for live job updates. |
+| `GET /api/events` | App event list and filtering. |
+| `POST /api/events/{event_ref}/redrive` | Redrive a supported event after review. |
+
+External token clients must supply `job_id` for the SSE stream and need
+`jobs.read` scope. Job-scoped streams do not accept `project_id` or `event_type`
+filters. Resume with the last received event ID using `Last-Event-ID` or the
+`cursor` query parameter; the header takes precedence.
 
 Realtime clients should reconnect with backoff and reload the latest HTTP state
-after reconnecting.
+after reconnecting. Use the public SSE contract for external integrations; the
+WebSocket and event inspection/redrive routes are app surfaces outside the
+curated public schema.
 
 ## Developer checklist
 

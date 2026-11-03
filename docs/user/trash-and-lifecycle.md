@@ -34,6 +34,9 @@ conflicts; do not infer that every deleted record has a plan tree.
    ordinary action.
 6. Open the restored object and verify its dependent records.
 
+Restoring a project whose workspace is also trashed restores that workspace
+so the project is visible again. Review the plan warning before confirming.
+
 ## Before permanent deletion
 
 Check whether the object is still referenced by:
@@ -62,6 +65,12 @@ rejects mixed ordinary/plan-backed selections and multiple plan-backed objects.
 5. Read warnings, validation errors, and dependency conflicts.
 6. Unselect any optional nodes that should not be affected.
 7. Confirm only when the selected tree matches the intended change.
+
+The MCP connector and all its projected tools are mandatory lifecycle items.
+Purging a selected workspace or project root requires every descendant to be
+selected; deselect the root if you intend to affect only part of its tree.
+If the plan becomes stale, reopen it and review the refreshed selection before
+confirming again.
 
 Other entity types use ordinary confirmation. **Purge** is permanent; the API
 does not allow direct purge of workspaces, projects, or MCP connectors without
@@ -108,5 +117,6 @@ behavior. Use Trash restore when the whole object was deleted.
 Data connections cannot be deleted while datasets depend on them. Remove or
 re-scope dependent datasets first, then delete the connection.
 
-Datasets should be disabled before deletion when you want to confirm no workflow
-depends on them.
+Consider disabling a dataset before deletion to observe the impact. Disabling
+changes its enabled state; it does not verify that no workflow depends on it.
+Review workflow references separately before deleting the dataset.

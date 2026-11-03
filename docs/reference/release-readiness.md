@@ -10,5 +10,6 @@ pagination_prev: null
 Release readiness is now maintained in the
 [Deployment Checklist](../deploy/deployment-checklist) and
 [Quality And Testing](../developer/quality-and-testing). Use those current
-contracts instead of the retired point-in-time audit. Historical review material
-remains private and is not republished here.
+contracts instead of the retired point-in-time audit. The retired audit is not
+republished here. This page does not certify release publication or current
+provider deployment status.
