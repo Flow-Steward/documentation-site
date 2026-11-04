@@ -30,6 +30,15 @@ jobs:
       needed: ${{ steps.context.outputs.needed }}
       tasks: ${{ steps.context.outputs.tasks }}
     steps:
+      - name: Require explicitly configured Luna before any AI call
+        env:
+          DOCS_AI_MODEL: ${{ vars.DOCS_AI_MODEL }}
+        shell: bash
+        run: |
+          if [ "${DOCS_AI_MODEL:-}" != "gpt-6-luna" ]; then
+            echo "::error::DOCS_AI_MODEL must be exactly gpt-6-luna. Documentation AI generation is blocked."
+            exit 1
+          fi
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           path: docs-site
@@ -97,7 +106,8 @@ jobs:
         with:
           openai-api-key: ${{ secrets.OPENAI_API_KEY }}
           codex-version: '0.166.0'
-          model: ${{ vars.DOCS_AI_MODEL }}
+          # Keep the paid model explicit; prepare rejects missing or different configuration.
+          model: gpt-6-luna
           working-directory: ${{ github.workspace }}/docs-site
           sandbox: read-only
           safety-strategy: drop-sudo
