@@ -9,7 +9,7 @@
     "docs_sha": {"type": "string"},
     "reviewed_document": {"type": "string"},
     "summary": {"type": "string"},
-    "evidence": {"type": "array", "items": {"type": "string"}},
+    "evidence": {"type": "array", "items": {"type": "string", "pattern": "^[a-zA-Z0-9_.@/-]+$"}},
     "updates": {
       "type": "array",
       "maxItems": 1,

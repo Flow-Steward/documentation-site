@@ -1,4 +1,4 @@
-import {readFileSync, writeFileSync, appendFileSync, statSync, readdirSync} from 'node:fs';
+import {readFileSync, writeFileSync, appendFileSync, statSync, readdirSync, existsSync} from 'node:fs';
 import {execFileSync} from 'node:child_process';
 import {resolve} from 'node:path';
 import {checkpoint, SHA, validateProposal} from './proposal.mjs';
@@ -19,6 +19,16 @@ if (action === 'prepare') {
   const root = process.cwd();
   const sourceSha = gitSha(input), docsSha = gitSha(root);
   if (!SHA.test(sourceSha) || !SHA.test(docsSha)) throw new Error('invalid checkout SHA');
+  // A cancelled/failed run can contain paid results. Never silently regenerate
+  // that source revision; recover saved receipts without model calls first.
+  const recoveryRoot = resolve(root, '.automation/recovery');
+  if (existsSync(recoveryRoot)) {
+    for (const entry of readdirSync(recoveryRoot, {withFileTypes: true})) {
+      if (!entry.isDirectory() || !/^\d+$/.test(entry.name)) continue;
+      const saved = loadJSON(resolve(recoveryRoot, entry.name, 'context/metadata.json'));
+      if (saved.sourceSha === sourceSha) throw new Error(`Paid receipts exist for ${sourceSha} in .automation/recovery/${entry.name}; use offline recover.mjs. Automatic regeneration is blocked.`);
+    }
+  }
   const requested = process.env.REQUESTED_SOURCE_SHA;
   if (requested) sourceContext(input, requested, null);
   const context = sourceContext(input, sourceSha, checkpoint(root));
