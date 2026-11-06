@@ -1,0 +1,24 @@
+{
+  "status": "completed",
+  "task_id": "page-2a488bfa0d051e5f",
+  "source_sha": "f9f918745298806b6247594e4dbb3203a8a9f417",
+  "docs_sha": "42f2a9e8affa46a84c6b79aa1d8c7ef70bf132cd",
+  "reviewed_document": "docs/deploy/render.md",
+  "summary": "No edits needed. The page's current-main guidance matches the reviewed source: compact_runtime.py handles dependency waiting and bootstrap-link logging; bootstrap_self_mint.py defines the 15-minute link and issuance conditions; connection_strings.py and rabbitmq_transport.py define connection resolution and verified TLS; compact_container_cli.py and the users command specs support the documented container CLI guidance; health.py and volume.py support readiness and one-runtime-per-volume behavior. The 2026-09-28 acceptance details remain explicitly historical. Current Render Blueprint settings, image availability, pricing, and dashboard behavior are external and unverified; the page tells readers to confirm them. The source review supports behavior on main and does not establish a published release.",
+  "evidence": [
+    "core/entrypoints/cli/compact_runtime.py",
+    "core/application/auth/bootstrap_self_mint.py",
+    "core/infrastructure/config/connection_strings.py",
+    "core/infrastructure/config/rabbitmq_transport.py",
+    "core/entrypoints/api/health.py",
+    "core/entrypoints/cli/compact_container_cli.py",
+    "core/application/management/command_specs/users.py",
+    "core/infrastructure/runtime/compact/volume.py",
+    "core/infrastructure/runtime/compact/process_spec.py",
+    "infra/docker/Dockerfile",
+    "infra/docker/docker-compose.compact.yaml",
+    "infra/docker/compact/flow-steward",
+    "assets/frontend/src/pages/auth/bootstrap/index.tsx"
+  ],
+  "updates": []
+}

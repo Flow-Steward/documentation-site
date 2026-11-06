@@ -36,8 +36,18 @@ export function checkPlan(plan, root, metadata) {
   if (JSON.stringify(plan) !== JSON.stringify(reviewPlan(root, metadata))) throw new Error('review plan differs from the trusted documentation inventory');
 }
 
+// Preserve older receipts that append a citation after an explicit separator.
+// Never infer a filesystem path from arbitrary prose.
+export function evidencePath(value) {
+  if (/[\r\n\0]/.test(value)) throw new Error('source evidence must be a single line');
+  const match = /^([a-zA-Z0-9_.@/-]+)(?: — \S.*)?$/.exec(value);
+  if (!match) throw new Error('evidence must name an existing path relative to the public product');
+  return match[1];
+}
+
 function checkEvidence(evidence, productRoot) {
-  for (const path of evidence) {
+  for (const value of evidence) {
+    const path = evidencePath(value);
     if (!/^[a-zA-Z0-9_.@/-]+$/.test(path) || path.startsWith('/') || path.split('/').some(p => !p || p === '.' || p === '..')) throw new Error('evidence must name an existing path relative to the public product');
     let current = productRoot;
     for (const part of path.split('/')) {
@@ -70,7 +80,7 @@ export function combineReceipts(plan, receipts, metadata, root, productRoot) {
     const receipt = byId.get(task.id);
     const changes = checkReceipt(receipt, task, metadata, root, productRoot);
     updates.push(...changes.map(({path, content}) => ({path, content})));
-    receipt.evidence.forEach(path => evidence.add(path));
+    receipt.evidence.forEach(value => evidence.add(evidencePath(value)));
     reviews.push({path: task.path, summary: receipt.summary, evidence: receipt.evidence});
   }
   const proposal = {

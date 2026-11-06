@@ -1,0 +1,1061 @@
+{
+  "sourceSha": "f9f918745298806b6247594e4dbb3203a8a9f417",
+  "docsSha": "42f2a9e8affa46a84c6b79aa1d8c7ef70bf132cd",
+  "status": "incomplete",
+  "planned": 82,
+  "saved": 37,
+  "reusable": 36,
+  "missing": [
+    {
+      "id": "page-700e2df9a243afed",
+      "path": "docs/integrations/connect-ai-agents.md"
+    },
+    {
+      "id": "page-0ea34cf00d8855cd",
+      "path": "docs/integrations/extension-operator-guide.md"
+    },
+    {
+      "id": "page-677a7323c3e6e2db",
+      "path": "docs/integrations/incoming-workflow-webhooks.md"
+    },
+    {
+      "id": "page-f538c53b6dcea3af",
+      "path": "docs/integrations/public-api-quick-start.md"
+    },
+    {
+      "id": "page-1e117039abe9f809",
+      "path": "docs/intro.mdx"
+    },
+    {
+      "id": "page-5828b586423d611d",
+      "path": "docs/maintainer/documentation-debt-backlog.md"
+    },
+    {
+      "id": "page-370381df31c8d799",
+      "path": "docs/reference/api.md"
+    },
+    {
+      "id": "page-975000db2bb150eb",
+      "path": "docs/reference/cli.md"
+    },
+    {
+      "id": "page-5812cf0d04ccaf93",
+      "path": "docs/reference/configuration.md"
+    },
+    {
+      "id": "page-ea9c3a7939f72ec4",
+      "path": "docs/reference/environment-variables.md"
+    },
+    {
+      "id": "page-b0f1ba4bc197b062",
+      "path": "docs/reference/feature-coverage-matrix.md"
+    },
+    {
+      "id": "page-1cace071f76a245c",
+      "path": "docs/reference/installer.md"
+    },
+    {
+      "id": "page-0030ea4ab883ec3e",
+      "path": "docs/reference/limits-and-file-formats.md"
+    },
+    {
+      "id": "page-a882dd3a78895f79",
+      "path": "docs/reference/mcp.md"
+    },
+    {
+      "id": "page-4cc214e0f36379ba",
+      "path": "docs/reference/platform-audit.md"
+    },
+    {
+      "id": "page-9062fda6b2ee58c5",
+      "path": "docs/reference/release-readiness.md"
+    },
+    {
+      "id": "page-5fd7a38d13c8e3a6",
+      "path": "docs/reference/upgrade.md"
+    },
+    {
+      "id": "page-6e4713289d15bb7d",
+      "path": "docs/reference/workflow-step-kinds.md"
+    },
+    {
+      "id": "page-ec791a0882c510e8",
+      "path": "docs/user/agents-and-skills.md"
+    },
+    {
+      "id": "page-bc91f913c5b6043c",
+      "path": "docs/user/core-concepts.md"
+    },
+    {
+      "id": "page-e665a76ccf8bb8da",
+      "path": "docs/user/dashboard.md"
+    },
+    {
+      "id": "page-e2c7a63d4528a038",
+      "path": "docs/user/datasets-and-data-connections.md"
+    },
+    {
+      "id": "page-c199877bcf5f54e3",
+      "path": "docs/user/extensions.md"
+    },
+    {
+      "id": "page-af00d3831473e603",
+      "path": "docs/user/failed-run-diagnostics.md"
+    },
+    {
+      "id": "page-71a41957de1023e5",
+      "path": "docs/user/feature-catalog.md"
+    },
+    {
+      "id": "page-295c58442422470c",
+      "path": "docs/user/feature-configuration.md"
+    },
+    {
+      "id": "page-a2e33fa349f302b3",
+      "path": "docs/user/file-an-issue.md"
+    },
+    {
+      "id": "page-f887930e81873df4",
+      "path": "docs/user/first-workflow.md"
+    },
+    {
+      "id": "page-816862240c6f5d49",
+      "path": "docs/user/getting-started.md"
+    },
+    {
+      "id": "page-75700c0c75c821f3",
+      "path": "docs/user/installation-and-updates.md"
+    },
+    {
+      "id": "page-e77a5be03b7f2148",
+      "path": "docs/user/jobs-and-approvals.md"
+    },
+    {
+      "id": "page-accaeaedde036c13",
+      "path": "docs/user/monitoring-and-troubleshooting.md"
+    },
+    {
+      "id": "page-24113bb83fcc75c7",
+      "path": "docs/user/product-tour.md"
+    },
+    {
+      "id": "page-da18b2da8aa5b909",
+      "path": "docs/user/project-knowledge-and-code-intelligence.md"
+    },
+    {
+      "id": "page-0950c76bbcab78c2",
+      "path": "docs/user/registry-management.md"
+    },
+    {
+      "id": "page-1380310582f5c336",
+      "path": "docs/user/settings-and-model-providers.md"
+    },
+    {
+      "id": "page-c325149b4cb5f172",
+      "path": "docs/user/tools-and-mcp.md"
+    },
+    {
+      "id": "page-ca3bd0c5afd0f0ac",
+      "path": "docs/user/trash-and-lifecycle.md"
+    },
+    {
+      "id": "page-1a9a994a91cebd43",
+      "path": "docs/user/use-cases.md"
+    },
+    {
+      "id": "page-4a84160530fc5611",
+      "path": "docs/user/users-roles-and-access.md"
+    },
+    {
+      "id": "page-7e887e6528a25f50",
+      "path": "docs/user/workflow-and-extension-catalogs.md"
+    },
+    {
+      "id": "page-ac2ef8cfb521e803",
+      "path": "docs/user/workflow-builder.md"
+    },
+    {
+      "id": "page-94f3045f8dd01fd0",
+      "path": "docs/user/workflow-promotion.md"
+    },
+    {
+      "id": "page-0321449237110808",
+      "path": "docs/user/workflows.md"
+    },
+    {
+      "id": "page-8b98e063b8f078fe",
+      "path": "docs/user/workspaces-and-projects.md"
+    }
+  ],
+  "receipts": [
+    {
+      "taskId": "page-030b930e49942e69",
+      "path": "docs/deploy/installer-walkthrough.md",
+      "sha256": "6d20d49003fd894b1a799a37bfc931b509e19b4ecb7ba48ed1d18c28128b08f1",
+      "reusable": true,
+      "normalizedEvidence": [
+        "install.sh",
+        "core/application/installer/spec.py",
+        "core/application/installer/service.py",
+        "core/infrastructure/installer/gateway_host_preflight.py",
+        "core/infrastructure/installer/gateway_health.py",
+        "core/infrastructure/installer/gateway_configuration.py",
+        "core/entrypoints/cli/installer.py",
+        "core/application/lifecycle/contracts.py",
+        "core/application/release/checkout_release.py",
+        "core/infrastructure/installer/release_handoff.py"
+      ]
+    },
+    {
+      "taskId": "page-0956ebdffc4bcc1f",
+      "path": "docs/integrations/external-mcp-catalogs.md",
+      "sha256": "2ac6cba2ed7c504dbeefebb7d7e2cf3e2e5ce49334ef97fa50a3c6db902ce18a",
+      "reusable": true,
+      "normalizedEvidence": [
+        "assets/frontend/src/pages/registry/mcp/index.tsx",
+        "assets/frontend/src/pages/registry/mcp/mcp-list-state.tsx",
+        "assets/frontend/src/pages/registry/mcp/mcp-json-import.ts",
+        "core/application/management/mcp_connector_services.py",
+        "core/application/management/mcp_connector_common.py",
+        "core/application/management/mcp_connector_http.py",
+        "core/application/management/mcp_connector_protocol.py",
+        "core/application/management/mcp_connector_projection.py",
+        "core/application/management/mcp_server_catalog_install.py",
+        "core/application/management/mcp_connector_oauth_contract.py",
+        "core/application/auth/mcp_connector_oauth.py",
+        "core/application/auth/mcp_connector_oauth_policy.py",
+        "core/application/auth/mcp_connector_oauth_tokens.py",
+        "core/application/orchestration/tools/tool_resolver.py"
+      ]
+    },
+    {
+      "taskId": "page-0b01f46394f16234",
+      "path": "docs/developer/publish-workflow.md",
+      "sha256": "4ad6622c00a418d2a1b573e018a5174ee3f34d100bf77ea4f83b029262c71581",
+      "reusable": true,
+      "normalizedEvidence": [
+        ".env.example.prod",
+        "core/application/workflows/workflow_template_catalog.py",
+        "core/infrastructure/static_catalog/index_cache.py",
+        "core/infrastructure/static_catalog/settings.py",
+        "core/infrastructure/static_catalog/http_fetch.py",
+        "core/entrypoints/admin/workflows_routes_catalog.py",
+        "core/entrypoints/admin/workflows_routes_read.py",
+        "core/entrypoints/admin/workflows_routes_write.py",
+        "core/entrypoints/admin/workflows_models.py",
+        "core/application/workflows/workflow_portability_export.py",
+        "core/application/workflows/workflow_portability_policy.py",
+        "core/application/workflows/workflow_portability_redaction.py",
+        "core/entrypoints/mcp/server_workflow_portability_tools.py",
+        "assets/frontend/src/pages/workflows/shared/header.tsx",
+        "assets/frontend/src/pages/workflows/list/index.tsx",
+        "assets/frontend/src/pages/workflows/catalog/api.ts",
+        "assets/frontend/src/pages/workflows/catalog/catalog-dialog.tsx",
+        "assets/frontend/src/pages/workflows/detail/workflow-settings-surface.tsx",
+        "docs/agent-skills/flow-steward-operator/skills/flow-steward-publish-workflow/SKILL.md"
+      ]
+    },
+    {
+      "taskId": "page-11c652e4a5a6658e",
+      "path": "docs/developer/quality-and-testing.md",
+      "sha256": "bc0f7e417f4a4d8d08dd2c6459f50fdcfa94430b1682758cb81cfc9df69651c1",
+      "reusable": true,
+      "normalizedEvidence": [
+        "infra/tooling/quality/check-registry.json",
+        "core/application/tooling/quality/check_registry.py",
+        "core/entrypoints/cli/scripts/lint.sh",
+        "core/application/tooling/quality/evidence.py",
+        "core/application/tooling/quality/fingerprint.py",
+        "core/application/tooling/quality/verify.py",
+        "core/application/tooling/quality/release_gate.py",
+        "core/application/tooling/quality/impacted_tests.py",
+        "core/entrypoints/cli/scripts/run-external-tier-three.sh",
+        ".pre-commit-config.yaml",
+        ".github/workflows/remote-quality.yml",
+        ".github/workflows/release-images.yml",
+        "core/application/tooling/extensions/extension_gate.py",
+        "core/application/tooling/extensions/test_extension.py",
+        "core/entrypoints/cli/scripts/run_test_runner.sh",
+        "core/application/management/command_specs/quality.py",
+        "core/application/management/command_specs/testing.py"
+      ]
+    },
+    {
+      "taskId": "page-1d244be53120c8e4",
+      "path": "docs/admin/queues-concurrency-retries-dlq.md",
+      "sha256": "fbde585122a7e77e86360989fa6bde1335ab4b25de0e57bb567d39036e456230",
+      "reusable": true,
+      "normalizedEvidence": [
+        "core/application/jobs/queue_delivery_runtime.py",
+        "core/application/jobs/queue_delivery_queries.py",
+        "core/application/jobs/task_execution_service.py",
+        "core/application/jobs/task_dispatch_publish.py",
+        "core/application/orchestration/retry_policy.py",
+        "core/infrastructure/db/project_execution_store.py",
+        "core/application/management/project_policy_validation.py",
+        "assets/frontend/src/pages/projects/policy/index.tsx",
+        "assets/frontend/src/pages/monitoring/monitoring-display.tsx",
+        "assets/frontend/src/pages/monitoring/shared/events/index.tsx",
+        "core/application/management/command_services_event_ingest_mixin.py",
+        "core/entrypoints/api/events.py",
+        "core/entrypoints/api/jobs.py",
+        "assets/frontend/src/pages/jobs/detail/job-page-actions.tsx",
+        "core/infrastructure/monitoring/system_storage.py"
+      ]
+    },
+    {
+      "taskId": "page-2a1b9aa10a1ac8c1",
+      "path": "docs/developer/mcp-server.md",
+      "sha256": "a7277d30070c5ec3196fe82d29cb7c1dd18ef3445bde8122a8f3279b5078e85d",
+      "reusable": true,
+      "normalizedEvidence": [
+        "core/entrypoints/mcp/server_runtime.py",
+        "core/infrastructure/public_identity.py",
+        "core/application/auth/inbound_oauth_policy.py",
+        "core/entrypoints/mcp/server_discovery.py",
+        "core/entrypoints/mcp/server_tool_scopes.py",
+        "core/entrypoints/mcp/server_api_tool.py",
+        "core/entrypoints/mcp/server_api_client.py",
+        "core/entrypoints/mcp/server_project_workflow_tools.py",
+        "core/entrypoints/mcp/server_workflow_authoring_tools.py",
+        "core/entrypoints/mcp/server_workflow_portability_tools.py",
+        "core/application/workflows/authoring/service.py",
+        "core/application/workflows/authoring/catalog.py",
+        "core/application/auth/agent_connection_service.py",
+        "core/application/auth/agent_connection_catalog.py",
+        "core/entrypoints/cli/__main__.py",
+        "core/entrypoints/cli/click_app.py",
+        "core/entrypoints/api/integrations_mcp_routes.py"
+      ]
+    },
+    {
+      "taskId": "page-2a488bfa0d051e5f",
+      "path": "docs/deploy/render.md",
+      "sha256": "e56f161b4d4f1847354ed1bac53e88e97c7056d04e890264471a81f1d9535ff9",
+      "reusable": true,
+      "normalizedEvidence": [
+        "core/entrypoints/cli/compact_runtime.py",
+        "core/application/auth/bootstrap_self_mint.py",
+        "core/infrastructure/config/connection_strings.py",
+        "core/infrastructure/config/rabbitmq_transport.py",
+        "core/entrypoints/api/health.py",
+        "core/entrypoints/cli/compact_container_cli.py",
+        "core/application/management/command_specs/users.py",
+        "core/infrastructure/runtime/compact/volume.py",
+        "core/infrastructure/runtime/compact/process_spec.py",
+        "infra/docker/Dockerfile",
+        "infra/docker/docker-compose.compact.yaml",
+        "infra/docker/compact/flow-steward",
+        "assets/frontend/src/pages/auth/bootstrap/index.tsx"
+      ]
+    },
+    {
+      "taskId": "page-37c969d0d1ea67d9",
+      "path": "docs/deploy/observability.md",
+      "sha256": "45c297a9db04ea75bd868e672eb847e371d6fa631ece01fbd34d57a30e872ec2",
+      "reusable": true,
+      "normalizedEvidence": [
+        "core/infrastructure/observability/sentry.py",
+        "core/infrastructure/observability/otel_config.py",
+        "core/infrastructure/observability/otel_runtime.py",
+        "core/infrastructure/observability/otel_logs.py",
+        "core/infrastructure/observability/observability_metrics.py",
+        "core/infrastructure/observability/process_metrics_runtime.py",
+        "core/entrypoints/api/health.py",
+        "assets/frontend/src/pages/monitoring/monitoring-data.ts",
+        "assets/frontend/src/pages/monitoring/monitoring-panels.tsx",
+        "core/application/monitoring/system.py",
+        "core/infrastructure/runtime/compact/process_spec.py",
+        "infra/docker/docker-compose.prod.yaml",
+        "core/entrypoints/mcp/server_main.py",
+        "core/application/doctor/checks.py",
+        "core/application/doctor/service.py",
+        "core/application/management/command_specs/stack.py",
+        "core/application/management/command_specs/readiness.py",
+        "core/application/reports/system_diagnostic_report.py"
+      ]
+    },
+    {
+      "taskId": "page-3991860214553125",
+      "path": "docs/developer/cli-and-automation.md",
+      "sha256": "edbfdbb8e110c8c469591c9605f098ce1dcfa27a058ca3b3c1674a04577463c3",
+      "reusable": true,
+      "normalizedEvidence": [
+        "core/entrypoints/cli/scripts/flow_steward_launcher.sh",
+        "core/entrypoints/cli/platform_runtime.py",
+        "core/entrypoints/cli/__main__.py",
+        "core/entrypoints/cli/click_app.py",
+        "core/entrypoints/cli/platform/modes.py",
+        "core/entrypoints/cli/platform/command_parameters.py",
+        "core/entrypoints/cli/platform/input_resolution.py",
+        "core/entrypoints/cli/platform/service_bindings/database.py",
+        "core/entrypoints/cli/platform/service_bindings/release.py",
+        "core/application/management/command_specs/database.py",
+        "core/application/management/command_specs/release.py",
+        "core/application/release/service.py",
+        "core/application/tooling/quality/service.py"
+      ]
+    },
+    {
+      "taskId": "page-3bdf3414808d5ee5",
+      "path": "docs/integrations/agent-plugin.md",
+      "sha256": "e213d45c609b2ef0f2d7ee3bd1906481c5c10518cc79ba98931966c25059fca7",
+      "reusable": true,
+      "normalizedEvidence": [
+        "docs/agent-skills/packages.json",
+        "docs/agent-skills/COMPATIBILITY.md",
+        "docs/agent-skills/flow-steward-operator/README.md",
+        "docs/agent-skills/flow-steward-operator/skills/flow-steward-workflow-authoring/SKILL.md",
+        "docs/agent-skills/flow-steward-operator/skills/flow-steward-workflow-authoring/references/agents-and-skills.md",
+        "docs/agent-skills/flow-steward-operator/skills/flow-steward-migrate-workflow/SKILL.md",
+        "docs/agent-skills/flow-steward-operator/skills/flow-steward-migrate-workflow/scripts/convert_n8n.py",
+        "docs/agent-skills/flow-steward-operator/skills/flow-steward-migrate-workflow/scripts/requirements.txt",
+        "docs/agent-skills/shared/skills/flow-steward-report-issue/SKILL.md",
+        "docs/agent-skills/flow-steward-developer/skills/flow-steward-extension-authoring/SKILL.md",
+        "docs/agent-skills/flow-steward-developer/skills/flow-steward-publish-extension/SKILL.md",
+        "docs/agent-skills/flow-steward-developer/skills/flow-steward-contribute-code/SKILL.md",
+        "core/application/auth/agent_connection_catalog.py",
+        "core/application/auth/agent_connection_service.py",
+        "assets/frontend/src/pages/settings/account/agent-package-archive.ts",
+        "assets/frontend/src/pages/settings/account/ai-agents-setup.tsx",
+        "infra/tooling/agent-skills/sync_packages.py",
+        "infra/tooling/agent-skills/build_release.py",
+        "core/entrypoints/mcp/server_tool_scopes.py",
+        "core/application/auth/agent_access_presets.py",
+        "core/application/auth/principal.py",
+        "core/entrypoints/mcp/server_registry_authoring_tools.py",
+        "core/application/management/registry_name_conflicts.py",
+        "core/application/management/command_specs/reports.py"
+      ]
+    },
+    {
+      "taskId": "page-3f4b69d787da689b",
+      "path": "docs/developer/local-development.md",
+      "sha256": "6f007612cc063f9c8e07a52798c746ad230628e98158aac8443175bdb5f8da28",
+      "reusable": true,
+      "normalizedEvidence": [
+        "install.sh",
+        "core/application/installer/spec.py",
+        "core/entrypoints/cli/installer.py",
+        "core/entrypoints/cli/scripts/flow_steward_launcher.sh",
+        "core/infrastructure/installer/gateway_runtime.py",
+        "infra/docker/docker-compose.yaml",
+        "infra/docker/docker-compose.dev.yaml",
+        "infra/docker/Dockerfile",
+        "core/entrypoints/cli/scripts/start_frontend_dev.sh",
+        "core/entrypoints/cli/scripts/start_server.sh",
+        "core/entrypoints/cli/scripts/lint.sh",
+        "core/entrypoints/cli/scripts/run_test_runner.sh",
+        "assets/frontend/package.json",
+        "AGENTS.md",
+        "tests/unit/test_dev_compose_hot_reload.py",
+        "core/infrastructure/config/flow_steward_env_manifest.json"
+      ]
+    },
+    {
+      "taskId": "page-449b9c45dd98f0c7",
+      "path": "docs/developer/publish-extension.md",
+      "sha256": "19a2317ceccc60c1a22ff84d22d620fff471820d8ccc1fbf45dbb1546a85b0e1",
+      "reusable": true,
+      "normalizedEvidence": [
+        "core/application/tooling/extensions/validate_extensions.py",
+        "core/entrypoints/cli/scripts/lint.sh",
+        "core/application/tooling/extensions/extension_gate.py",
+        "core/application/tooling/extensions/bundle_extension.py",
+        "core/application/management/command_specs/extensions.py",
+        "core/infrastructure/extension_runtime/bundle_icon.py",
+        "core/infrastructure/extension_runtime/extension_egress.py",
+        "core/application/extensions/compiled_manifest_validation.py",
+        "core/application/extensions/host_contract.py",
+        "core/infrastructure/extension_sdk/public/pyproject.toml",
+        "core/infrastructure/extension_sdk/public/README.md",
+        "core/infrastructure/extension_runtime/python_dependencies.py",
+        "core/infrastructure/static_catalog/settings.py",
+        "core/application/extensions/archive_validation_service.py",
+        "core/application/extensions/extension_catalog_install.py",
+        "assets/frontend/src/pages/extensions/index.tsx",
+        "assets/frontend/src/pages/extensions/catalog-api.ts",
+        "docs/agent-skills/flow-steward-developer/skills/flow-steward-publish-extension/SKILL.md"
+      ]
+    },
+    {
+      "taskId": "page-552abd1daa05b230",
+      "path": "docs/deploy/elestio.md",
+      "sha256": "70c725eac07e00aa2e9a51ff8737835086b5f4a6791512a8305d4767656ca304",
+      "reusable": true,
+      "normalizedEvidence": [
+        "core/infrastructure/config/rabbitmq_transport.py",
+        "core/infrastructure/config/connection_strings.py",
+        "infra/docker/docker-compose.compact.yaml",
+        "core/infrastructure/runtime/compact/process_spec.py",
+        "core/application/auth/bootstrap_self_mint.py",
+        "core/entrypoints/cli/compact_runtime.py",
+        "core/entrypoints/cli/compact_container_cli.py",
+        "core/application/management/command_specs/users.py",
+        "core/entrypoints/api/health.py",
+        "assets/frontend/src/pages/auth/bootstrap/index.tsx",
+        "infra/docker/compact/flow-steward"
+      ]
+    },
+    {
+      "taskId": "page-5a37c7b3bb71eec6",
+      "path": "docs/admin/security-policy-and-redaction.md",
+      "sha256": "53dbcea1a910ddc91dc05d0e172d83653be9f062631f4d762e69ad22cf4f71e3",
+      "reusable": true,
+      "normalizedEvidence": [
+        "core/infrastructure/security/config.py",
+        "core/infrastructure/security/policy.py",
+        "core/infrastructure/security/policy_loader.py",
+        "core/infrastructure/security/default_policy.yaml",
+        "core/infrastructure/security/engine.py",
+        "core/infrastructure/security/integration.py",
+        "core/infrastructure/security/scanners/pii.py",
+        "core/infrastructure/security/scanners/secrets.py",
+        "core/infrastructure/security/event_logger.py",
+        "assets/frontend/src/pages/settings/security/index.tsx",
+        "core/application/security/observability_service.py",
+        "core/infrastructure/security/posture.py",
+        "core/infrastructure/config/runtime_config.py",
+        "core/infrastructure/db/platform_logger_common.py",
+        "core/infrastructure/observability/sentry.py",
+        "core/infrastructure/security/prompt_safety.py",
+        "core/application/security/credential_redaction.py"
+      ]
+    },
+    {
+      "taskId": "page-5c27a789a9bff585",
+      "path": "docs/admin/events-and-redrive.md",
+      "sha256": "8d1aaa9c4c0a38db62030e00091b2d82a4d963cd572b2ec52401a11da0b89207",
+      "reusable": true,
+      "normalizedEvidence": [
+        "assets/frontend/src/pages/monitoring/shared/events/index.tsx",
+        "assets/frontend/src/pages/monitoring/shared/events/event-display-helpers.ts",
+        "assets/frontend/src/pages/monitoring/shared/events/api.ts",
+        "assets/frontend/src/components/shared/period-filter.tsx",
+        "core/application/management/command_services_event_ingest_mixin.py",
+        "core/application/management/query_services_event.py",
+        "core/entrypoints/api/events.py",
+        "core/application/notifications/dispatch.py",
+        "core/infrastructure/db/logger_events_dispatch_dispatches_mixin.py",
+        "core/application/observability_vocabulary.py"
+      ]
+    },
+    {
+      "taskId": "page-714654a44ea33051",
+      "path": "docs/developer/extensions.md",
+      "sha256": "057e6b0ba57f3b9343a97fcb5455055324969213881f90ac5319e75dd9314946",
+      "reusable": true,
+      "normalizedEvidence": [
+        "core/application/extensions/host_contract.py",
+        "core/application/extensions/query_catalog.py",
+        "core/application/extensions/extension_descriptor.py",
+        "core/application/extensions/compiled_manifest_validation.py",
+        "core/infrastructure/extension_runtime/extension_runtime_compile.py",
+        "core/infrastructure/extension_runtime/extension_runtime_invocation.py",
+        "core/infrastructure/extension_runtime/python_dependencies.py",
+        "core/entrypoints/api/reactions_extensions.py",
+        "core/entrypoints/api/integrations_extension_routes.py",
+        "assets/frontend/src/pages/extensions/extension-manifest-renderer.tsx",
+        "assets/frontend/src/pages/extensions/api.ts",
+        "core/application/management/command_specs/extensions.py"
+      ]
+    },
+    {
+      "taskId": "page-7b06eec26a1eabc8",
+      "path": "docs/deploy/platforms.md",
+      "sha256": "e976b38dc664e6badfc3116993820d804f1e8aa2a0ac59132311ffe0f0812bad",
+      "reusable": true,
+      "normalizedEvidence": [
+        "infra/docker/Dockerfile",
+        "infra/docker/docker-compose.compact.yaml",
+        "infra/docker/postgres-extended/Dockerfile",
+        "core/entrypoints/cli/compact_provider_runtime.py",
+        "core/infrastructure/config/connection_strings.py",
+        "core/entrypoints/cli/compact_runtime.py",
+        "core/infrastructure/runtime/compact/bootstrap.py",
+        "core/infrastructure/runtime/compact/volume.py",
+        "core/entrypoints/cli/compact_container_cli.py",
+        "core/entrypoints/cli/compact_platform_runtime.py",
+        "core/entrypoints/cli/platform_runtime.py",
+        "core/entrypoints/cli/platform/service_bindings/database.py",
+        "core/entrypoints/cli/doctor.py",
+        "core/entrypoints/cli/scripts/db_restore.sh",
+        "core/application/auth/bootstrap_self_mint.py"
+      ]
+    },
+    {
+      "taskId": "page-7d34f3626e64f015",
+      "path": "docs/developer/workflow-runtime.md",
+      "sha256": "3b85f15fa56b8585fca79f7170d49d8b6e90b2b8f6041cdce123a526eec503c8",
+      "reusable": true,
+      "normalizedEvidence": [
+        "core/application/workflows/workflow_definition_snapshot.py",
+        "core/application/jobs/workflow_definition_snapshot_repository.py",
+        "core/application/orchestration/run_definition.py",
+        "core/application/workflows/execution_graph.py",
+        "core/application/orchestration/run_cursor.py",
+        "core/application/orchestration/active_step.py",
+        "core/application/orchestration/for_each_runtime.py",
+        "core/application/orchestration/parallel_group_runtime.py",
+        "core/entrypoints/admin/workflows_definition_run_routes.py",
+        "core/application/workflows/platform_test_run_runtime.py",
+        "core/application/orchestration/dataset_query_step_runtime.py",
+        "core/application/orchestration/transform_step_runtime.py",
+        "core/application/tabular_feed/service.py",
+        "core/application/management/query_services_job_journal_mixin.py",
+        "core/application/orchestration/step_io_preview.py",
+        "core/application/orchestration/journal.py",
+        "core/application/orchestration/graph/builder_approval_gate.py"
+      ]
+    },
+    {
+      "taskId": "page-84074f3cf5ba66c6",
+      "path": "docs/admin/audit-trail.md",
+      "sha256": "41d277579756064151f0569bd9cb23d58895441d5b491afc0cf818985414c836",
+      "reusable": true,
+      "normalizedEvidence": [
+        "core/application/management/command_services_event_ingest_mixin.py",
+        "core/application/management/query_services_event.py",
+        "core/infrastructure/db/logger_events_dispatch_delivery_attempts_mixin.py",
+        "assets/frontend/src/pages/monitoring/shared/events/api.ts",
+        "core/infrastructure/extension_runtime/extension_invocation_audit.py",
+        "core/application/notifications/delivery.py",
+        "core/application/notifications/contracts.py",
+        "core/application/notifications/dispatch.py",
+        "core/application/jobs/public_approval_serializer.py",
+        "core/infrastructure/db/command_audit_store.py",
+        "core/application/auth/audit.py",
+        "core/application/auth/serve_auth_runtime.py",
+        "core/application/secrets/repository.py",
+        "core/application/management/command_services_trash_public_mixin.py",
+        "core/entrypoints/admin/settings_retention.py",
+        "core/infrastructure/security/event_logger.py",
+        "core/application/security/observability_service.py",
+        "assets/frontend/src/pages/settings/security/index.tsx"
+      ]
+    },
+    {
+      "taskId": "page-8a0aad20650a1377",
+      "path": "docs/deploy/installation.md",
+      "sha256": "3d328dc5a8d693ce28e459f35a213cbacd2a5e0645eeca62bd752e517167911e",
+      "reusable": true,
+      "normalizedEvidence": [
+        "core/application/release/checkout_release.py",
+        "core/entrypoints/cli/installer.py",
+        "core/infrastructure/installer/gateway_host_preflight.py",
+        "core/application/installer/service.py",
+        "core/application/auth/bootstrap_tokens.py",
+        "core/application/auth/bootstrap_self_mint.py",
+        "assets/frontend/src/pages/auth/bootstrap/index.tsx",
+        "core/infrastructure/config/rabbitmq_transport.py",
+        "core/entrypoints/cli/compact_runtime.py",
+        "core/entrypoints/cli/compact_provider_runtime.py",
+        "infra/host/systemd/autostart.sh",
+        "infra/docker/docker-compose.compact.yaml",
+        "core/application/management/command_specs/users.py",
+        "core/application/installer/spec.py"
+      ]
+    },
+    {
+      "taskId": "page-8c2896cd08168d90",
+      "path": "docs/developer/contributing.md",
+      "sha256": "317c248f61766083d6a335c88559b23dab22f6921deb3b4f0a3507a4cbba401d",
+      "reusable": false,
+      "error": "missing or symlink source evidence: core/application/tooling/quality/upgrade_preflight.py"
+    },
+    {
+      "taskId": "page-8e78c48c3d1b30a8",
+      "path": "docs/developer/operations-internals.md",
+      "sha256": "baba3a65db7fc69b347c3819a070e19d5a3ff1d42dbd8bc715d5a9364fee2871",
+      "reusable": true,
+      "normalizedEvidence": [
+        "core/infrastructure/observability/otel_config.py",
+        "core/infrastructure/observability/otel_runtime.py",
+        "core/entrypoints/mcp/server.py",
+        "core/entrypoints/mcp/server_main.py",
+        "core/infrastructure/observability/runtime_logging.py",
+        "core/infrastructure/observability/sentry.py",
+        "core/application/tooling/ops/retention_cleanup.py",
+        "core/application/tooling/ops/prune_workspace_artifacts.py",
+        "core/entrypoints/cli/scripts/ops_schedule.sh",
+        "core/infrastructure/runtime/control/config.py",
+        "core/infrastructure/runtime/control/loops.py",
+        "core/infrastructure/runtime/compact/process_spec.py",
+        "core/infrastructure/config/compact_runtime.py",
+        "core/infrastructure/observability/process_metrics_runtime.py",
+        "core/entrypoints/api/health.py",
+        "core/infrastructure/observability/observability_metrics.py",
+        "core/infrastructure/runtime/artifact_storage_factory.py",
+        "infra/docker/docker-compose.prod.yaml",
+        "infra/docker/Dockerfile"
+      ]
+    },
+    {
+      "taskId": "page-9b88ef083e6e86ca",
+      "path": "docs/developer/architecture.md",
+      "sha256": "9dd3b85ffb5df233961a038cc23a15bcd342766c9cbab900c7e8df2d660b2a84",
+      "reusable": true,
+      "normalizedEvidence": [
+        "core/entrypoints/api/contracts_v2.py",
+        "core/entrypoints/api/public_openapi_policy.py",
+        "core/entrypoints/api/jobs_control.py",
+        "core/entrypoints/api/route_bindings.py",
+        "core/entrypoints/api/app_factory.py",
+        "core/entrypoints/ws/jobs.py",
+        "core/entrypoints/api/provider_webhooks_router.py",
+        "core/infrastructure/runtime/app_lifecycle_runtime.py",
+        "core/entrypoints/cli/control_process.py",
+        "core/infrastructure/runtime/control/loops.py",
+        "core/infrastructure/runtime/worker/worker.py",
+        "core/infrastructure/runtime/worker/queue_broker.py",
+        "core/application/jobs/dispatch_outbox_repository.py",
+        "core/application/jobs/workflow_timer_dispatcher.py",
+        "core/application/tooling/db/migration_runner.py",
+        "core/application/tooling/db/upgrade_db.py",
+        "core/entrypoints/web/frontend_shell.py",
+        "assets/frontend/src/app/router.tsx",
+        "core/entrypoints/mcp/server.py",
+        "core/application/extensions/extension_contract_v2.py",
+        "core/application/orchestration/connector_extension_runtime.py",
+        "core/infrastructure/extension_runtime/extension_runtime_invocation.py",
+        "core/application/jobs/task_execution_service.py",
+        "core/application/management/mcp_connector_client.py",
+        "core/application/orchestration/tools/tool_resolver.py"
+      ]
+    },
+    {
+      "taskId": "page-a3c32e2a9b501ee0",
+      "path": "docs/integrations/extension-authoring-skill.md",
+      "sha256": "d8ca5ce81daacc11a3a5ea9de9f9844c1742d57a570aa35a64ebaccfb708f93c",
+      "reusable": true,
+      "normalizedEvidence": [
+        "docs/agent-skills/flow-steward-developer/skills/flow-steward-extension-authoring/SKILL.md",
+        "docs/agent-skills/flow-steward-developer/README.md",
+        "docs/agent-skills/flow-steward-developer/.claude-plugin/plugin.json",
+        "docs/agent-skills/packages.json",
+        "core/application/management/command_specs/extensions.py",
+        "core/infrastructure/extension_runtime/python_dependencies.py",
+        "core/application/tooling/extensions/bundle_extension.py",
+        "core/application/extensions/compiled_manifest_validation.py",
+        "assets/frontend/src/pages/settings/account/agent-package-archive.ts",
+        "assets/frontend/src/pages/settings/account/agent-package-archive.test.ts",
+        "assets/frontend/src/pages/settings/account/ai-agents-setup.tsx",
+        "assets/frontend/src/pages/workflows/builder/canvas-add-step-palette.test.tsx"
+      ]
+    },
+    {
+      "taskId": "page-a49ca7541803d4ea",
+      "path": "docs/integrations/build-an-extension.md",
+      "sha256": "dc7e575f5858ef1a54020e6f17d323b67ac6fa6f1539f3f8a02ed31d8ae4a8c1",
+      "reusable": true,
+      "normalizedEvidence": [
+        "docs/standards/extension-manifest-standard.yaml",
+        "core/application/extensions/scaffold.py",
+        "core/application/management/command_specs/extensions.py",
+        "core/application/tooling/extensions/deps.py",
+        "core/application/tooling/extensions/bundle_extension.py",
+        "core/application/extensions/callbacks.py",
+        "core/infrastructure/extension_runtime/extension_runtime_validation.py",
+        "core/application/extensions/extension_contract_policies.py",
+        "core/application/extensions/command_install_runtime.py",
+        "core/entrypoints/api/reactions_extensions.py",
+        "assets/frontend/src/pages/extensions/index.tsx",
+        "assets/frontend/src/pages/extensions/api.ts",
+        "assets/frontend/src/pages/extensions/connection-save.ts",
+        "assets/frontend/src/pages/extensions/extension-connection-secret-catalog.tsx",
+        "core/application/secrets/service.py",
+        "core/entrypoints/api/integrations_secret_routes.py"
+      ]
+    },
+    {
+      "taskId": "page-ab9f61af60dfd00c",
+      "path": "docs/deploy/backups-and-restore.md",
+      "sha256": "076809fd134e41f1d4249f156d7dad2467ecb7c6c1c7d01094d906c59021fa83",
+      "reusable": true,
+      "normalizedEvidence": [
+        "core/application/management/command_specs/backup.py",
+        "core/application/lifecycle/backup_command_service.py",
+        "core/infrastructure/lifecycle/backup_gateway.py",
+        "core/entrypoints/cli/lifecycle_runtime.py",
+        "core/entrypoints/cli/compact_platform_runtime.py",
+        "core/entrypoints/cli/compact_container_cli.py",
+        "infra/docker/Dockerfile",
+        "core/entrypoints/cli/scripts/db_backup.sh",
+        "core/entrypoints/cli/scripts/db_backup_validate.sh",
+        "core/entrypoints/cli/scripts/db_restore.sh",
+        "core/entrypoints/cli/scripts/docker_compose_env.sh",
+        "core/application/management/command_specs/database.py",
+        "core/application/tooling/db/service.py",
+        "core/application/tooling/db/restore_parity_check.py",
+        "core/entrypoints/cli/platform_runtime.py",
+        "core/entrypoints/cli/scripts/flow_steward_launcher.sh",
+        "core/application/clone/service.py",
+        "core/application/clone/manifest.py",
+        "core/application/clone/operation.py",
+        "core/entrypoints/cli/platform/service_bindings/clone.py",
+        "core/entrypoints/cli/platform/click_adapter.py",
+        "core/application/release/service.py",
+        "core/infrastructure/clone/installation_gateway.py",
+        "core/infrastructure/installer/release_handoff.py",
+        "core/entrypoints/cli/clone_composition.py",
+        "core/application/management/command_specs/maintenance.py",
+        "core/application/maintenance/service.py",
+        "core/application/doctor/checks.py",
+        "core/application/doctor/hints.py"
+      ]
+    },
+    {
+      "taskId": "page-ae586d9b194bdd7e",
+      "path": "docs/deploy/architecture.md",
+      "sha256": "90d93dd9057c9b17b9704e3e9198ddecaf6d10fe44e8389e83e38fa51cc9e0af",
+      "reusable": true,
+      "normalizedEvidence": [
+        "core/application/lifecycle/contracts.py",
+        "core/application/lifecycle/configuration_rendering.py",
+        "core/infrastructure/runtime/compact/process_spec.py",
+        "infra/docker/docker-compose.compact.yaml",
+        "docs/architecture/adr/0029-compact-and-scalable-deployment.md",
+        "docs/operations/compact-scalable-deployment.md",
+        "core/infrastructure/observability/otel_runtime.py",
+        ".env.example.ops",
+        "docs/operations/telemetry.md",
+        "docs/architecture/adr/0009-canonical-agent-memory-platform.md",
+        "docs/architecture/adr/0002-runtime-ownership.md",
+        "README.md",
+        "core/entrypoints/mcp/server_job_tools.py"
+      ]
+    },
+    {
+      "taskId": "page-aff574fd451a0191",
+      "path": "docs/deploy/deployment-checklist.md",
+      "sha256": "53c3fb5dcd4a089aa93f0d1a015c6e27c1d56efd3d6ede4d0cfdd28356e7c28f",
+      "reusable": true,
+      "normalizedEvidence": [
+        "core/application/management/command_specs/release.py",
+        "core/application/management/command_specs/readiness.py",
+        "core/application/management/command_specs/backup.py",
+        "core/application/management/command_specs/database.py",
+        "core/application/release/images.py",
+        "core/application/release/environment.py",
+        "core/infrastructure/installer/gateway_runtime.py",
+        "core/infrastructure/config/env_registry.py",
+        "core/entrypoints/api/health.py",
+        "infra/docker/docker-compose.prod.yaml",
+        "core/application/installer/spec.py",
+        "core/application/auth/bootstrap_self_mint.py",
+        "core/entrypoints/cli/doctor.py",
+        "core/entrypoints/cli/platform/service_bindings/release.py",
+        "docs/operations/compact-scalable-deployment.md",
+        "docs/operations/official-release-publication.md"
+      ]
+    },
+    {
+      "taskId": "page-b4d592b93227f95f",
+      "path": "docs/deploy/storage-and-artifacts.md",
+      "sha256": "7f35e9f3e395d4d1721fd192ade0580a30609425d3e3e1aa8a482e4737c1b55d",
+      "reusable": true,
+      "normalizedEvidence": [
+        "core/infrastructure/runtime/artifact_storage_factory.py",
+        "core/application/installer/spec.py",
+        "core/entrypoints/cli/installer.py",
+        "core/application/lifecycle/environment_storage_policy.py",
+        "core/application/lifecycle/environment_operation.py",
+        "core/infrastructure/lifecycle/storage_gateway.py",
+        "core/infrastructure/lifecycle/docker_runtime_support.py",
+        "core/infrastructure/lifecycle/docker_gateway.py",
+        "core/infrastructure/installer/gateway_runtime.py",
+        "core/infrastructure/installer/storage_identity.py",
+        "core/entrypoints/cli/scripts/db_backup.sh",
+        "core/entrypoints/cli/scripts/db_restore.sh",
+        "core/entrypoints/cli/scripts/flow_steward_launcher.sh",
+        "core/application/clone/manifest.py",
+        "core/infrastructure/installer/state_store.py",
+        "core/application/lifecycle/configuration_rendering.py",
+        "infra/docker/docker-compose.compact.yaml",
+        "infra/docker/compact/storage-bundled.yaml",
+        "infra/docker/scalable/cli-host-directories-artifacts.yaml"
+      ]
+    },
+    {
+      "taskId": "page-b57ca053bd6ccae5",
+      "path": "docs/developer/contributing-documentation.md",
+      "sha256": "79c973dfa4301761b3f9142da630caea1f6d264c1d96f1804cf7f8a32493404e",
+      "reusable": true,
+      "normalizedEvidence": [
+        ".github/workflows/docs-sync.yml",
+        "docs/architecture/adr/0048-documentation-and-tag-release-actions.md",
+        "docs/agent-skills/flow-steward-developer/skills/flow-steward-contribute-code/SKILL.md",
+        "docs/architecture/adr/0053-hosted-quality-gates.md",
+        "docs/architecture/adr/0054-reuse-exact-sha-release-gate.md"
+      ]
+    },
+    {
+      "taskId": "page-bb06b0651968bb3a",
+      "path": "docs/developer/documentation-site.md",
+      "sha256": "44f96fd2ca3674497d02257978382ed357239aef907cf4ce9a54b49310319baf",
+      "reusable": true,
+      "normalizedEvidence": [
+        ".github/workflows/docs-sync.yml",
+        "docs/architecture/adr/0048-documentation-and-tag-release-actions.md",
+        "docs/operations/official-release-publication.md",
+        "README.md"
+      ]
+    },
+    {
+      "taskId": "page-bb75e2b5a1c78092",
+      "path": "docs/deploy/rollback.md",
+      "sha256": "ef14734a4ffa6c9cf50b7f014b3bb9cc0c91a5a94f918260232573a9dafb6061",
+      "reusable": true,
+      "normalizedEvidence": [
+        "core/application/release/service.py",
+        "core/application/clone/service.py",
+        "core/application/clone/planning.py",
+        "core/entrypoints/cli/clone_composition.py",
+        "core/application/maintenance/service.py",
+        "core/application/management/command_specs/maintenance.py",
+        "core/application/doctor/checks.py",
+        "core/application/lifecycle/configuration_operation.py",
+        "core/entrypoints/cli/scripts/db_restore.sh",
+        "core/entrypoints/cli/scripts/flow_steward_launcher.sh",
+        "core/application/management/command_specs/contracts.py",
+        "core/application/management/command_specs/stack.py",
+        "core/application/management/command_specs/config.py",
+        "core/infrastructure/installer/release_handoff.py",
+        "core/infrastructure/lifecycle/docker_rollback_operations.py",
+        "tests/unit/test_rollback_across_migration.py"
+      ]
+    },
+    {
+      "taskId": "page-d15d2e44d7412f9e",
+      "path": "docs/developer/integrations.md",
+      "sha256": "9bb3d094c45a4ad98e1d685940dd50282492daad2f71dcaa783b069b7308cec8",
+      "reusable": true,
+      "normalizedEvidence": [
+        "core/entrypoints/api/public_openapi_policy.py",
+        "core/entrypoints/api/jobs_control.py",
+        "core/infrastructure/config/openapi_docs_config.py",
+        "core/entrypoints/api/workflow_entrypoints_routes_webhooks.py",
+        "core/application/workflows/workflow_webhook_creation_service.py",
+        "core/entrypoints/api/workflow_entrypoints_execution_auth.py",
+        "core/entrypoints/api/events_stream.py",
+        "core/entrypoints/api/events.py",
+        "core/entrypoints/admin/workflows_routes_listing_import.py",
+        "core/application/management/command_specs/extensions.py",
+        "core/entrypoints/api/integrations_extension_routes.py",
+        "core/application/orchestration/http_request_step_runtime.py",
+        "core/entrypoints/mcp/server.py",
+        "core/entrypoints/mcp/server_discovery.py",
+        "core/application/auth/scope_contracts.py",
+        "core/application/secrets/authority.py",
+        "core/application/secrets/reference_consumers.py",
+        "core/application/management/mcp_connector_header_choices.py",
+        "core/application/secrets/workflow_gate.py",
+        "core/application/secrets/service_workflows.py"
+      ]
+    },
+    {
+      "taskId": "page-d842c5dbf24f0c3f",
+      "path": "docs/integrations/built-in-mcp-quick-start.md",
+      "sha256": "8579fd0a7b932352994a5241137e8f1e87f918c532321569585caff9c3b1a3ff",
+      "reusable": true,
+      "normalizedEvidence": [
+        "infra/traefik/fs.dynamic.yaml",
+        "core/entrypoints/mcp/server_main.py",
+        "core/entrypoints/mcp/server_runtime.py",
+        "core/entrypoints/mcp/server_discovery.py",
+        "core/entrypoints/mcp/server_tool_scopes.py",
+        "core/entrypoints/mcp/server_api_tool.py",
+        "core/entrypoints/mcp/server_api_client.py",
+        "core/entrypoints/mcp/server_project_workflow_tools.py",
+        "core/application/auth/scope_contracts.py",
+        "core/application/auth/agent_connection_catalog.py",
+        "assets/frontend/src/pages/settings/account/ai-agents.tsx",
+        "assets/frontend/src/pages/settings/account/ai-agents-setup.tsx",
+        "assets/frontend/src/pages/settings/account/agent-package-archive.ts",
+        "tests/integration/test_mcp_server.py"
+      ]
+    },
+    {
+      "taskId": "page-dff77f73c8203b1c",
+      "path": "docs/deploy/troubleshooting.md",
+      "sha256": "e3978f98c6d2b9e9a59148002de76b909d2d56020f19bc1f977168fd5a5dded2",
+      "reusable": true,
+      "normalizedEvidence": [
+        "install.sh",
+        "core/application/installer/classification.py",
+        "core/application/installer/service.py",
+        "core/application/management/command_specs/readiness.py",
+        "core/application/management/command_specs/stack.py",
+        "core/application/management/command_specs/proxy.py",
+        "core/application/management/command_specs/environment.py",
+        "core/application/doctor/checks.py",
+        "core/entrypoints/cli/doctor.py",
+        "core/infrastructure/installer/doctor_probes.py",
+        "core/application/lifecycle/contracts.py",
+        "core/infrastructure/installer/gateway_health.py",
+        "infra/docker/scalable/ingress-external_proxy-docker.yaml",
+        "core/infrastructure/lifecycle/storage_gateway.py",
+        "core/infrastructure/lifecycle/docker_gateway.py",
+        "infra/docker/docker-compose.prod.yaml",
+        "assets/frontend/src/pages/monitoring/monitoring-data.ts",
+        "assets/frontend/src/pages/monitoring/monitoring-panels.tsx",
+        "core/entrypoints/api/system_monitoring.py",
+        "core/infrastructure/monitoring/system_storage.py",
+        "core/entrypoints/mcp/server.py",
+        "core/entrypoints/mcp/server_runtime.py",
+        "core/entrypoints/mcp/server_api_auth.py",
+        "core/entrypoints/mcp/server_tool_scopes.py",
+        "core/entrypoints/mcp/server_discovery.py",
+        "core/entrypoints/mcp/server_api_client.py",
+        "core/infrastructure/mcp_dev_proxy.py",
+        "core/entrypoints/cli/worker_process.py",
+        "core/infrastructure/db/worker/job_execution_repository.py"
+      ]
+    },
+    {
+      "taskId": "page-e93e79e26d9a46be",
+      "path": "docs/deploy/diagnostics-and-migration.md",
+      "sha256": "0bfe6075401bc44e1572320e2879c4ab0641851a360f8bff0ae4811993dad0c3",
+      "reusable": true,
+      "normalizedEvidence": [
+        "core/application/doctor/service.py",
+        "core/entrypoints/cli/doctor.py",
+        "core/application/reports/system_diagnostic_report.py",
+        "core/entrypoints/api/system_monitoring.py",
+        "core/entrypoints/cli/platform/service_bindings/reports.py",
+        "core/application/clone/manifest.py",
+        "core/application/clone/secret_policy.py",
+        "core/application/clone/service.py",
+        "core/entrypoints/cli/clone_composition.py",
+        "core/infrastructure/config/env_registry.py",
+        "db/migrations/20261104120000_secret_catalog_installation_wide.sql",
+        "core/application/tooling/db/upgrade_preflight.py",
+        "core/application/tooling/db/upgrade_phases.py",
+        "core/entrypoints/cli/scripts/flow_steward_launcher.sh"
+      ]
+    },
+    {
+      "taskId": "page-ee9b13a4b8ebc944",
+      "path": "docs/developer/project-knowledge-and-code-intelligence.md",
+      "sha256": "cb4b22dca4b1d3f88ad9239e20cedc3e54daabb4f16a7fbd2ffb3d1fd959f905",
+      "reusable": true,
+      "normalizedEvidence": [
+        "assets/frontend/src/pages/projects/detail/project-edit-form.tsx",
+        "assets/frontend/src/pages/projects/policy/index.tsx",
+        "core/application/registry/builtin_mcp_tools.py",
+        "core/entrypoints/mcp/server_api_client.py",
+        "tests/unit/test_mcp_api_client.py",
+        "tests/unit/test_registry.py",
+        "tests/unit/test_pre_010_cleanup_guardrails.py",
+        "core/application/management/project_profile_kb.py",
+        "core/application/management/command_services_project_crud_mixin.py",
+        "core/application/memory/project_context.py",
+        "core/application/memory/context_assembly.py",
+        "core/infrastructure/db/memory_store_jobs.py",
+        "core/application/workflows/discovery/capability_discovery_core_mixin.py",
+        "core/application/workflows/discovery/capability_discovery_knowledge_mixin.py",
+        "assets/frontend/src/pages/jobs/detail/job-detail-page-sections.tsx"
+      ]
+    }
+  ]
+}

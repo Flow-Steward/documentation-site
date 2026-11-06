@@ -50,6 +50,10 @@ Never label a failure completed to satisfy the schema. Do not emit a successful
 no-op when a review was abandoned. A failed/incomplete receipt fails the workflow;
 partial results cannot be published or advance a checkpoint.
 
+Return evidence entries as bare paths only, for example
+`core/application/lifecycle/contracts.py`. Put function names, line numbers,
+and explanations in summary, never in evidence entries.
+
 For completed reviews, evidence must contain actual existing FILE paths you
 inspected, relative to ../product/ (e.g. core/entrypoints/cli/click_app.py,
 not ../product/core/...). Cite the relevant functions/sections in summary.

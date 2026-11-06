@@ -1,0 +1,31 @@
+{
+  "status": "completed",
+  "task_id": "page-ee9b13a4b8ebc944",
+  "source_sha": "f9f918745298806b6247594e4dbb3203a8a9f417",
+  "docs_sha": "42f2a9e8affa46a84c6b79aa1d8c7ef70bf132cd",
+  "reviewed_document": "docs/developer/project-knowledge-and-code-intelligence.md",
+  "summary": "Qualified the removed Knowledge Base claim to describe current public UI/MCP contracts, since main retains internal cleanup for legacy KB tool records and project-profile synchronization into canonical memory. Bounded the code-intelligence statement to the reviewed core public contracts. Verified project rules UI and save behavior, profile sync and exact account/project retrieval, runtime memory assembly, workflow-knowledge discovery, and job result/artifact evidence. Main-source behavior is documented without claiming a published release; external tool capabilities and published-release availability remain unverified.",
+  "evidence": [
+    "assets/frontend/src/pages/projects/detail/project-edit-form.tsx",
+    "assets/frontend/src/pages/projects/policy/index.tsx",
+    "core/application/registry/builtin_mcp_tools.py",
+    "core/entrypoints/mcp/server_api_client.py",
+    "tests/unit/test_mcp_api_client.py",
+    "tests/unit/test_registry.py",
+    "tests/unit/test_pre_010_cleanup_guardrails.py",
+    "core/application/management/project_profile_kb.py",
+    "core/application/management/command_services_project_crud_mixin.py",
+    "core/application/memory/project_context.py",
+    "core/application/memory/context_assembly.py",
+    "core/infrastructure/db/memory_store_jobs.py",
+    "core/application/workflows/discovery/capability_discovery_core_mixin.py",
+    "core/application/workflows/discovery/capability_discovery_knowledge_mixin.py",
+    "assets/frontend/src/pages/jobs/detail/job-detail-page-sections.tsx"
+  ],
+  "updates": [
+    {
+      "path": "docs/developer/project-knowledge-and-code-intelligence.md",
+      "content": "---\nsidebar_position: 6\ntitle: Project Context\ndescription: Current project context and the boundary between internal memory and public tools.\n---\n\n# Project Context\n\nProject rules and assigned data connections provide scoped context for workflow\nagents. Update them through the project configuration screens. Edit Project rules\non the Policy tab and use Save Project; the execution policy has its own Save\npolicy button. Inspect Jobs for execution evidence: logs, messages, events,\napprovals, outputs, and artifacts.\n\n## Current public surfaces\n\nThe former project Knowledge Base page and MCP contracts `kb_search`, `kb_write`,\n`project_profile_get`, and `project_profile_update` are not exposed by the current\npublic UI or MCP source on main. Use `project_list` for project discovery and\nworkflow/job tools for workflow contracts and execution evidence. The source\nretains internal cleanup for legacy built-in KB tool records and project-profile\nsynchronization into canonical memory; these do not provide a public KB editor or\nmemory CRUD contract. These statements describe the reviewed source on main;\navailability in a published release has not been verified.\n\nThe reviewed core public source exposes no contract for repository code indexing,\ncode search or graphs, schema-index snapshots, project reindex controls, or\napplication-code generation. An external tool's declared abilities do not\nestablish those core capabilities. This page keeps its historical URL so existing\nlinks explain the current scope.\n\n## Internal memory\n\nThe application still maintains canonical memory and workflow knowledge used by\nruntime context assembly and deterministic workflow discovery. Project-profile\nsynchronization uses stable account/project IDs and includes project rules plus\nassigned connection metadata. The synchronized profile includes at most the first\n2,000 characters of project rules. Exact project-profile retrieval does not fall\nback to another account or project.\n\nInternal storage and retrieval services are not a public knowledge-management\nfeature. Dataset introspection and scoped queries remain separate supported\nfeatures; see [Datasets And Data Connections](../user/datasets-and-data-connections).\n\nSee [MCP Reference](../reference/mcp),\n[Workspaces And Projects](../user/workspaces-and-projects), and\n[Jobs And Approvals](../user/jobs-and-approvals).\n"
+    }
+  ]
+}

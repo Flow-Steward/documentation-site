@@ -1,0 +1,335 @@
+{
+  "version": 1,
+  "sourceSha": "f9f918745298806b6247594e4dbb3203a8a9f417",
+  "docsSha": "42f2a9e8affa46a84c6b79aa1d8c7ef70bf132cd",
+  "tasks": [
+    {
+      "id": "page-84074f3cf5ba66c6",
+      "path": "docs/admin/audit-trail.md"
+    },
+    {
+      "id": "page-5c27a789a9bff585",
+      "path": "docs/admin/events-and-redrive.md"
+    },
+    {
+      "id": "page-1d244be53120c8e4",
+      "path": "docs/admin/queues-concurrency-retries-dlq.md"
+    },
+    {
+      "id": "page-5a37c7b3bb71eec6",
+      "path": "docs/admin/security-policy-and-redaction.md"
+    },
+    {
+      "id": "page-ae586d9b194bdd7e",
+      "path": "docs/deploy/architecture.md"
+    },
+    {
+      "id": "page-ab9f61af60dfd00c",
+      "path": "docs/deploy/backups-and-restore.md"
+    },
+    {
+      "id": "page-aff574fd451a0191",
+      "path": "docs/deploy/deployment-checklist.md"
+    },
+    {
+      "id": "page-e93e79e26d9a46be",
+      "path": "docs/deploy/diagnostics-and-migration.md"
+    },
+    {
+      "id": "page-552abd1daa05b230",
+      "path": "docs/deploy/elestio.md"
+    },
+    {
+      "id": "page-8a0aad20650a1377",
+      "path": "docs/deploy/installation.md"
+    },
+    {
+      "id": "page-030b930e49942e69",
+      "path": "docs/deploy/installer-walkthrough.md"
+    },
+    {
+      "id": "page-37c969d0d1ea67d9",
+      "path": "docs/deploy/observability.md"
+    },
+    {
+      "id": "page-7b06eec26a1eabc8",
+      "path": "docs/deploy/platforms.md"
+    },
+    {
+      "id": "page-2a488bfa0d051e5f",
+      "path": "docs/deploy/render.md"
+    },
+    {
+      "id": "page-bb75e2b5a1c78092",
+      "path": "docs/deploy/rollback.md"
+    },
+    {
+      "id": "page-b4d592b93227f95f",
+      "path": "docs/deploy/storage-and-artifacts.md"
+    },
+    {
+      "id": "page-dff77f73c8203b1c",
+      "path": "docs/deploy/troubleshooting.md"
+    },
+    {
+      "id": "page-9b88ef083e6e86ca",
+      "path": "docs/developer/architecture.md"
+    },
+    {
+      "id": "page-3991860214553125",
+      "path": "docs/developer/cli-and-automation.md"
+    },
+    {
+      "id": "page-b57ca053bd6ccae5",
+      "path": "docs/developer/contributing-documentation.md"
+    },
+    {
+      "id": "page-8c2896cd08168d90",
+      "path": "docs/developer/contributing.md"
+    },
+    {
+      "id": "page-bb06b0651968bb3a",
+      "path": "docs/developer/documentation-site.md"
+    },
+    {
+      "id": "page-714654a44ea33051",
+      "path": "docs/developer/extensions.md"
+    },
+    {
+      "id": "page-d15d2e44d7412f9e",
+      "path": "docs/developer/integrations.md"
+    },
+    {
+      "id": "page-3f4b69d787da689b",
+      "path": "docs/developer/local-development.md"
+    },
+    {
+      "id": "page-2a1b9aa10a1ac8c1",
+      "path": "docs/developer/mcp-server.md"
+    },
+    {
+      "id": "page-8e78c48c3d1b30a8",
+      "path": "docs/developer/operations-internals.md"
+    },
+    {
+      "id": "page-ee9b13a4b8ebc944",
+      "path": "docs/developer/project-knowledge-and-code-intelligence.md"
+    },
+    {
+      "id": "page-449b9c45dd98f0c7",
+      "path": "docs/developer/publish-extension.md"
+    },
+    {
+      "id": "page-0b01f46394f16234",
+      "path": "docs/developer/publish-workflow.md"
+    },
+    {
+      "id": "page-11c652e4a5a6658e",
+      "path": "docs/developer/quality-and-testing.md"
+    },
+    {
+      "id": "page-7d34f3626e64f015",
+      "path": "docs/developer/workflow-runtime.md"
+    },
+    {
+      "id": "page-3bdf3414808d5ee5",
+      "path": "docs/integrations/agent-plugin.md"
+    },
+    {
+      "id": "page-a49ca7541803d4ea",
+      "path": "docs/integrations/build-an-extension.md"
+    },
+    {
+      "id": "page-d842c5dbf24f0c3f",
+      "path": "docs/integrations/built-in-mcp-quick-start.md"
+    },
+    {
+      "id": "page-700e2df9a243afed",
+      "path": "docs/integrations/connect-ai-agents.md"
+    },
+    {
+      "id": "page-a3c32e2a9b501ee0",
+      "path": "docs/integrations/extension-authoring-skill.md"
+    },
+    {
+      "id": "page-0ea34cf00d8855cd",
+      "path": "docs/integrations/extension-operator-guide.md"
+    },
+    {
+      "id": "page-0956ebdffc4bcc1f",
+      "path": "docs/integrations/external-mcp-catalogs.md"
+    },
+    {
+      "id": "page-677a7323c3e6e2db",
+      "path": "docs/integrations/incoming-workflow-webhooks.md"
+    },
+    {
+      "id": "page-f538c53b6dcea3af",
+      "path": "docs/integrations/public-api-quick-start.md"
+    },
+    {
+      "id": "page-1e117039abe9f809",
+      "path": "docs/intro.mdx"
+    },
+    {
+      "id": "page-5828b586423d611d",
+      "path": "docs/maintainer/documentation-debt-backlog.md"
+    },
+    {
+      "id": "page-370381df31c8d799",
+      "path": "docs/reference/api.md"
+    },
+    {
+      "id": "page-975000db2bb150eb",
+      "path": "docs/reference/cli.md"
+    },
+    {
+      "id": "page-5812cf0d04ccaf93",
+      "path": "docs/reference/configuration.md"
+    },
+    {
+      "id": "page-ea9c3a7939f72ec4",
+      "path": "docs/reference/environment-variables.md"
+    },
+    {
+      "id": "page-b0f1ba4bc197b062",
+      "path": "docs/reference/feature-coverage-matrix.md"
+    },
+    {
+      "id": "page-1cace071f76a245c",
+      "path": "docs/reference/installer.md"
+    },
+    {
+      "id": "page-0030ea4ab883ec3e",
+      "path": "docs/reference/limits-and-file-formats.md"
+    },
+    {
+      "id": "page-a882dd3a78895f79",
+      "path": "docs/reference/mcp.md"
+    },
+    {
+      "id": "page-4cc214e0f36379ba",
+      "path": "docs/reference/platform-audit.md"
+    },
+    {
+      "id": "page-9062fda6b2ee58c5",
+      "path": "docs/reference/release-readiness.md"
+    },
+    {
+      "id": "page-5fd7a38d13c8e3a6",
+      "path": "docs/reference/upgrade.md"
+    },
+    {
+      "id": "page-6e4713289d15bb7d",
+      "path": "docs/reference/workflow-step-kinds.md"
+    },
+    {
+      "id": "page-ec791a0882c510e8",
+      "path": "docs/user/agents-and-skills.md"
+    },
+    {
+      "id": "page-bc91f913c5b6043c",
+      "path": "docs/user/core-concepts.md"
+    },
+    {
+      "id": "page-e665a76ccf8bb8da",
+      "path": "docs/user/dashboard.md"
+    },
+    {
+      "id": "page-e2c7a63d4528a038",
+      "path": "docs/user/datasets-and-data-connections.md"
+    },
+    {
+      "id": "page-c199877bcf5f54e3",
+      "path": "docs/user/extensions.md"
+    },
+    {
+      "id": "page-af00d3831473e603",
+      "path": "docs/user/failed-run-diagnostics.md"
+    },
+    {
+      "id": "page-71a41957de1023e5",
+      "path": "docs/user/feature-catalog.md"
+    },
+    {
+      "id": "page-295c58442422470c",
+      "path": "docs/user/feature-configuration.md"
+    },
+    {
+      "id": "page-a2e33fa349f302b3",
+      "path": "docs/user/file-an-issue.md"
+    },
+    {
+      "id": "page-f887930e81873df4",
+      "path": "docs/user/first-workflow.md"
+    },
+    {
+      "id": "page-816862240c6f5d49",
+      "path": "docs/user/getting-started.md"
+    },
+    {
+      "id": "page-75700c0c75c821f3",
+      "path": "docs/user/installation-and-updates.md"
+    },
+    {
+      "id": "page-e77a5be03b7f2148",
+      "path": "docs/user/jobs-and-approvals.md"
+    },
+    {
+      "id": "page-accaeaedde036c13",
+      "path": "docs/user/monitoring-and-troubleshooting.md"
+    },
+    {
+      "id": "page-24113bb83fcc75c7",
+      "path": "docs/user/product-tour.md"
+    },
+    {
+      "id": "page-da18b2da8aa5b909",
+      "path": "docs/user/project-knowledge-and-code-intelligence.md"
+    },
+    {
+      "id": "page-0950c76bbcab78c2",
+      "path": "docs/user/registry-management.md"
+    },
+    {
+      "id": "page-1380310582f5c336",
+      "path": "docs/user/settings-and-model-providers.md"
+    },
+    {
+      "id": "page-c325149b4cb5f172",
+      "path": "docs/user/tools-and-mcp.md"
+    },
+    {
+      "id": "page-ca3bd0c5afd0f0ac",
+      "path": "docs/user/trash-and-lifecycle.md"
+    },
+    {
+      "id": "page-1a9a994a91cebd43",
+      "path": "docs/user/use-cases.md"
+    },
+    {
+      "id": "page-4a84160530fc5611",
+      "path": "docs/user/users-roles-and-access.md"
+    },
+    {
+      "id": "page-7e887e6528a25f50",
+      "path": "docs/user/workflow-and-extension-catalogs.md"
+    },
+    {
+      "id": "page-ac2ef8cfb521e803",
+      "path": "docs/user/workflow-builder.md"
+    },
+    {
+      "id": "page-94f3045f8dd01fd0",
+      "path": "docs/user/workflow-promotion.md"
+    },
+    {
+      "id": "page-0321449237110808",
+      "path": "docs/user/workflows.md"
+    },
+    {
+      "id": "page-8b98e063b8f078fe",
+      "path": "docs/user/workspaces-and-projects.md"
+    }
+  ]
+}
