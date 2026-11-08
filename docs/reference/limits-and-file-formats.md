@@ -257,6 +257,25 @@ pass: a longer collection selects its first N items and reports the source
 count, applied limit, and truncation. This variable has no shipped production
 Compose app binding or Compact child allowlist entry at this revision.
 
+## Workflow reports
+
+A [report](../user/workflows#reports) built by a Template step has fixed limits.
+Nothing is cut to fit: a report over a limit fails the step with the field that
+broke it.
+
+| Limit | Value |
+|---|---|
+| Components | 100 |
+| Datasets | 10 |
+| Rows per dataset | 1,000 |
+| Columns per table | 30 |
+| Series per chart | 10 |
+| Section nesting | 4 levels |
+| Characters in one text component or table cell | 10,000 |
+| Summary text | 4,000 characters |
+| Report definition in the step | 64 KiB |
+| Stored report size | 1 MiB |
+
 ## Nested workflow depth
 
 `FS_INVOKE_WORKFLOW_MAX_DEPTH` limits an `invoke_workflow` chain. It defaults to

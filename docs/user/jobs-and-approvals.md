@@ -57,18 +57,20 @@ cancel is permitted.
    current definition, which may differ from what ran. A run without a pinned
    definition shows an availability warning. Timer waits show their due time;
    child-workflow waits link to the child run when that information is available.
-4. Review `Failure summary` when the run includes failure information.
-5. Select a step in the execution waterfall to open `Step details`. Inspect its
+4. Review the run's Result. When the workflow returns a [report](workflows#reports),
+   it is shown there first, with the other outputs below it.
+5. Review `Failure summary` when the run includes failure information.
+6. Select a step in the execution waterfall to open `Step details`. Inspect its
    inputs, outputs, message, generated files, and `Errors` when those are present.
-6. Review `Decision history` when recorded decisions are available, and the
+7. Review `Decision history` when recorded decisions are available, and the
    review workspace when a human gate is active.
-7. Use authorized API/CLI access for raw logs, messages, and job events. The
+8. Use authorized API/CLI access for raw logs, messages, and job events. The
    current job page has no `Advanced diagnostics` drawer or dedicated
    `Overview`, `Runtime`, `Decisions`, `Causal`, `Messages`, `Logs`, or `Events`
    tabs. Backend diagnostic fields and runtime message projections do not imply
    named UI controls. Viewers can read scoped jobs, but cannot decide a gate,
    cancel, or restart them; admin/operator actions still depend on state and policy.
-8. Check cost breakdown when model or tool usage matters.
+9. Check cost breakdown when model or tool usage matters.
 
 [![Historical completed provider-free job detail with status, timing, execution waterfall, restart, report, and diagnostics controls](/img/screenshots/2026-10-04/job-detail-completed.png)](/img/screenshots/2026-10-04/job-detail-completed.png)
 
