@@ -369,7 +369,7 @@ and connected AI chats show it as a formatted document.
 
 [![A finished report in the MCP Apps report viewer: metrics, a table, a bar chart and a section](/img/screenshots/2026-11-08/report-viewer.png)](/img/screenshots/2026-11-08/report-viewer.png)
 
-*The report viewer showing the sample sales report from the product's test fixtures, rendered by the release-candidate viewer build in a test MCP Apps host on 2026-11-08.*
+*The report viewer showing the sample sales report from the product's test fixtures, captured in a test MCP Apps host on 2026-11-08. Reports with charts show in the viewer from 0.9.13.*
 
 ### What a report can hold
 
