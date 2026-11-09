@@ -167,9 +167,10 @@ to accept the displayed default. Boolean questions accept yes/no. Values passed
 as command-line options are already supplied and are skipped in the plain
 questionnaire.
 
-The installer asks visible questions in the order below. A question marked
-**advanced** is still asked in plain mode; in `./install.sh --tui`, expand
-**Show advanced** to see it. Visibility follows previous answers, but the
+The installer asks visible questions in the order below, one at a time. In a
+terminal, pick a choice with the arrow keys and press Enter; without a terminal,
+type the number shown beside the choice. A question marked **advanced** is asked
+only with `./install.sh --advanced`. Visibility follows previous answers, but the
 **Network and TLS** list shows all eight choices: it does not filter out
 incompatible choices. Choose the pair in the table above. The final
 **Review pending change:** shows normalized values; **Apply this change?**
@@ -569,8 +570,8 @@ and [resolver reference](https://doc.traefik.io/traefik/reference/install-config
 
 ### Discover trusted proxy addresses
 
-**Trusted proxy CIDRs** is always visible in plain mode and is advanced in the
-full-screen form. Its default is `127.0.0.1/32,::1/128`. Enter a comma-separated
+**Trusted proxy CIDRs** is an advanced question (`./install.sh --advanced`).
+Its default is `127.0.0.1/32,::1/128`. Enter a comma-separated
 list of IP addresses/CIDRs for the **immediate proxy as seen by the Flow Steward
 backend**. This lets the runtime trust forwarded request information from that
 peer. It is not a list of users allowed to sign in.

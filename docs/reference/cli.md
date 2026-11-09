@@ -22,9 +22,17 @@ identity. Do not run it inside `fs-app`.
 
 ## Common behavior
 
-- Plain, line-oriented interaction is the default, including bare
-  `./flow-steward`. `--tui` opts in to full-screen forms/rich output;
-  `--plain` overrides it. Doctor diagnostics remain line-oriented.
+- Human-readable output is the default: coloured in a terminal, plain text
+  when redirected or with `--plain`, `--no-color` or `NO_COLOR`. Only `--json`
+  prints JSON. Missing input is asked one question at a time; pick a choice
+  with the arrow keys and Enter (without a terminal, type its number).
+- Commands shown in hints and next steps use the name you ran:
+  `./flow-steward` (or its path) on a server, `flow-steward` in a provider console.
+- Tab completion: add `eval "$(/path/to/flow-steward completion zsh)"` (or
+  `bash`, or `flow-steward completion fish | source`) to your shell profile.
+  Bash in the Compact image loads it already.
+- `flow-steward shell` opens an interactive prompt: type commands without the
+  program name (`users list`), Tab completes them, Up/Down walk the history.
 - Interactive mode collects missing fields and reviews change plans.
 - `--non-interactive` refuses missing required input rather than prompting.
 - `--json` normally returns the versioned `flow-steward.cli.v1` envelope.

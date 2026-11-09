@@ -82,8 +82,9 @@ Run from the application repository:
 ./install.sh
 ```
 
-Plain interaction is the default for both launchers. Use `--tui` only if you want
-the full-screen interface; `--plain` explicitly forces line-oriented interaction.
+Both launchers ask one question at a time: pick a choice with the arrow keys and
+press Enter. Results are coloured in a terminal; `--plain` prints them without
+colour, and `--json` prints JSON for scripts.
 A fresh checkout with clean tracked files exactly at its `v<VERSION>` tag resolves
 that stable GitHub release and installs its official immutable images. If the
 release or complete image set is unavailable, installation stops with

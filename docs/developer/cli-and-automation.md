@@ -59,8 +59,9 @@ For schema-driven product commands, use `--json` for machine-readable output and
 ./flow-steward projects list --json --non-interactive
 ```
 
-JSON mode disables prompts. Plain text is the default; `--tui` explicitly opts
-into full-screen forms and rich output. Commands requiring review still need
+JSON mode disables prompts and is the only mode that prints JSON; without
+`--json` every command prints human-readable text (coloured in a terminal,
+plain when redirected), so scripts must pass `--json`. Commands requiring review still need
 confirmation in unattended runs. Check the command's `--help`: `--confirm` is
 either a flag or requires the exact canonical confirmation value printed after
 review, depending on the command.
