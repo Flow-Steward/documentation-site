@@ -55,10 +55,10 @@ registry image was not verified for this reference.
 | Option | Meaning |
 |---|---|
 | `--json` | Emit one JSON document and do not prompt (implies `--non-interactive`). Fresh installation still needs `--confirm`. The live setup link is printed separately to stderr. |
-| `--plain` | Use line-oriented interaction, also the default without `--tui`. |
-| `--tui` | Opt into the full-screen form; advanced fields are behind **Show advanced**. |
+| `--plain` | Print without colour or animation; choices are typed by number. |
+| `--advanced` | Also ask the advanced questions. |
 | `--no-color` | Disable color. |
-| `--verbose` | Request redacted technical output; ordinary non-JSON installation also streams progress/technical output. |
+| `--verbose` | Also print the technical Docker output; without it the installer shows one line per step and keeps the details in the installation log. |
 | `--non-interactive` | Never prompt; every field not given as an option takes its default. A fresh install requires `--confirm`. Without a terminal on stdin the installer never prompts either. |
 | `--confirm` | Confirm the fresh-install plan. |
 | `-h`, `--help` | Show launcher/private installer help. |
@@ -72,9 +72,8 @@ are valid; model validation enforces the combinations below.
 
 ## Installation fields
 
-“Always” means no field visibility condition. “Advanced” applies to the
-full-screen form; it does not hide the question in plain mode, except for
-**Host settings**, which plain mode never asks.
+“Always” means no field visibility condition. “Advanced” questions are asked
+only with `--advanced`; **Host settings** is never asked (use `--setting`).
 
 | Exact label | Option | Displayed default / values | Visible when |
 |---|---|---|---|
@@ -124,8 +123,8 @@ on either profile. This option does not accept deployment fields such as
 Compact storage: the **File storage** default, `bundled`, is the Scalable
 default. On Compact, that default becomes `local_fs` unless `--file-storage` is
 given on the command line. An answer of **Local persistent filesystem** or
-**External S3-compatible storage** (with its S3 settings) is kept, in plain
-mode, `--tui` and non-interactive runs alike; the review shows the final value.
+**External S3-compatible storage** (with its S3 settings) is kept, in interactive
+and non-interactive runs alike; the review shows the final value.
 For bundled storage on Compact pass `--file-storage bundled`. Scalable keeps the
 prompted or supplied value.
 
