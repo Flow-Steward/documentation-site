@@ -491,7 +491,10 @@ On 2026-11-10 a fresh project created by this helper, with the
 `platform-private` broker settings above and a Compact image carrying that mode,
 reached `/health/ready`; `flow-steward status` in `railway ssh` reported ready,
 and RabbitMQ accepted the runtime's authenticated connections to the `flow`
-virtual host. That check covered installation and readiness only.
+virtual host. In a second fresh project the same day, the first administrator was created from the one-time link in a browser,
+signed in, created a project, imported the [smoke workflow](../user/first-workflow)
+and ran it (`Hello, …!` output); after a Compact restart the same browser session,
+project, workflow and job were still there and a second run completed.
 
 The earlier 2026-09-28 fresh-project check used the then-pinned image and the
 helper of that date: dependency startup, readiness, first administrator, browser sign-in,
@@ -521,7 +524,11 @@ On **2026-11-10** the guided installer created a fresh installation with the
 `platform-private` broker settings and a Compact image carrying that mode,
 unchanged otherwise: public `/health/ready` returned 200, `flow-steward status`
 over `fly ssh console` reported ready with 13 of 13 core checks, and RabbitMQ
-accepted the runtime's authenticated connections.
+accepted the runtime's authenticated connections. In a second fresh installation
+the same day, the first administrator was created from the one-time link in a browser,
+signed in, created a project, imported the [smoke workflow](../user/first-workflow)
+and ran it (`Hello, …!` output); after a Compact restart the same browser session,
+project, workflow and job were still there and a second run completed.
 
 Fresh guided installation on **2026-09-28** used Compact source
 `31652e30e9c65b16576e9a4b3d105072c24b8337`, image index

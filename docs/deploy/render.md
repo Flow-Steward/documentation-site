@@ -46,7 +46,13 @@ acceptance covered Compact only.
 On **2026-11-10** a fresh Blueprint instance with the `platform-private` broker
 settings and a Compact image carrying that mode reached `/health/ready` in about
 two minutes after Compact was created, and `flow-steward status` in the service
-Shell reported ready with 13 of 13 core checks.
+Shell reported ready with 13 of 13 core checks. In a second fresh instance the
+same day, the first administrator was created from the one-time link in a browser,
+signed in, created a project, imported the [smoke workflow](../user/first-workflow)
+and ran it (`Hello, …!` output); after a Compact restart the same browser session,
+project, workflow and job were still there and a second run completed. Both times Compact's first deploy exited once and
+Render's automatic second deploy went live about a minute later; no action was
+needed.
 
 Fresh Blueprint acceptance on **2026-09-28** used Compact source
 `31652e30e9c65b16576e9a4b3d105072c24b8337`, image digest
