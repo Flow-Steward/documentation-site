@@ -251,15 +251,15 @@ holding real data, verify backups and a restore procedure for your installation.
 
 ## Railway: Compact in dependency order
 
-The sequence below describes the pinned 2026-09-28 example. It is not a complete
-recipe for deploying an image built from current main: main defaults
-`FS_RABBITMQ_TRANSPORT_MODE` to `tls` and rejects plaintext `amqp` connections to
-provider hostnames, including `rabbitmq.railway.internal`. Current main requires
-an `amqps` broker endpoint with certificate and hostname verification. Its local
-transport modes allow only specific Compose, audit or numeric loopback endpoints;
-they are not a bypass for provider private networking. Provisioning that broker
-TLS and updating the external deployment helper are outside the historical
-example below. This source behavior does not prove publication of an updated image.
+Compact reaches RabbitMQ over Railway's private network, which Railway encrypts
+with WireGuard and isolates per environment. Flow Steward refuses unencrypted
+AMQP by default, so the installation declares that one broker:
+`FS_RABBITMQ_TRANSPORT_MODE=platform-private` with
+`FS_RABBITMQ_PRIVATE_HOST=rabbitmq.railway.internal`. Plaintext is then allowed
+only to that host on port 5672; any other broker still needs verified `amqps`.
+Every service in the same Railway environment can reach the broker, so keep
+unrelated services out of it. See
+[RabbitMQ transport](../reference/environment-variables#rabbitmq-transport).
 
 On main, `FS_COMPACT_WAIT_FOR_DEPENDENCIES=1` optionally waits for PostgreSQL and
 RabbitMQ before database bootstrap, using `FS_DB_DSN` and `RABBITMQ_URL` and
@@ -289,7 +289,8 @@ It refuses to modify a project that already has services. It generates
 distinct PostgreSQL and RabbitMQ passwords, creates
 the three services and their volumes before connecting images, waits for the
 database and broker to become ready, and only then starts Compact. It pins the
-2026-09-28 evaluated images, checks `/health/ready`, and prints the private
+images verified by the Flow Steward release it names (`flow_steward_release` at
+the top of the file), checks `/health/ready`, and prints the private
 first-admin setup link from Compact's deploy logs. Open that link promptly;
 it expires 15 minutes after issuance. Keep the downloaded file if you need
 to review the exact commands;
@@ -328,9 +329,9 @@ POSTGRES_PASSWORD=<new strong random password>
 
 `PGDATA` must be a subdirectory of the volume because a new Railway volume can
 contain `lost+found`, which PostgreSQL refuses as its data directory. Use the
-published **Flow Steward PostgreSQL 17 image with Apache AGE and pgvector**,
-`ghcr.io/flow-steward/fs-postgres-extended@sha256:47a10afb648b55a29e0422f7944a5eb8f12f99f4fecfbb5a2af721fe42196ce8`
-for the 2026-09-28 evaluated deployment.
+published **Flow Steward PostgreSQL 17 image with Apache AGE and pgvector**
+pinned in the helper, for example
+`ghcr.io/flow-steward/flow-steward-postgres@sha256:1904c420b22fc6554f145ef5904404e5f907ea81d85fa500e9cbde96a71e495e`.
 Railway's standard managed PostgreSQL image does not supply the required AGE
 extension. Wait until its logs say the database is ready to accept connections.
 Keep port 5432 private.
@@ -346,7 +347,7 @@ RABBITMQ_DEFAULT_PASS=<different strong random password>
 RABBITMQ_DEFAULT_VHOST=flow
 ```
 
-Connect the 2026-09-28 evaluated RabbitMQ image
+Connect the RabbitMQ image the release uses,
 `rabbitmq@sha256:e582c0bc7766f3342496d8485efb5a1df782b5ce3886ad017e2eaae442311f69`.
 Wait for the AMQP listener on port 5672 and keep it private; the management
 port must not be published just to make the app work.
@@ -355,9 +356,7 @@ port must not be published just to make the app work.
 
 Create an **empty** service named `compact`, attach a persistent volume at
 `/data`, and generate a Railway public domain routed to container port `8080`.
-Set the following variables before adding its image. These are the historical
-pinned deployment's values; its plaintext broker URL is incompatible with current
-main's provider transport policy described above. The `${{...}}` strings
+Set the following variables before adding its image. The `${{...}}` strings
 are Railway references to the two backing services; keep the service names
 exactly as shown or adjust the references accordingly.
 
@@ -369,6 +368,8 @@ POSTGRES_DB=${{postgres.POSTGRES_DB}}
 POSTGRES_USER=${{postgres.POSTGRES_USER}}
 POSTGRES_PASSWORD=${{postgres.POSTGRES_PASSWORD}}
 RABBITMQ_HOST=rabbitmq.railway.internal
+FS_RABBITMQ_TRANSPORT_MODE=platform-private
+FS_RABBITMQ_PRIVATE_HOST=rabbitmq.railway.internal
 FS_PUBLIC_BASE_URL=https://<generated-railway-domain>
 ARTIFACT_STORAGE_BACKEND=local_fs
 PORT=8080
@@ -377,17 +378,15 @@ PORT=8080
 Configure one replica, health check `/health/ready`, **Always** restart, zero
 deployment overlap, and at least 180 seconds of draining time. Compact is a
 single-runtime profile; overlapping two live copies against the same database
-and broker is unsupported. Finally connect the 2026-09-28 evaluated Compact
-image
-`ghcr.io/flow-steward/flow-steward-compact@sha256:dee794207e38a4828cadd659cb41cbeaf65a1bdfedd6e4532bcb2a89c77681b1`
-from source commit `367d5ff885a5b7557cdb0fb712fe754539fa4d09`.
+and broker is unsupported. Finally connect the Compact image pinned in the
+helper, for example
+`ghcr.io/flow-steward/flow-steward-compact@sha256:df980396aacc3b80da0387d1bd63702aa4bbe78b4a1eec5a06e0a84c8a4deb31`.
 Wait for Railway deployment status **Success** and HTTP readiness. A successful
 image upload or a running PostgreSQL service alone does not prove the app is
 ready.
 
-Keep the `*_HOST` values for the historical pinned image. On current main,
-RabbitMQ readiness derives its endpoint and TLS settings from `RABBITMQ_URL`,
-not `RABBITMQ_HOST`. PostgreSQL readiness normally uses `POSTGRES_HOST`; enabling
+RabbitMQ readiness derives its endpoint and transport from `RABBITMQ_URL`;
+`RABBITMQ_HOST` is kept for tools that build the URL from components. PostgreSQL readiness normally uses `POSTGRES_HOST`; enabling
 `FS_COMPACT_WAIT_FOR_DEPENDENCIES=1` instead derives its endpoint from `FS_DB_DSN`.
 The provider entrypoint also builds `LANGGRAPH_POSTGRES_URI` from `POSTGRES_*`
 when `POSTGRES_HOST` is supplied, including the password. The default PostgreSQL
@@ -488,8 +487,14 @@ through this runtime shell. The built-in command explains this for unsupported
 operations. Use the Railway dashboard/CLI for deployment operations and the
 supported product/Compact maintenance commands for app administration.
 
-The 2026-09-28 fresh-project check used the downloadable example and this exact
-image: dependency startup, readiness, first administrator, browser sign-in,
+On 2026-11-10 a fresh project created by this helper, with the
+`platform-private` broker settings above and a Compact image carrying that mode,
+reached `/health/ready`; `flow-steward status` in `railway ssh` reported ready,
+and RabbitMQ accepted the runtime's authenticated connections to the `flow`
+virtual host. That check covered installation and readiness only.
+
+The earlier 2026-09-28 fresh-project check used the then-pinned image and the
+helper of that date: dependency startup, readiness, first administrator, browser sign-in,
 `users list`, `projects list`, `jobs list`, and `status` passed. After restarting
 Compact, the same administrator and existing session still worked, and a file
 on `/data` and the saved runtime keys retained their checksums. This was an
@@ -520,11 +525,13 @@ and delivered the private bootstrap link. First-administrator setup, browser
 login, native CLI administration and user/session/file/key persistence after
 restart passed. AI execution, HA and backup/restore were outside this check.
 
-These are historical pinned-image instructions. Before substituting an image
-built from current main, provision verified RabbitMQ TLS as described in the
-Railway section; private Fly networking alone does not permit a plaintext broker
-URL under main's transport policy. Current helper contents, provider behavior and
-image availability require separate verification.
+Compact reaches RabbitMQ over Fly's private network, which Fly carries over
+WireGuard. Every app in the same Fly organization can reach it, so use an
+organization that holds only this installation if that matters to you.
+`compact.toml` declares the broker with `FS_RABBITMQ_TRANSPORT_MODE=platform-private`
+and `FS_RABBITMQ_PRIVATE_HOST=<prefix>-rabbit.internal`; plaintext AMQP is
+allowed only to that host on port 5672. See
+[RabbitMQ transport](../reference/environment-variables#rabbitmq-transport).
 
 Use the same public Compact, extension-enabled PostgreSQL and RabbitMQ images
 as the Render and Elestio examples. Fly uses one application per image, so
@@ -635,9 +642,11 @@ and their volumes when finished; merely stopping Machines retains storage.
 
 Compact's provider contract is not Railway-specific: it requires persistent
 `/data`, compatible PostgreSQL 17 with AGE/pgvector, RabbitMQ, a public HTTP
-route, and graceful shutdown. On current main, provider RabbitMQ connections
-must use `amqps` with certificate and hostname verification; the canonical
-Compose installation separately declares its restricted local transport mode.
+route, and graceful shutdown. A broker on the provider's private network is
+declared with `FS_RABBITMQ_TRANSPORT_MODE=platform-private` and its exact host in
+`FS_RABBITMQ_PRIVATE_HOST`; any other broker needs verified `amqps`. Decide
+whether that provider's private network is acceptable for unencrypted AMQP
+before using the mode.
 Do not treat the Railway walkthrough as proof
 that another provider has been tested. Verify each provider's volumes, network,
 startup ordering, health checks, and backup/restore path independently.

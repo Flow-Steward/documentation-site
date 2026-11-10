@@ -27,14 +27,17 @@ URLs are absent. Confirm that the Blueprint supplies those settings and mounts
 writable persistent storage; the dated installation did not require a local
 shell script, manual disk-permission changes or manual password copying.
 
-Current main defaults to verified RabbitMQ TLS (`amqps://`), including certificate
-and hostname verification. Before selecting an image with this contract, confirm
-that the broker, linked-service URL and port, certificate trust, and broker
-hostname satisfy it. The dependency-wait flag does not provision broker TLS,
-and a provider-private hostname alone does not permit plaintext AMQP. Do not
-substitute a current-main image into the September template and assume that its
-historical broker configuration is sufficient. See the transport boundary in
-[Installation](installation#other-providers).
+Compact reaches RabbitMQ over Render's private network. Flow Steward refuses
+unencrypted AMQP by default, so the Blueprint declares that one broker:
+`FS_RABBITMQ_TRANSPORT_MODE=platform-private`, and `FS_RABBITMQ_PRIVATE_HOST`
+taken from the RabbitMQ service's private host, the same value as
+`RABBITMQ_HOST`. Plaintext is then allowed only to that host on port 5672.
+Render's private network spans every service in the same workspace and region,
+and Render does not document that this traffic is encrypted. If that is not
+acceptable, use a TLS broker (`amqps://`, mode `tls`) instead. See
+[RabbitMQ transport](../reference/environment-variables#rabbitmq-transport).
+The Blueprint needs a Compact image from a release that supports this mode;
+it is not compatible with images that predate it.
 
 This is the **Compact** topology. For **Scalable**, use the
 [VPS installation](installation#vps-guided-installation); the dated Render

@@ -70,6 +70,8 @@ POSTGRES_PASSWORD=<password>
 RABBITMQ_URL=amqp://<user>:<encoded-password>@<rabbitmq-private-host>:5672/flow
 RABBITMQ_HOST=<rabbitmq-private-host>
 RABBITMQ_PORT=5672
+FS_RABBITMQ_TRANSPORT_MODE=platform-private
+FS_RABBITMQ_PRIVATE_HOST=<rabbitmq-private-host>
 FS_PUBLIC_BASE_URL=https://<public-hostname>
 ARTIFACT_STORAGE_BACKEND=local_fs
 PORT=8080
@@ -77,6 +79,17 @@ FS_RUNTIME_HTTP_PORT=8080
 FS_WORKER_PROCESSES=2
 FS_COMPACT_WAIT_FOR_DEPENDENCIES=1
 ```
+
+Flow Steward refuses unencrypted AMQP by default. `platform-private` allows it
+only to the one broker named in `FS_RABBITMQ_PRIVATE_HOST`, on port 5672, over
+the provider's private network; every other broker still needs verified
+`amqps`. Use it only when the provider keeps that network unreachable from the
+internet, and know who shares it: Railway encrypts its private network with
+WireGuard and isolates each environment; Fly.io uses WireGuard, and every app in
+the same organization can reach it; Render's network spans the workspace and
+region, and Render does not document that the traffic is encrypted. Where that
+is not acceptable, use a TLS broker (`amqps://`, mode `tls`) instead. See
+[RabbitMQ transport](../reference/environment-variables#rabbitmq-transport).
 
 The image already sets `FS_DEPLOYMENT_PROFILE=compact`. Its provider entrypoint
 can derive `FS_DB_DSN` from `DATABASE_URL` or PostgreSQL components, and derive
@@ -131,7 +144,8 @@ and [volumes](https://docs.railway.com/volumes).
    Connect its image and wait for the AMQP listener.
 3. Create an empty `compact` service with `/data` and all runtime variables.
    Use `postgres.railway.internal` and `rabbitmq.railway.internal` for the
-   private hosts when those are the service names.
+   private hosts when those are the service names, and set
+   `FS_RABBITMQ_PRIVATE_HOST=rabbitmq.railway.internal`.
 4. Generate the public domain targeting port 8080; set `FS_PUBLIC_BASE_URL` to
    that HTTPS origin. Keep `PORT` and `FS_RUNTIME_HTTP_PORT` at 8080. Set the
    readiness path, one replica, Always restart, zero deployment overlap, and

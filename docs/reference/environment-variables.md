@@ -255,6 +255,33 @@ services.
 | `POSTGRES_DB` | Database name. |
 | `POSTGRES_USER` | Database user. |
 | `POSTGRES_PASSWORD` | Database password. Secret. |
+| `FS_RABBITMQ_TRANSPORT_MODE` | Which broker connections may skip TLS. See below. |
+| `FS_RABBITMQ_PRIVATE_HOST` | The one provider private-network broker host allowed in `platform-private` mode. |
+
+### RabbitMQ transport
+
+`FS_RABBITMQ_TRANSPORT_MODE` defaults to `tls`: the broker URL must be
+`amqps://`, with certificate and host-name verification. No mode turns those
+checks off. Unencrypted `amqp://` is allowed only to a broker the deployment
+declares:
+
+| Mode | Unencrypted AMQP allowed to | Used by |
+| --- | --- | --- |
+| `tls` | nothing | default; any external broker |
+| `compose-local` | `rabbitmq-fs:5672` | the Docker installation and Compose templates such as Elestio |
+| `audit-local` | `rabbitmq-audit:5672` | the disposable quality-check stack |
+| `loopback-local` | an explicit numeric loopback address and port | host development |
+| `platform-private` | exactly `FS_RABBITMQ_PRIVATE_HOST`, port 5672 | Compact on Railway, Fly.io or Render |
+
+`FS_RABBITMQ_PRIVATE_HOST` is a host name such as `rabbitmq.railway.internal`;
+IP addresses are refused, and the variable is ignored in every other mode.
+Choose `platform-private` only when the provider keeps its private network
+unreachable from the internet, and know who shares that network: every service
+in the same Railway environment (encrypted with WireGuard), every app in the
+same Fly.io organization (WireGuard), every service in the same Render workspace
+and region (encryption not documented by Render). Otherwise use a TLS broker.
+A refused broker URL stops the runtime with "RabbitMQ transport is invalid or
+disallowed by FS_RABBITMQ_TRANSPORT_MODE"; the message never contains the URL.
 
 ## Memory and search backends
 

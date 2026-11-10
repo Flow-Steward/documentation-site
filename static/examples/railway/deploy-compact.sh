@@ -5,9 +5,12 @@
 set -euo pipefail
 
 environment_name=production
-postgres_image=ghcr.io/flow-steward/fs-postgres-extended@sha256:47a10afb648b55a29e0422f7944a5eb8f12f99f4fecfbb5a2af721fe42196ce8
+# Digests verified by the Flow Steward release named here. Update both with
+# `node scripts/automation/release-images.mjs sync <version>` in the docs repository.
+flow_steward_release=0.9.13
+postgres_image=ghcr.io/flow-steward/flow-steward-postgres@sha256:1904c420b22fc6554f145ef5904404e5f907ea81d85fa500e9cbde96a71e495e
 rabbitmq_image=rabbitmq@sha256:e582c0bc7766f3342496d8485efb5a1df782b5ce3886ad017e2eaae442311f69
-compact_image=ghcr.io/flow-steward/flow-steward-compact@sha256:dee794207e38a4828cadd659cb41cbeaf65a1bdfedd6e4532bcb2a89c77681b1
+compact_image=ghcr.io/flow-steward/flow-steward-compact@sha256:df980396aacc3b80da0387d1bd63702aa4bbe78b4a1eec5a06e0a84c8a4deb31
 
 for command_name in railway jq openssl curl; do
   command -v "$command_name" >/dev/null || {
@@ -63,6 +66,7 @@ if [[ $(jq '.services.edges | length' <<<"$project_json") -ne 0 ]]; then
   exit 1
 fi
 
+printf 'Installing Flow Steward %s.\n' "$flow_steward_release"
 printf 'Creating empty services and persistent volumes in %s (%s).\n' "$project_name" "$project_id"
 for service_name in postgres rabbitmq compact; do
   railway add --service "$service_name" --json >/dev/null
@@ -97,7 +101,7 @@ printf '%s' "$rabbitmq_password" | railway variable set RABBITMQ_DEFAULT_PASS --
 unset postgres_password rabbitmq_password
 
 wait_for_service() {
-  local service_name=$1 expected_log=$2 deployment_id status output
+  local service_name=$1 expected_log=$2 deployment_id status output deploy_logs
   local deadline=$((SECONDS + 600))
   while (( SECONDS < deadline )); do
     output=$(railway deployment list --service "$service_name" --project "$project_id" \
@@ -110,9 +114,12 @@ wait_for_service() {
           "$service_name" "$deployment_id" "$status" >&2
         return 1 ;;
       SUCCESS)
-        if railway logs "$deployment_id" --service "$service_name" \
+        # Read the logs completely first: `grep -q` would close the pipe early,
+        # the CLI then aborts, and pipefail turns a match into a retry.
+        deploy_logs=$(railway logs "$deployment_id" --service "$service_name" \
           --project "$project_id" --environment "$environment_name" \
-          --lines 500 2>/dev/null | grep -Fq "$expected_log"; then
+          --lines 500 2>/dev/null || true)
+        if grep -Fq "$expected_log" <<<"$deploy_logs"; then
           printf '%s is ready (deployment %s).\n' "$service_name" "$deployment_id"
           return 0
         fi ;;
@@ -142,6 +149,8 @@ if [[ -z "$domain" ]]; then
   exit 1
 fi
 
+# Plaintext AMQP is allowed only to this one host on Railway's private network,
+# which Railway encrypts with WireGuard and isolates per environment (ADR 0064).
 railway variable set \
   'FS_DB_DSN=postgresql://${{postgres.POSTGRES_USER}}:${{postgres.POSTGRES_PASSWORD}}@postgres.railway.internal:5432/${{postgres.POSTGRES_DB}}' \
   'RABBITMQ_URL=amqp://${{rabbitmq.RABBITMQ_DEFAULT_USER}}:${{rabbitmq.RABBITMQ_DEFAULT_PASS}}@rabbitmq.railway.internal:5672/flow' \
@@ -150,6 +159,8 @@ railway variable set \
   'POSTGRES_PASSWORD=${{postgres.POSTGRES_PASSWORD}}' \
   POSTGRES_HOST=postgres.railway.internal \
   RABBITMQ_HOST=rabbitmq.railway.internal \
+  FS_RABBITMQ_TRANSPORT_MODE=platform-private \
+  FS_RABBITMQ_PRIVATE_HOST=rabbitmq.railway.internal \
   ARTIFACT_STORAGE_BACKEND=local_fs PORT=8080 \
   "FS_PUBLIC_BASE_URL=https://$domain" \
   --service compact --project "$project_id" --environment "$environment_name" \
