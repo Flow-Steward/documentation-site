@@ -517,6 +517,12 @@ historical testing. The Railway CLI and its helper tools are separate from the V
 
 ## Fly.io: Compact with persistent volumes
 
+On **2026-11-10** the guided installer created a fresh installation with the
+`platform-private` broker settings and a Compact image carrying that mode,
+unchanged otherwise: public `/health/ready` returned 200, `flow-steward status`
+over `fly ssh console` reported ready with 13 of 13 core checks, and RabbitMQ
+accepted the runtime's authenticated connections.
+
 Fresh guided installation on **2026-09-28** used Compact source
 `31652e30e9c65b16576e9a4b3d105072c24b8337`, image index
 `sha256:dee794207e38a4828cadd659cb41cbeaf65a1bdfedd6e4532bcb2a89c77681b1`.
