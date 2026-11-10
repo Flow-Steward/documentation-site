@@ -26,6 +26,7 @@ const sidebars: SidebarsConfig = {
         'user/product-tour',
         'user/use-cases',
         'user/getting-started',
+        'user/connect-an-ai-client',
         'user/core-concepts',
         'user/feature-catalog',
       ],
