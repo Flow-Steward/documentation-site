@@ -52,7 +52,8 @@ check the provider's setup instructions and test the connection.
 Credential-bearing endpoints must use HTTPS, except for private endpoints
 permitted by the explicit `FS_ALLOW_PRIVATE_REMOTE_URLS` override. Local/private
 destinations are blocked by default under the SSRF policy. Flow Steward rejects
-credentials in endpoint URLs/query strings and HTTP responses over 4 MiB. OAuth
+credentials in endpoint URLs/query strings and HTTP responses over the
+`FS_MCP_HTTP_RESPONSE_MAX_BYTES` limit (4 MiB by default). OAuth
 token expiry without a usable refresh token, changed endpoint or credential
 revision, and scope expansion can require reconnect. OAuth endpoints and issuer
 are discovered automatically and cannot be overridden in OAuth configuration.

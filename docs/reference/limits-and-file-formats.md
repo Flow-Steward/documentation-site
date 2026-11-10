@@ -157,7 +157,7 @@ environment. See [Environment Variables](environment-variables#public-job-sse-ad
 | Extension callback body | `FS_EXTENSION_CALLBACK_BODY_MAX_BYTES` | 1 MiB; clamped to 4 KiB–64 MiB | HTTP 413, `Request body exceeds size limit` |
 | Extension OAuth request body | fixed at this revision | 64 KiB | HTTP 413, `{"error":"request_too_large"}` |
 | OAuth callback query string | fixed at this revision | 8 KiB | Rejected before callback processing when the encoded query exceeds the cap. |
-| External MCP HTTP response | fixed at this revision | 4 MiB | Connector request fails; reduce or paginate the server response. |
+| External MCP HTTP response | `FS_MCP_HTTP_RESPONSE_MAX_BYTES` | 4 MiB; clamped to 1 KiB–1 GiB | Connector request fails with `MCP server response exceeded the configured limit`; reduce or paginate the server response, or raise the host setting. |
 | Remote runtime response | `FS_REMOTE_RUNTIME_RESPONSE_MAX_BYTES` | 5 MiB; clamped to 64 KiB–256 MiB | Remote-runtime request fails before JSON decoding. |
 | Approval decision body | fixed at this revision | 64 KiB | HTTP 413 with code `approval_payload_too_large`. |
 
@@ -280,8 +280,10 @@ extension, CLI, queue, and worker timeouts are independent budgets.
 storage factory fallback and operations example are 600 seconds; base and
 production Compose interpolate 900 seconds. The adapter constrains a requested
 TTL to at least 60 seconds and no more than its configured ceiling, itself
-capped at seven days. Inspect the effective service environment before
-promising a lifetime. Browser-facing presigned downloads additionally require
+capped at seven days. The job artifact download route requests 600 seconds, so
+a browser download link from a job lives at most 10 minutes whatever the
+configured ceiling; the download button in the job page issues a new link on
+every click. Browser-facing presigned downloads additionally require
 an explicitly configured public storage endpoint; otherwise the application
 serves the authorized download instead of promising a storage URL.
 
@@ -319,9 +321,9 @@ is not accepted at this revision. Do not put an extra `--` before the arguments.
 These controls come from process environments; several are snapshotted at
 module import. Change the deployment's supported configuration source and
 recreate affected application/worker services. For supported host settings,
-Scalable accepts `flow-steward config set NAME=VALUE` followed by
-`flow-steward config apply`; Compact accepts
-`./install.sh --setting NAME=VALUE`. These commands accept only supported
+Compact and Scalable on a Docker host accept
+`flow-steward config set NAME=VALUE` followed by `flow-steward config apply`;
+Compact also accepts `./install.sh --setting NAME=VALUE`. These commands accept only supported
 setting names, not arbitrary environment variables. Verify the rendered service
 environment and that the selected endpoint actually consumes a control; the
 presence of a name in an example environment file is not proof of an active

@@ -32,7 +32,7 @@ this is not a claim that every integration has been exercised in a live deployme
 | Models and provider settings | Account/provider configuration, fresh verification, catalog filtering, deliberate project/agent model selection. | [Settings](../user/settings-and-model-providers) |
 | Notifications and reports | Project routes, deliveries, report generation/retrieval, and event evidence. | [Integrations](../developer/integrations) |
 | Job evidence and recovery | Logs, messages, errors, traces, artifacts, costs, approvals, journal, restart/cancel, and watchdog. | [Diagnostics](../user/failed-run-diagnostics) |
-| Monitoring, events, and queues | Services, storage, processes, queue state, event dispatch, and authorized redrive. | [Monitoring](../user/monitoring-and-troubleshooting) |
+| Monitoring, events, and queues | Services, storage, processes, queue state, event dispatch, and authorized redrive. | [Monitoring](../user/monitoring) |
 | Policy and sensitive data | Project/account policy, scanning, redaction, PII modes, and scoped access. | [Policy](../admin/security-policy-and-redaction) |
 | Identity and access | Users, roles, PATs, service accounts, token scopes, and allowlists. | [Access](../user/users-roles-and-access) |
 | Retention and lifecycle | Retention settings, cleanup, trash, restore, and dependency-aware deletion plans. | [Lifecycle](../user/trash-and-lifecycle) |

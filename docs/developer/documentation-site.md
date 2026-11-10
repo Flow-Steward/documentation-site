@@ -93,7 +93,7 @@ Keep the documentation split clear:
 - Admin & Operations: users, providers, security policy, audit evidence, events,
   queues, retries, and monitoring.
 - Deploy & Run: install, update, configuration, backups, storage, observability,
-  rollback, and deployment troubleshooting.
+  and rollback.
 - Integrations & Extensions: incoming webhooks, MCP clients and catalogs, data
   connections, provider callbacks, and extension authoring.
 - Developer Platform: codebase, CLI usage patterns, MCP server, workflow

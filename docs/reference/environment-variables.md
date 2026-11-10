@@ -211,15 +211,17 @@ creates `.env.prod` itself, generates its passwords and keys, and rewrites the
 keys it owns on every run.
 
 Use `./install.sh` for a fresh or resumable installation. After installation,
-on Scalable use `./flow-steward config show`, `config validate`, `config set`, and
+on a Docker host use `./flow-steward config show`, `config validate`, `config set`, and
 `config apply` for the typed configuration fields and approved host settings
 those commands expose. `config set NAME=VALUE` accepts typed field names and
 non-secret manifest entries marked `operator_settable`; it rejects arbitrary
-environment-variable names. Current approved host settings include
-`FS_AGENT_TEXT_FILE_EXTENSIONS` and `FS_ALLOW_PRIVATE_REMOTE_URLS`. On Compact,
-set approved host settings from the installation folder with
-`./install.sh --setting NAME=VALUE`; the installer records them and restarts the
-runtime. An empty host-setting value resets it to its default. Other settings
+environment-variable names. The approved host settings are
+`FS_AGENT_FILE_INLINE_MAX_CHARS`, `FS_AGENT_FILE_PAGE_CHARS`,
+`FS_AGENT_TEXT_FILE_EXTENSIONS`, `FS_AGENT_TOOL_RESULT_MAX_CHARS`,
+`FS_ALLOW_PRIVATE_REMOTE_URLS`, and `FS_MCP_HTTP_RESPONSE_MAX_BYTES`. Compact
+and Scalable both accept these commands; Compact also accepts
+`./install.sh --setting NAME=VALUE` from the installation folder, which records
+the setting and restarts the runtime. An empty host-setting value resets it to its default. Other settings
 require the deployment's supported environment source and recreation of affected
 services.
 
@@ -311,9 +313,13 @@ listed minimum are raised to that minimum.
 | `FS_AUTH_PASSWORD_RESET_MAX_ATTEMPTS` | 5 | 3 | Password-reset attempts allowed within the window. |
 | `FS_AUTH_PASSWORD_RESET_LOCKOUT_SECONDS` | 900 seconds | 30 seconds | Password-reset lockout duration. |
 
-Change these only through the supported deployment environment, then recreate
-every application/API process. They are not arbitrary keys accepted by
-`flow-steward config set`.
+These are not keys accepted by `flow-steward config set`. The production
+Compose files for Compact and Scalable do not pass the login and
+password-reset rate-limit variables (`FS_AUTH_LOGIN_*`,
+`FS_AUTH_PASSWORD_RESET_RATE_WINDOW_SECONDS`,
+`FS_AUTH_PASSWORD_RESET_MAX_ATTEMPTS`, `FS_AUTH_PASSWORD_RESET_LOCKOUT_SECONDS`)
+to the services, so an installed production deployment runs with the defaults
+listed above.
 
 ## LLM providers and AI behavior
 

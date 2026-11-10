@@ -105,6 +105,6 @@ the chosen recovery was safe.
 ## Related pages
 
 - [Jobs And Approvals](jobs-and-approvals)
-- [Monitoring And Troubleshooting](monitoring-and-troubleshooting)
+- [Monitoring](monitoring)
 - [Queues, Concurrency, Retries, And DLQ](../admin/queues-concurrency-retries-dlq)
 - [Events And Redrive](../admin/events-and-redrive)

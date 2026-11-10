@@ -333,6 +333,7 @@ The launcher also reads Docker context/configuration inputs, including
 | `3` | Validation failed: an invalid value or ingress/TLS pair, a bad file path, or an invalid host setting. |
 | `4` | Precondition failed: run as root, port in use, not enough disk. |
 | `5` | A required file or repository path is unreadable. |
+| `6` | Another installer run is active for this installation; wait for it to finish. |
 | `7` | Docker, Compose or another dependency is unavailable, the host is unsupported, official release images cannot be verified, or a setting cannot be applied by a rerun. |
 | `8` | A step failed after it started, such as a health or schema check. |
 | `9` | Ambiguous installation state: inspect the reported identity, configuration or secrets before retrying. |

@@ -63,4 +63,4 @@ stale or unavailable and open the relevant underlying page to investigate.
 
 - [Jobs And Approvals](jobs-and-approvals)
 - [Failed-Run Diagnostics](failed-run-diagnostics)
-- [Monitoring And Troubleshooting](monitoring-and-troubleshooting)
+- [Monitoring](monitoring)

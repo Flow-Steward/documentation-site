@@ -92,6 +92,6 @@ or ad hoc notes.
 
 ## Related pages
 
-- [Monitoring And Troubleshooting](../user/monitoring-and-troubleshooting)
+- [Monitoring](../user/monitoring)
 - [Audit Trail](audit-trail)
 - [API Reference](../reference/api)

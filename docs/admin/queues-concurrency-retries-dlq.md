@@ -111,7 +111,7 @@ Before increasing concurrency:
 
 ## Related pages
 
-- [Monitoring And Troubleshooting](../user/monitoring-and-troubleshooting)
+- [Monitoring](../user/monitoring)
 - [Failed-Run Diagnostics](../user/failed-run-diagnostics)
 - [Events And Redrive](events-and-redrive)
 - [Observability](../deploy/observability)

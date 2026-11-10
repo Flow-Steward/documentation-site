@@ -385,10 +385,9 @@ Clone does not change DNS or routing.
 
 If the target has a different domain, that target domain remains in place.
 Stored URLs and provider callbacks are not globally rewritten. Prefer installing
-the target with its intended final hostname; on Compact do not copy a Scalable
-`config set`/`config apply` example, because those retained-CLI commands are not
-available. Validate the supported profile-specific change process separately
-if the hostname must change later.
+the target with its intended final hostname. If the hostname must change
+later, use `config set` and `config apply` on the Docker host; a provider
+console without host Docker does not expose those commands.
 
 After checks and the traffic-switch decision, reopen **only the selected
 active target**:

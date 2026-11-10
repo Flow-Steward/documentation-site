@@ -11,6 +11,7 @@ documentation assistant to answer from Flow Steward docs.
 - [Getting Started](docs/user/getting-started): Shortest path to a first run.
 - [Core Concepts](docs/user/core-concepts): Main product objects.
 - [Feature Catalog](docs/user/feature-catalog): User-facing capability map.
+- [Troubleshooting](docs/troubleshooting): Symptom-by-symptom fixes for installation, upgrades, sign-in, limits, jobs, and integrations; doctor and diagnostics.
 
 ## User Guide
 
@@ -40,7 +41,7 @@ documentation assistant to answer from Flow Steward docs.
 - [Events And Redrive](docs/admin/events-and-redrive): Event inspection and safe redrive.
 - [Audit Trail](docs/admin/audit-trail): Where to inspect operational evidence.
 - [Queues, Concurrency, Retries, And DLQ](docs/admin/queues-concurrency-retries-dlq): Queue and failed-work operations.
-- [Monitoring And Troubleshooting](docs/user/monitoring-and-troubleshooting): Monitoring, telemetry, watchdog, and troubleshooting.
+- [Monitoring](docs/user/monitoring): Monitoring checks, event filters, telemetry, watchdog, and retention.
 
 ## Deploy & Run
 
@@ -60,7 +61,6 @@ documentation assistant to answer from Flow Steward docs.
 - [Backups And Restore](docs/deploy/backups-and-restore): Database backup, validation, restore, and drills.
 - [Storage And Artifacts](docs/deploy/storage-and-artifacts): Logs, artifacts, backups, extensions, workspaces, and object storage.
 - [Observability](docs/deploy/observability): Sentry, Prometheus, readiness, metrics, and incident evidence.
-- [Deployment Troubleshooting](docs/deploy/troubleshooting): Problem-shaped operator checks.
 - [Rollback Runbook](docs/deploy/rollback): Rollback boundaries and database restore flow.
 - [Deployment Architecture](docs/deploy/architecture): Operator-oriented runtime component map.
 
