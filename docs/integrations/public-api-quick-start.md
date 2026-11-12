@@ -7,10 +7,9 @@ description: Submit the documentation smoke workflow and follow its durable job.
 # Start And Observe A Workflow With The Public API
 
 Use the compatible provider-free workflow described in
-[First Workflow](../user/first-workflow). The linked legacy v1 download cannot
-be imported on current main. An administrator must recreate the equivalent in
-the builder, or import a reviewed v2 export with an explicit execution graph,
-then bind, review, and enable it for public API launch. Record its actual ID.
+[First Workflow](../user/first-workflow). An administrator imports the
+downloadable v2 fixture (`docs_deterministic_smoke_v2`), reviews it, and enables
+it for public API launch. Record its actual ID if the import renamed it.
 
 On 2026-10-05, the legacy `docs_deterministic_smoke_v1` downloadable fixture
 completed through the API on a fresh disposable Compact installation at source
@@ -55,7 +54,7 @@ GET /api/projects/{PROJECT_ID}/workflows/{WORKFLOW_ID}/contract
 Authorization: Bearer <FLOW_STEWARD_TOKEN>
 ```
 
-Confirm the required JSON input `payload` and required JSON output `normalized`.
+Confirm the required text input `message` and required text output `greeting`.
 
 ## Submit and capture the job ID
 
@@ -69,7 +68,7 @@ Idempotency-Key: docs-api-smoke-001
   "project_id": "<PROJECT_ID>",
   "workflow_id": "<WORKFLOW_ID>",
   "test_mode": true,
-  "inputs": {"payload": {"message": "hello"}}
+  "inputs": {"message": "hello"}
 }
 ```
 
@@ -99,7 +98,7 @@ Authorization: Bearer <FLOW_STEWARD_TOKEN>
 Use the nested `workflow_run` field as the stable integration projection.
 Wait for `workflow_run.terminal` and inspect `workflow_run.result.outputs` on
 success. The expected output is
-`workflow_run.result.outputs.normalized: {"message":"hello"}`. Assert that
+`workflow_run.result.outputs.greeting: "Hello, hello!"`. Assert that
 value as well as `workflow_run.status == "completed"`; a completed job without
 the declared output does not pass this check.
 
@@ -118,7 +117,7 @@ Representative frames include:
 ```text
 id: 1842
 event: job.state
-data: {"schema_version":"1","job_id":"job-987","project_id":"proj_42","workflow_id":"docs_deterministic_smoke_v1","status":"completed","terminal":true,"updated_at":"2026-09-17T12:00:00Z","result":{"outputs":{"normalized":{"message":"hello"}},"artifacts":{}}}
+data: {"schema_version":"1","job_id":"job-987","project_id":"proj_42","workflow_id":"docs_deterministic_smoke_v2","status":"completed","terminal":true,"updated_at":"2026-09-17T12:00:00Z","result":{"outputs":{"greeting":"Hello, hello!"},"artifacts":{}}}
 
 event: stream.error
 data: {"schema_version":"1","code":"stream_unavailable","message":"Public job stream is temporarily unavailable","retryable":true}

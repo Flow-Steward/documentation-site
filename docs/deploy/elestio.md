@@ -23,12 +23,13 @@ port mapping and volumes. Product behavior described below is supported on main;
 this does not establish that a corresponding image release has been published
 or that every behavior is present in the historical image pinned below.
 
-Before replacing the historical image, review the broker transport contract of
-the target revision. Current main defaults to `amqps://` with certificate and
-hostname verification; plaintext is allowed only by explicit, restricted local
-transport modes. A private hostname or shared VM alone does not establish that
-the template meets that contract. See
-[Installation](installation#other-providers).
+All three services share one Compose network on one VM, like the canonical
+Docker installation. The template therefore declares the same local broker
+context: RabbitMQ answers as `rabbitmq-fs` on that network, Compact sets
+`RABBITMQ_HOST=rabbitmq-fs` and `FS_RABBITMQ_TRANSPORT_MODE=compose-local`, and
+the broker publishes no host port. Do not change the broker host name or
+publish its port; any other broker needs verified `amqps`. See
+[RabbitMQ transport](../reference/environment-variables#rabbitmq-transport).
 
 Fresh GitHub-template acceptance on **2026-09-28** used Compact source
 `31652e30e9c65b16576e9a4b3d105072c24b8337`, image digest

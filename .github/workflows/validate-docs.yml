@@ -20,6 +20,8 @@ jobs:
           node-version: '22'
           cache: npm
       - run: node --test scripts/automation/*.test.mjs
+      - name: Every pinned image digest resolves
+        run: node scripts/automation/release-images.mjs check
       - run: npm ci
       - run: npm run typecheck
       - run: npm run build

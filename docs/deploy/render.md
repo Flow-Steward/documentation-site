@@ -27,18 +27,32 @@ URLs are absent. Confirm that the Blueprint supplies those settings and mounts
 writable persistent storage; the dated installation did not require a local
 shell script, manual disk-permission changes or manual password copying.
 
-Current main defaults to verified RabbitMQ TLS (`amqps://`), including certificate
-and hostname verification. Before selecting an image with this contract, confirm
-that the broker, linked-service URL and port, certificate trust, and broker
-hostname satisfy it. The dependency-wait flag does not provision broker TLS,
-and a provider-private hostname alone does not permit plaintext AMQP. Do not
-substitute a current-main image into the September template and assume that its
-historical broker configuration is sufficient. See the transport boundary in
-[Installation](installation#other-providers).
+Compact reaches RabbitMQ over Render's private network. Flow Steward refuses
+unencrypted AMQP by default, so the Blueprint declares that one broker:
+`FS_RABBITMQ_TRANSPORT_MODE=platform-private`, and `FS_RABBITMQ_PRIVATE_HOST`
+taken from the RabbitMQ service's private host, the same value as
+`RABBITMQ_HOST`. Plaintext is then allowed only to that host on port 5672.
+Render's private network spans every service in the same workspace and region,
+and Render does not document that this traffic is encrypted. If that is not
+acceptable, use a TLS broker (`amqps://`, mode `tls`) instead. See
+[RabbitMQ transport](../reference/environment-variables#rabbitmq-transport).
+The Blueprint needs a Compact image from a release that supports this mode;
+it is not compatible with images that predate it.
 
 This is the **Compact** topology. For **Scalable**, use the
 [VPS installation](installation#vps-guided-installation); the dated Render
 acceptance covered Compact only.
+
+On **2026-11-10** a fresh Blueprint instance with the `platform-private` broker
+settings and a Compact image carrying that mode reached `/health/ready` in about
+two minutes after Compact was created, and `flow-steward status` in the service
+Shell reported ready with 13 of 13 core checks. In a second fresh instance the
+same day, the first administrator was created from the one-time link in a browser,
+signed in, created a project, imported the [smoke workflow](../user/first-workflow)
+and ran it (`Hello, …!` output); after a Compact restart the same browser session,
+project, workflow and job were still there and a second run completed. Both times Compact's first deploy exited once and
+Render's automatic second deploy went live about a minute later; no action was
+needed.
 
 Fresh Blueprint acceptance on **2026-09-28** used Compact source
 `31652e30e9c65b16576e9a4b3d105072c24b8337`, image digest
@@ -79,8 +93,12 @@ managed PostgreSQL product. Plan database backups and upgrades accordingly.
 
 1. Use the [Deploy to Render button](https://render.com/deploy?repo=https%3A%2F%2Fgithub.com%2FFlow-Steward%2Fflow-steward-deploy). It targets the public configuration repository; choose its `main` branch and the root `render.yaml`. Confirm that no application-source Git connection is required.
 2. Review the three proposed services, region, plans, and disks. The dated configuration used **Frankfurt**, generated separate PostgreSQL and RabbitMQ passwords, and linked them to Compact without embedding passwords in the YAML file. Confirm those connections and `FS_COMPACT_WAIT_FOR_DEPENDENCIES=1` before deploying.
-3. Wait until PostgreSQL and RabbitMQ are running and the Compact web service is **Live**. Confirm that its health check is `/health/ready`. The first image pull can take longer than a restart; a web address appearing in the dashboard is not a readiness signal.
-4. Open the Compact service's **Logs**. Find the line beginning `Flow Steward has no administrator yet`. Privately copy the complete one-time setup URL printed there and open it to create the first administrator. The URL expires **15 minutes** after issue. Opening `/bootstrap` directly without it displays a token field because the public page does not reveal the secret.
+3. If the first sync shows `flow-steward-compact` as *canceled: another action
+   failed* while PostgreSQL and RabbitMQ were created, open the Blueprint, choose
+   **Manual sync** and approve it once. On 2026-11-10 the first sync did this
+   without an error message, and the second one created Compact.
+4. Wait until PostgreSQL and RabbitMQ are running and the Compact web service is **Live**. Confirm that its health check is `/health/ready`. The first image pull can take longer than a restart; a web address appearing in the dashboard is not a readiness signal.
+5. Open the Compact service's **Logs**. Find the line beginning `Flow Steward has no administrator yet`. Privately copy the complete one-time setup URL printed there and open it to create the first administrator. The URL expires **15 minutes** after issue. Opening `/bootstrap` directly without it displays a token field because the public page does not reveal the secret.
 
 Do not paste the setup URL into a support ticket or screenshot. It contains a
 one-time token. After creating the administrator, sign in at `/login`.
