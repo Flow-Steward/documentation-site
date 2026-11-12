@@ -29,6 +29,7 @@ const sidebars: SidebarsConfig = {
         'user/connect-an-ai-client',
         'user/core-concepts',
         'user/feature-catalog',
+        'troubleshooting',
       ],
     },
     {
@@ -73,7 +74,7 @@ const sidebars: SidebarsConfig = {
         'admin/events-and-redrive',
         'admin/audit-trail',
         'admin/queues-concurrency-retries-dlq',
-        'user/monitoring-and-troubleshooting',
+        'user/monitoring',
       ],
     },
     {
@@ -115,7 +116,6 @@ const sidebars: SidebarsConfig = {
         'deploy/backups-and-restore',
         'deploy/storage-and-artifacts',
         'deploy/observability',
-        'deploy/troubleshooting',
         'deploy/rollback',
         'deploy/architecture',
       ],

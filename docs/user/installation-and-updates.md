@@ -201,10 +201,10 @@ for a supported configuration change:
 ./flow-steward config apply --confirm
 ```
 
-On Compact the `stack` and `config` commands are refused. Rerun
-`./install.sh` for supported worker-process, profile, or host-setting changes.
-Choose the public host, ingress/TLS and file storage carefully at installation;
-these are not changed by a Compact installer rerun.
+On a Docker-host Compact installation the `config show`, `config set`,
+`config validate`, and `config apply` commands work the same way through a
+one-shot management container. The `stack` commands are refused on Compact,
+and a provider console without host Docker does not expose `config`.
 
 On either host profile, `./install.sh --setting NAME=VALUE` applies supported
 host settings and restarts the runtime. Only settings allowed by the public
@@ -358,4 +358,4 @@ unverified by this review.
 - [Upgrade Reference](../reference/upgrade)
 - [Deployment Checklist](../deploy/deployment-checklist)
 - [Backups And Restore](../deploy/backups-and-restore)
-- [Deployment Troubleshooting](../deploy/troubleshooting)
+- [Troubleshooting](../troubleshooting)

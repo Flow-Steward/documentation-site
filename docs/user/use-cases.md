@@ -137,7 +137,7 @@ Useful docs:
 
 - [Agents And Skills](agents-and-skills)
 - [Tools And MCP](tools-and-mcp)
-- [Monitoring And Troubleshooting](monitoring-and-troubleshooting)
+- [Monitoring](monitoring)
 
 ## Author a disabled workflow through MCP
 
@@ -176,7 +176,7 @@ Operators can:
 Useful docs:
 
 - [Jobs And Approvals](jobs-and-approvals)
-- [Monitoring And Troubleshooting](monitoring-and-troubleshooting)
+- [Monitoring](monitoring)
 - [MCP Reference](../reference/mcp#job-diagnostics)
 
 ## Recover stuck or interrupted work with watchdog
@@ -204,7 +204,7 @@ Why it matters:
 
 Useful docs:
 
-- [Monitoring And Troubleshooting](monitoring-and-troubleshooting#watchdog)
+- [Monitoring](monitoring#watchdog)
 - [Jobs And Approvals](jobs-and-approvals)
 - [Feature Configuration](feature-configuration#logs-retention-trash-and-watchdog)
 
@@ -257,7 +257,7 @@ Useful docs:
 
 - [Feature Configuration](feature-configuration#pii-and-security-policy)
 - [Environment Variables](../reference/environment-variables)
-- [Monitoring And Troubleshooting](monitoring-and-troubleshooting)
+- [Monitoring](monitoring)
 
 ## Copy a workflow between environments
 

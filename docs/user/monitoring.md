@@ -1,10 +1,10 @@
 ---
 sidebar_position: 12
-title: Monitoring And Troubleshooting
-description: Check system health, queues, events, and common operator issues.
+title: Monitoring
+description: Check system health, queues, events, telemetry, watchdog, and retention.
 ---
 
-# Monitoring And Troubleshooting
+# Monitoring
 
 Use monitoring when Flow Steward is running but work is slow, blocked, failing,
 or not visible where expected.
@@ -34,17 +34,7 @@ for a bug report.
 
 ## Common issues
 
-| Symptom | Check |
-|---|---|
-| Job is stuck awaiting approval | Open the job approval packet and decide it if authorized. |
-| Job failed after a connector step | Check extension health, tool credentials, and job messages. |
-| Workflow cannot query data | Confirm dataset is enabled, available to the project, and its resource selection includes the resource. |
-| MCP tool is missing | Sync the MCP connector and check the allowlist. |
-| User cannot perform an action | Check role, active status, account scope, and project/workflow scope. |
-| Project context is outdated | Review project rules and assigned connections; public KB editing and reindex commands are unavailable. |
-| Notification did not send | Check project notification routes, extension health, and event dispatch state. |
-| Job appears stuck or orphaned | Review job runtime journal, then inspect watchdog scan results. |
-| Storage is growing too quickly | Review retention settings, trash, artifacts, and log retention. |
+Symptom-by-symptom fixes live on one page: [Troubleshooting](../troubleshooting).
 
 ## Event filters
 

@@ -149,7 +149,7 @@ For an incident, collect:
 
 ## Related pages
 
-- [Monitoring And Troubleshooting](../user/monitoring-and-troubleshooting)
+- [Monitoring](../user/monitoring)
 - [Events And Redrive](../admin/events-and-redrive)
 - [Queues, Concurrency, Retries, And DLQ](../admin/queues-concurrency-retries-dlq)
 - [Operations Internals](../developer/operations-internals)
