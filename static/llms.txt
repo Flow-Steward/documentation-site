@@ -56,6 +56,7 @@ documentation assistant to answer from Flow Steward docs.
 - [Installer Reference](docs/reference/installer): `install.sh` commands and flags.
 - [Upgrade Reference](docs/reference/upgrade): Upgrade flow and checks.
 - [Deployment Checklist](docs/deploy/deployment-checklist): Production-readiness preflight.
+- [Host Settings](docs/reference/host-settings): Every setting an operator changes, by the name `config set` accepts.
 - [Environment Variables](docs/reference/environment-variables): Environment variable catalog.
 - [Configuration](docs/reference/configuration): Configuration files and backend profiles.
 - [Backups And Restore](docs/deploy/backups-and-restore): Database backup, validation, restore, and drills.
@@ -97,6 +98,7 @@ documentation assistant to answer from Flow Steward docs.
 - [CLI Reference](docs/reference/cli): Command groups and examples.
 - [API Reference](docs/reference/api): API groups, schema surfaces, health, and metrics.
 - [Configuration](docs/reference/configuration): Configuration files and backend profiles.
+- [Host Settings](docs/reference/host-settings): Every setting an operator changes, by the name `config set` accepts.
 - [Environment Variables](docs/reference/environment-variables): Environment variable catalog.
 - [MCP Reference](docs/reference/mcp): Built-in MCP tool groups and usage order.
 - [Workflow Step Kinds](docs/reference/workflow-step-kinds): Step kinds, outcomes, containers and placement reference.
