@@ -141,6 +141,8 @@ stored `step_kind` names and their key settings.
 | | Hook | A place where a project adds its own steps. Offered only to workflow authors, see [Hooks](#hooks). |
 | Canvas | Note | Text and images on the canvas. Saved separately from structure. |
 
+For Agent and Template steps, follow [Compose reusable agent behavior](./agents-and-skills#compose-reusable-agent-behavior): keep reusable methods in skills, pass changing values as parameters, and use Template to assemble context or render text.
+
 There is no code step. To run your own logic, build it as an extension action
 and call it with **Extension tools**; see
 [Custom code](../reference/workflow-step-kinds#custom-code-code-step).
