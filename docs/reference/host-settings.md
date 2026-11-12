@@ -12,9 +12,9 @@ error messages and this page all print it the same way, and
 `flow-steward config set NAME=VALUE` accepts it as printed. Several settings are
 separated by spaces. A change is staged until `flow-steward config apply`.
 
-On **Compact**, `config` is not available: a host setting is set with
-`./install.sh --setting NAME=VALUE`, which keeps the installation, records the
-setting and restarts the runtime.
+On a Docker host, **Compact and Scalable** both support `config show`,
+`config set`, `config validate` and `config apply`. Compact uses a one-shot
+management container. Provider consoles without host Docker do not expose config.
 
 ## Example: Docling on an internal address
 
@@ -28,7 +28,8 @@ flow-steward config set FS_ALLOW_PRIVATE_REMOTE_URLS=1
 flow-steward config apply
 
 # Compact, from the installation folder
-./install.sh --setting FS_ALLOW_PRIVATE_REMOTE_URLS=1
+./flow-steward config set FS_ALLOW_PRIVATE_REMOTE_URLS=1
+./flow-steward config apply
 ```
 
 Then save the Docling connection again and run the workflow.
@@ -38,6 +39,46 @@ Then save the Docling connection again and run the workflow.
 Environment settings an operator may set by name. Secrets and values the
 installer manages are never set this way.
 
+### `FS_AGENT_FILE_INLINE_MAX_CHARS`
+
+Characters of text files an agent receives whole in its task message, summed over the step's files; a file that does not fit is read in pages, and 0 pages every file (range 0 .. 2000000).
+
+- Default: `2000000`
+- Accepts: text
+- Scalable: `flow-steward config set FS_AGENT_FILE_INLINE_MAX_CHARS=VALUE`, then `flow-steward config apply`
+- Compact (Docker host): `./flow-steward config set FS_AGENT_FILE_INLINE_MAX_CHARS=VALUE`, then `./flow-steward config apply`
+- Reset to the default: `FS_AGENT_FILE_INLINE_MAX_CHARS=` (an empty value)
+
+### `FS_AGENT_FILE_PAGE_CHARS`
+
+Characters one read_agent_file page returns for a text file too large to attach whole (range 1000 .. 200000).
+
+- Default: `20000`
+- Accepts: text
+- Scalable: `flow-steward config set FS_AGENT_FILE_PAGE_CHARS=VALUE`, then `flow-steward config apply`
+- Compact (Docker host): `./flow-steward config set FS_AGENT_FILE_PAGE_CHARS=VALUE`, then `./flow-steward config apply`
+- Reset to the default: `FS_AGENT_FILE_PAGE_CHARS=` (an empty value)
+
+### `FS_AGENT_TEXT_FILE_EXTENSIONS`
+
+Comma-separated agent text-file suffixes; an empty value uses the default. Upload extension and MIME allowlists are configured separately.
+
+- Default: `txt,md,markdown,json,xml,csv,tsv,yaml,yml,rtf`
+- Accepts: text
+- Scalable: `flow-steward config set FS_AGENT_TEXT_FILE_EXTENSIONS=VALUE`, then `flow-steward config apply`
+- Compact (Docker host): `./flow-steward config set FS_AGENT_TEXT_FILE_EXTENSIONS=VALUE`, then `./flow-steward config apply`
+- Reset to the default: `FS_AGENT_TEXT_FILE_EXTENSIONS=` (an empty value)
+
+### `FS_AGENT_TOOL_RESULT_MAX_CHARS`
+
+Characters of one agent tool result the model receives; longer results are cut. File pages use FS_AGENT_FILE_PAGE_CHARS instead (range 1000 .. 200000).
+
+- Default: `6000`
+- Accepts: text
+- Scalable: `flow-steward config set FS_AGENT_TOOL_RESULT_MAX_CHARS=VALUE`, then `flow-steward config apply`
+- Compact (Docker host): `./flow-steward config set FS_AGENT_TOOL_RESULT_MAX_CHARS=VALUE`, then `./flow-steward config apply`
+- Reset to the default: `FS_AGENT_TOOL_RESULT_MAX_CHARS=` (an empty value)
+
 ### `FS_ALLOW_PRIVATE_REMOTE_URLS`
 
 Optional override to permit private remote extension URLs, private MCP connector base URLs and private or loopback LLM provider base URLs (link-local and metadata addresses stay refused for LLM providers).
@@ -45,8 +86,18 @@ Optional override to permit private remote extension URLs, private MCP connector
 - Default: `0`
 - Accepts: `0`, `1`
 - Scalable: `flow-steward config set FS_ALLOW_PRIVATE_REMOTE_URLS=1`, then `flow-steward config apply`
-- Compact: `./install.sh --setting FS_ALLOW_PRIVATE_REMOTE_URLS=1` from the installation folder; it keeps the installation and restarts the runtime
+- Compact (Docker host): `./flow-steward config set FS_ALLOW_PRIVATE_REMOTE_URLS=1`, then `./flow-steward config apply`
 - Reset to the default: `FS_ALLOW_PRIVATE_REMOTE_URLS=` (an empty value)
+
+### `FS_MCP_HTTP_RESPONSE_MAX_BYTES`
+
+Maximum remote MCP HTTP response body, including JSON and SSE envelopes, in bytes. Default 4 MiB; range 1024 .. 1073741824. Invalid text uses the default; numeric values clamp to the supported range. Apply the host setting to restart runtimes.
+
+- Default: `4194304`
+- Accepts: text
+- Scalable: `flow-steward config set FS_MCP_HTTP_RESPONSE_MAX_BYTES=VALUE`, then `flow-steward config apply`
+- Compact (Docker host): `./flow-steward config set FS_MCP_HTTP_RESPONSE_MAX_BYTES=VALUE`, then `./flow-steward config apply`
+- Reset to the default: `FS_MCP_HTTP_RESPONSE_MAX_BYTES=` (an empty value)
 
 ## Installation settings
 
@@ -60,8 +111,8 @@ Production runtime topology.
 
 - Default: `scalable`
 - Accepts: `compact`, `scalable`
-- Scalable: `flow-steward config set deployment_profile=compact`, then `flow-steward config apply`
-- Compact: chosen at installation with `./install.sh --deployment-profile compact`; an installed Compact keeps it
+- Scalable: `flow-steward config set deployment_profile=scalable`, then `flow-steward config apply`
+- Compact (Docker host): `./flow-steward config set deployment_profile=scalable`, then `./flow-steward config apply`
 
 ### `runtime_http_port`
 
@@ -70,7 +121,7 @@ Single HTTP backend port exposed by Compact.
 - Default: `8080`
 - Accepts: an integer
 - Scalable: `flow-steward config set runtime_http_port=8080`, then `flow-steward config apply`
-- Compact: chosen at installation with `./install.sh --runtime-http-port 8080`; an installed Compact keeps it
+- Compact (Docker host): `./flow-steward config set runtime_http_port=8080`, then `./flow-steward config apply`
 
 ### `worker_processes`
 
@@ -79,7 +130,7 @@ Compact only: queue-worker processes inside the one runtime container, applied o
 - Default: `2`
 - Accepts: an integer
 - Scalable: `flow-steward config set worker_processes=2`, then `flow-steward config apply`
-- Compact: `./install.sh --worker-processes 2`, also on an installed Compact
+- Compact (Docker host): `./flow-steward config set worker_processes=2`, then `./flow-steward config apply`
 
 ### `worker_replicas`
 
@@ -88,7 +139,7 @@ Scalable only: fs-worker container replicas. Compact scales with --worker-proces
 - Default: `1`
 - Accepts: an integer
 - Scalable: `flow-steward config set worker_replicas=3`, then `flow-steward config apply`
-- Compact: not set by the operator
+- Compact: use `worker_processes`; this setting is Scalable-only
 
 ### `file_storage`
 
@@ -96,8 +147,8 @@ Artifact storage backend; profile changes preserve this value.
 
 - Default: `bundled`
 - Accepts: `local_fs`, `bundled`, `external_s3`
-- Scalable: `flow-steward config set file_storage=local_fs`, then `flow-steward config apply`
-- Compact: chosen at installation with `./install.sh --file-storage local_fs`; an installed Compact keeps it
+- Scalable: `flow-steward config set file_storage=bundled`, then `flow-steward config apply`
+- Compact (Docker host): `./flow-steward config set file_storage=bundled`, then `./flow-steward config apply`
 
 ### `ingress_mode`
 
@@ -106,7 +157,7 @@ Component that owns public routing and TLS.
 - Default: `bundled_traefik`
 - Accepts: `bundled_traefik`, `external_traefik`, `external_proxy`, `platform`
 - Scalable: `flow-steward config set ingress_mode=bundled_traefik`, then `flow-steward config apply`
-- Compact: chosen at installation with `./install.sh --ingress-mode bundled_traefik`; an installed Compact keeps it
+- Compact (Docker host): `./flow-steward config set ingress_mode=bundled_traefik`, then `./flow-steward config apply`
 
 ### `public_host`
 
@@ -115,7 +166,7 @@ Public DNS name or IP address used to reach Flow Steward. Together with Public p
 - Default: `localhost`
 - Accepts: text
 - Scalable: `flow-steward config set public_host=flow.example.test`, then `flow-steward config apply`
-- Compact: chosen at installation with `./install.sh --public-host flow.example.test`; an installed Compact keeps it
+- Compact (Docker host): `./flow-steward config set public_host=flow.example.test`, then `./flow-steward config apply`
 
 ### `public_port`
 
@@ -124,7 +175,7 @@ Public TCP and UDP port exposed by the selected TLS mode. HTTPS port 443 is omit
 - Default: `8099`
 - Accepts: an integer
 - Scalable: `flow-steward config set public_port=443`, then `flow-steward config apply`
-- Compact: chosen at installation with `./install.sh --public-port 443`; an installed Compact keeps it
+- Compact (Docker host): `./flow-steward config set public_port=443`, then `./flow-steward config apply`
 
 ### `tls_mode`
 
@@ -133,7 +184,7 @@ TLS termination mode for the public Flow Steward endpoint.
 - Default: `local`
 - Accepts: `local`, `self_signed`, `provided`, `acme`, `reverse_proxy`, `external_resolver`, `external_certificate`, `platform_managed`
 - Scalable: `flow-steward config set tls_mode=local`, then `flow-steward config apply`
-- Compact: chosen at installation with `./install.sh --tls-mode local`; an installed Compact keeps it
+- Compact (Docker host): `./flow-steward config set tls_mode=local`, then `./flow-steward config apply`
 
 ### `reverse_proxy_backend_host`
 
@@ -142,7 +193,7 @@ Backend host reached by the configured reverse proxy.
 - Default: `127.0.0.1`
 - Accepts: text
 - Scalable: `flow-steward config set reverse_proxy_backend_host=127.0.0.1`, then `flow-steward config apply`
-- Compact: chosen at installation with `./install.sh --reverse-proxy-backend-host 127.0.0.1`; an installed Compact keeps it
+- Compact (Docker host): `./flow-steward config set reverse_proxy_backend_host=127.0.0.1`, then `./flow-steward config apply`
 
 ### `reverse_proxy_backend_port`
 
@@ -151,7 +202,7 @@ Backend TCP port reached by the configured reverse proxy.
 - Default: `18099`
 - Accepts: an integer
 - Scalable: `flow-steward config set reverse_proxy_backend_port=8099`, then `flow-steward config apply`
-- Compact: chosen at installation with `./install.sh --reverse-proxy-backend-port 8099`; an installed Compact keeps it
+- Compact (Docker host): `./flow-steward config set reverse_proxy_backend_port=8099`, then `./flow-steward config apply`
 
 ### `reverse_proxy_mcp_port`
 
@@ -160,7 +211,7 @@ Scalable MCP backend port for a host reverse proxy.
 - Default: `18100`
 - Accepts: an integer
 - Scalable: `flow-steward config set reverse_proxy_mcp_port=18100`, then `flow-steward config apply`
-- Compact: chosen at installation with `./install.sh --reverse-proxy-mcp-port 18100`; an installed Compact keeps it
+- Compact (Docker host): `./flow-steward config set reverse_proxy_mcp_port=18100`, then `./flow-steward config apply`
 
 ### `proxy_placement`
 
@@ -169,7 +220,7 @@ Location of an existing Nginx or Apache proxy.
 - Default: `host`
 - Accepts: `host`, `docker`
 - Scalable: `flow-steward config set proxy_placement=host`, then `flow-steward config apply`
-- Compact: chosen at installation with `./install.sh --proxy-placement host`; an installed Compact keeps it
+- Compact (Docker host): `./flow-steward config set proxy_placement=host`, then `./flow-steward config apply`
 
 ### `proxy_kind`
 
@@ -178,7 +229,7 @@ Existing reverse-proxy implementation.
 - Default: `nginx`
 - Accepts: `nginx`, `apache`
 - Scalable: `flow-steward config set proxy_kind=nginx`, then `flow-steward config apply`
-- Compact: chosen at installation with `./install.sh --proxy-kind nginx`; an installed Compact keeps it
+- Compact (Docker host): `./flow-steward config set proxy_kind=nginx`, then `./flow-steward config apply`
 
 ### `proxy_trusted_ips`
 
@@ -187,7 +238,7 @@ Comma-separated immediate proxy CIDRs; wildcard networks are rejected.
 - Default: `127.0.0.1/32, ::1/128`
 - Accepts: text
 - Scalable: `flow-steward config set proxy_trusted_ips=127.0.0.1/32,::1/128`, then `flow-steward config apply`
-- Compact: chosen at installation with `./install.sh --proxy-trusted-ips 127.0.0.1/32,::1/128`; an installed Compact keeps it
+- Compact (Docker host): `./flow-steward config set proxy_trusted_ips=127.0.0.1/32,::1/128`, then `./flow-steward config apply`
 
 ### `traefik_network`
 
@@ -196,7 +247,7 @@ External Docker network used by an existing Traefik.
 - Default: `(empty)`
 - Accepts: text
 - Scalable: `flow-steward config set traefik_network=traefik`, then `flow-steward config apply`
-- Compact: chosen at installation with `./install.sh --traefik-network traefik`; an installed Compact keeps it
+- Compact (Docker host): `./flow-steward config set traefik_network=traefik`, then `./flow-steward config apply`
 
 ### `traefik_https_entrypoint`
 
@@ -205,7 +256,7 @@ Existing Traefik HTTPS entrypoint name.
 - Default: `websecure`
 - Accepts: text
 - Scalable: `flow-steward config set traefik_https_entrypoint=websecure`, then `flow-steward config apply`
-- Compact: chosen at installation with `./install.sh --traefik-https-entrypoint websecure`; an installed Compact keeps it
+- Compact (Docker host): `./flow-steward config set traefik_https_entrypoint=websecure`, then `./flow-steward config apply`
 
 ### `traefik_http_entrypoint`
 
@@ -214,7 +265,7 @@ Existing Traefik HTTP entrypoint name.
 - Default: `web`
 - Accepts: text
 - Scalable: `flow-steward config set traefik_http_entrypoint=web`, then `flow-steward config apply`
-- Compact: chosen at installation with `./install.sh --traefik-http-entrypoint web`; an installed Compact keeps it
+- Compact (Docker host): `./flow-steward config set traefik_http_entrypoint=web`, then `./flow-steward config apply`
 
 ### `traefik_cert_resolver`
 
@@ -223,7 +274,7 @@ Existing resolver used only by external_resolver TLS.
 - Default: `(empty)`
 - Accepts: text
 - Scalable: `flow-steward config set traefik_cert_resolver=myresolver`, then `flow-steward config apply`
-- Compact: chosen at installation with `./install.sh --traefik-cert-resolver myresolver`; an installed Compact keeps it
+- Compact (Docker host): `./flow-steward config set traefik_cert_resolver=myresolver`, then `./flow-steward config apply`
 
 ### `proxy_network`
 
@@ -232,7 +283,7 @@ External Docker network used by a container reverse proxy.
 - Default: `(empty)`
 - Accepts: text
 - Scalable: `flow-steward config set proxy_network=proxy`, then `flow-steward config apply`
-- Compact: chosen at installation with `./install.sh --proxy-network proxy`; an installed Compact keeps it
+- Compact (Docker host): `./flow-steward config set proxy_network=proxy`, then `./flow-steward config apply`
 
 ### `acme_contact`
 
@@ -241,7 +292,7 @@ Contact email for bundled ACME registration.
 - Default: `(empty)`
 - Accepts: text
 - Scalable: `flow-steward config set acme_contact=ops@example.com`, then `flow-steward config apply`
-- Compact: chosen at installation with `./install.sh --acme-contact ops@example.com`; an installed Compact keeps it
+- Compact (Docker host): `./flow-steward config set acme_contact=ops@example.com`, then `./flow-steward config apply`
 
 ### `acme_directory_url`
 
@@ -250,7 +301,7 @@ Explicit ACME CA directory URL.
 - Default: `(empty)`
 - Accepts: text
 - Scalable: `flow-steward config set acme_directory_url=https://acme-v02.api.letsencrypt.org/directory`, then `flow-steward config apply`
-- Compact: chosen at installation with `./install.sh --acme-directory-url https://acme-v02.api.letsencrypt.org/directory`; an installed Compact keeps it
+- Compact (Docker host): `./flow-steward config set acme_directory_url=https://acme-v02.api.letsencrypt.org/directory`, then `./flow-steward config apply`
 
 ### `extension_installer_origin`
 
@@ -259,7 +310,7 @@ Validated internal HTTP origin for the installer role.
 - Default: `http://fs-extension-installer:8099`
 - Accepts: text
 - Scalable: `flow-steward config set extension_installer_origin=http://fs-extension-installer:8099`, then `flow-steward config apply`
-- Compact: chosen at installation with `./install.sh --extension-installer-origin http://fs-extension-installer:8099`; an installed Compact keeps it
+- Compact (Docker host): `./flow-steward config set extension_installer_origin=http://fs-extension-installer:8099`, then `./flow-steward config apply`
 
 ### `certificate_path`
 
@@ -268,7 +319,7 @@ Path to the operator-provided TLS certificate chain.
 - Default: `.ssl/cert.pem`
 - Accepts: a path
 - Scalable: `flow-steward config set certificate_path=.ssl/cert.pem`, then `flow-steward config apply`
-- Compact: chosen at installation with `./install.sh --certificate-path .ssl/cert.pem`; an installed Compact keeps it
+- Compact (Docker host): `./flow-steward config set certificate_path=.ssl/cert.pem`, then `./flow-steward config apply`
 
 ### `private_key_path`
 
@@ -277,4 +328,4 @@ Path to the operator-provided TLS certificate private key.
 - Default: `.ssl/key.pem`
 - Accepts: a path
 - Scalable: `flow-steward config set private_key_path=.ssl/key.pem`, then `flow-steward config apply`
-- Compact: chosen at installation with `./install.sh --private-key-path .ssl/key.pem`; an installed Compact keeps it
+- Compact (Docker host): `./flow-steward config set private_key_path=.ssl/key.pem`, then `./flow-steward config apply`
