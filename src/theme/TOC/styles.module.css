@@ -1,0 +1,14 @@
+.tableOfContents { max-height: calc(100vh - 108px); overflow-y: auto; position: sticky; top: 84px; padding-top: 4px; }
+.title { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; color: var(--ink-secondary, #3c4448); font-size: 13px; font-weight: 500; line-height: 1.4; }
+.title svg { flex: none; }
+.navigation { position: relative; }
+.navigation :global(.table-of-contents) { padding: 0; border: 0; font-size: 14px; }
+.navigation :global(ul) { list-style: none; margin: 0; padding-left: 12px; }
+.navigation :global(li) { margin: 0; }
+.navigation :global(.table-of-contents__link) { display: block; padding: 6px 0 6px 16px; color: var(--ink-tertiary, #656d72); font-size: 14px; line-height: 1.4; transition: color .2s ease; }
+.navigation :global(.table-of-contents__link:hover), .navigation :global(.table-of-contents__link--active) { color: var(--ink, #000509); }
+.rail { position: absolute; left: 0; top: 0; overflow: visible; pointer-events: none; }
+.rail path { fill: none; stroke: var(--border-default, #d4d8da); stroke-width: 1; stroke-linejoin: round; }
+.activeRail { position: absolute; left: -1px; top: 0; width: 2px; border-radius: 2px; background: var(--ifm-color-primary, #1e6251); pointer-events: none; transition: transform .2s ease, height .2s ease; }
+@media (max-width: 1179.98px) { .tableOfContents { display: none; } }
+@media (prefers-reduced-motion: reduce) { .activeRail, .navigation :global(.table-of-contents__link) { transition: none; } }
