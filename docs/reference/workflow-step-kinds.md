@@ -37,6 +37,8 @@ Availability in a published release has not been verified.
 | Stop · success | `stop_success` | End the run successfully and return the outputs. | Optional message. |
 | Stop · fail | `stop_fail` | End the run as failed. | Optional message. |
 
+An Agent step runs its agent's base skill (or, with no base skill set, the first bound skill); a step stored with an explicit `skill` runs that skill instead. The agent's other skills do not run in that step. Use Template for dynamic text assembly; keep reusable behavioral instructions in skills. See [Compose reusable agent behavior](../user/agents-and-skills#compose-reusable-agent-behavior) for the intended division of responsibilities.
+
 These twenty kinds are the complete list. Validation refuses any other
 `step_kind` (`workflow.step.kind_unsupported`); a step stored without a kind is
 an `agent` step.

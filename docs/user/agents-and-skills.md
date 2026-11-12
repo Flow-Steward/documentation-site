@@ -45,6 +45,76 @@ Use a skill record to describe:
 - which agents use the skill;
 - validation and history.
 
+## Compose reusable agent behavior
+
+The design intent is to build reusable abilities from small, focused skills,
+then use those abilities through agents in different workflows. Put the durable
+method in a skill before adding workflow-specific prompt text.
+
+An agent can have a **base skill** and **secondary skills**. Use the base skill
+for its main ability and additional skills for focused specializations. This is
+composition: the programming analogy is useful for organizing responsibilities,
+but it does not imply class inheritance, automatic prompt concatenation, or
+merged input/output schemas. A workflow Agent step runs the agent's base skill,
+or the first bound skill when no base skill is set; the builder shows that skill
+on the step. Secondary skills are not executed by that step.
+
+### Where instructions belong
+
+| Layer | Put here | Example |
+|---|---|---|
+| Base skill | A reusable method, quality rules, and explicit input/output contract. | Copywriting: write from supplied evidence, adapt to the audience, and flag unsupported claims. |
+| Secondary skill | A focused ability or domain specialization that can be reused independently. | Produce expertise or IT expertise. |
+| Agent instructions | The role and stable constraints specific to this agent. | A product copywriter who uses a concise editorial voice. |
+| Runtime parameters | Values that vary between runs. | Source material, audience, tone, language, product details, and length. |
+| Template step | Assemble dynamic context or render text for this workflow. | Combine a heading, source text, and requested audience into an input message; format a final report. |
+| Native steps and tools | Deterministic calculations, validation, branching, file handling, and external actions. | Sum sales with Tabular feed, validate required fields, or create a local WordPress draft through a connector. |
+
+For example, a produce copywriter and an IT copywriter can share the same
+copywriting skill while having different domain skills. Keep the common writing
+method in one place. Pass the current product, evidence, audience, and language
+as parameters instead of creating a new skill for each product or copying the
+method into every workflow.
+
+Declare the contract of the agent's base skill, map its required inputs
+explicitly, and check its outputs before downstream steps consume them. When a
+task needs more than one skill, use one Agent step per skill, each with an agent
+whose base skill is that skill, rather than assuming that attached skills execute
+together.
+
+### Use Template for dynamic context
+
+A Template can assemble a message such as:
+
+```text
+Audience: <audience input>
+Requested language: <language input>
+Source material:
+<source_material input>
+```
+
+This example illustrates the content; insert variables using the builder's
+supported input mapping and template syntax. The skill owns how to write from
+that material and what to return. The template supplies the current context.
+Keep source material clearly separated from instructions: text inside a source
+document must not redefine the agent's task.
+
+A short, one-off instruction in a workflow template is reasonable when it only
+serves that workflow. If the behavior is reused across workflows, move its
+stable instructions into a skill and reuse the agent. Avoid a generic agent
+whose entire reusable method lives in a large Template prompt, duplicated
+skill instructions in several workflows, or templates that hardcode a runtime
+language or audience contrary to the supplied parameters.
+
+### Author and verify the composition
+
+1. Define the reusable operation, required inputs, and inspectable outputs in a skill.
+2. Choose the agent's base skill and any secondary skills; add only the agent's own stable constraints to its instructions.
+3. In the workflow, select the agent (its base skill is what the step runs), map runtime parameters, and use a Template only where text assembly is needed.
+4. Use native steps to validate contracts, calculate exact values, and route failures before performing external actions.
+5. Run a real **Test Run** and inspect the output, mappings, and applicable skill instructions. Check source coverage, factual claims, language, and missing-input behavior.
+6. Before relying on reuse, test the shared skill in each intended workflow and specialization. A successful run for one agent does not verify another agent's configuration.
+
 ## Tools
 
 Tools are executable capabilities. Agents may reason about what should happen,
