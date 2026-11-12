@@ -361,6 +361,99 @@ Good contracts make explicit workflow launches, `Test Run`, MCP calls, and neste
 invocation safer because the UI can generate the right fields and the runtime
 can validate mappings earlier.
 
+## Reports
+
+A Template step with `format: report` builds a structured report for people to
+read instead of a text. The workflow returns it as an output, and the job page
+and connected AI chats show it as a formatted document.
+
+[![A finished report in the MCP Apps report viewer: metrics, a table, a bar chart and a section](/img/screenshots/2026-11-08/report-viewer.png)](/img/screenshots/2026-11-08/report-viewer.png)
+
+*The report viewer showing the sample sales report from the product's test fixtures, captured in a test MCP Apps host on 2026-11-08. Reports with charts show in the viewer from 0.9.13.*
+
+### What a report can hold
+
+| Component | Shows |
+|---|---|
+| `text` | A heading or a paragraph; literal text mixed with bound values. |
+| `metric` | One large figure with a label and an optional comparison, such as *vs previous week: −4.2 %*. Consecutive metrics share one grid. |
+| `table` | Rows of one dataset with a caption, chosen columns and a text for an empty table. |
+| `chart` | A `line` or `bar` chart of one dataset, up to 10 series. **Show data** under it lists the same values as a table. |
+| `section` | A titled group of other components, nested up to four levels. |
+
+Every bound value has an explicit format: `text`, `boolean` (localized yes/no),
+`number`, `currency` (an ISO 4217 code such as `EUR`; no conversion), `percent`
+(`0.18` is 18 %), `date` or `datetime`. Numbers take optional
+`minimum_fraction_digits` and `maximum_fraction_digits`. The report's `locale`
+and `time_zone` fix how it looks for every viewer.
+
+### Build one
+
+1. **Prepare the data in earlier steps.** A report shows data as given: totals,
+   sorting and filtering belong in Transform, dataset queries or other steps.
+2. **Add a Template step and choose the report format.** Declare its inputs
+   (local name, type, required, source) as for a text template. A metric or
+   text value binds to one input and an optional path inside it; a table or
+   chart reads a dataset, an array of row objects from one input.
+3. **Return it.** Set the step's `result_target` to `state.outputs.<name>`. In
+   the workflow's interface declare `<name>` as a required output of type
+   `object` and name it as the report output (`report_output`). AI agents set
+   both with the `update_interface` operation of `workflow_apply_changes`.
+4. **Run the workflow.** The finished job shows the report in its Result.
+
+A short definition:
+
+```json
+{
+  "schema_version": 1,
+  "title": "Weekly sales",
+  "locale": "en-US",
+  "time_zone": "Europe/Berlin",
+  "datasets": [{"id": "regions", "source": {"input": "regions"}}],
+  "components": [
+    {"id": "revenue", "type": "metric", "label": "Revenue",
+     "value": {"input": "kpis", "path": "revenue"},
+     "format": {"type": "currency", "currency": "EUR"},
+     "comparison": {"label": "vs previous week",
+                    "value": {"input": "kpis", "path": "revenue_change"},
+                    "format": {"type": "percent", "maximum_fraction_digits": 1}}},
+    {"id": "by_region", "type": "table", "caption": "Revenue by region",
+     "dataset": "regions", "empty_text": "No sales this week.",
+     "columns": [
+       {"id": "region", "field": "region", "label": "Region", "format": {"type": "text"}},
+       {"id": "revenue", "field": "revenue", "label": "Revenue",
+        "format": {"type": "currency", "currency": "EUR"}}]}
+  ]
+}
+```
+
+### Values and errors
+
+- `0`, `false` and an empty table are values. A `null` shows as `—`. A missing
+  value uses the binding's `default`, or fails the step.
+- A value of the wrong type fails the step with the field that broke it; a
+  number written as text is an error, not a number
+  (`Format 'number' needs a number, got string`).
+- Nothing is cut to fit. A report over a [limit](../reference/limits-and-file-formats#workflow-reports)
+  fails the step.
+- A report holds no HTML, scripts, styles, chart-library options or URLs.
+
+### Where the report appears
+
+- **Job page.** The run's Result shows the report first, with the other outputs
+  below it.
+- **AI chat over MCP.** The [`workflow_run_report`](../reference/mcp#job-diagnostics)
+  tool shows the report in the chat client's report viewer when the client
+  supports MCP Apps. The AI model itself receives only a short summary (title,
+  summary text and row counts), never the rows. Clients without
+  a viewer get the same summary.
+- **API.** `GET /api/jobs/{job_id}/workflow-report` returns `model` (job state
+  and the summary) and `snapshot` (the whole report, or `null` while the run is
+  going or when it returned none).
+
+Job events, step messages and the job diagnostics an AI agent reads carry only
+the short summary of a report.
+
 ## Groups, loops and hooks
 
 There are no phases. Steps that belong together go into a **Group** (run once,

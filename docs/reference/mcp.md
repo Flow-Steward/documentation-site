@@ -198,6 +198,7 @@ Enable it deliberately before normal execution.
 | `job_list(project_id="", workflow_id="", status="", group_by="", search="", page=1, per_page=25)` | List scoped jobs. `group_by="attention"` groups them for triage and pages like the plain list; `has_more=true` means the groups hold only this page of `total` runs. |
 | `job_approvals_pending(page=1, per_page=25)` | Find pending approvals in the current scope, one page at a time (`per_page` at most 200); `total` counts the whole queue. Failures remain errors. |
 | `job_result(job_id, include_messages_limit=100, include_logs_limit=50)` | Read the final or partial result. `completed` is true only for a successful run; `terminal` and `outcome` say how it ended or where it stands; `truncated` flags lists cut by the limits. |
+| `workflow_run_report(job_id, wait_seconds=0)` | Show the [report](../user/workflows#reports) a run returned. Clients that support MCP Apps show it in their report viewer; the model receives only its title, summary text and counts. `wait_seconds` (0–30) waits for a running job; state `pending` means call again, `no_report` means the run returned none. Needs `jobs.read`. |
 | `job_status` | Read current job status. |
 | `job_runtime_journal` | Read runtime journal. |
 | `job_decision_overrides` | Read durable decision overrides applied to the job. |

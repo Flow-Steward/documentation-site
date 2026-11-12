@@ -25,7 +25,7 @@ Availability in a published release has not been verified.
 | Tabular feed | `tabular_feed` | Process CSV, TSV, JSON, NDJSON, Parquet or XLSX feeds without loading all rows into state. | Operation, input, actions, result target. |
 | DataSet | `dataset_query` | Run a saved dataset query. | Query template, params, row limit, result target. |
 | File from base64 | `file_from_base64` | Turn base64 data into a file artifact. | Base64 source, file name, content type, file handle target, size limit. |
-| Template | `template` | Render one text from declared inputs. | Text, format, inputs, result target. |
+| Template | `template` | Render one text from declared inputs, or with `format: report` a structured [report](../user/workflows#reports). | Text or report definition, format, inputs, result target. |
 | Collect | `collect` | Add one value to an existing list or object. For each body only. | Target, source, mode (`append` or `set_key`), key. |
 | If | `if` | Branch on a condition. | Selector, operator, value; routes `true` and `false`. |
 | Switch | `switch` | Route by value to one of several cases. | Selector, cases with a stable `case_id`; routes each `case` and `default`. |
