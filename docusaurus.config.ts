@@ -65,7 +65,9 @@ const config: Config = {
   themeConfig: {
     image: 'img/logo.svg',
     colorMode: {
-      respectPrefersColorScheme: true,
+      defaultMode: 'light',
+      disableSwitch: true,
+      respectPrefersColorScheme: false,
     },
     navbar: {
       title: 'Flow Steward',
@@ -173,7 +175,7 @@ const config: Config = {
       copyright: `Copyright © ${new Date().getFullYear()} Flow Steward contributors. Built with Docusaurus.`,
     },
     prism: {
-      theme: prismThemes.github,
+      theme: prismThemes.dracula,
       darkTheme: prismThemes.dracula,
     },
   } satisfies Preset.ThemeConfig,
