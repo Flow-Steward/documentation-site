@@ -63,6 +63,39 @@ including Apache, Nginx and Traefik discovery, use the
 [Platform Deployment](platforms) for shared provider runtime requirements and
 [Diagnostics and Migration](diagnostics-and-migration) for doctor and Clone.
 
+## Install with a coding agent
+
+Use the same prompt with Claude Code, Codex, Cursor or Gemini CLI. Paste the
+complete block below into your coding agent. It reuses an existing installation
+and MCP connection; the reference links are only for missing context.
+
+```text
+Help me install Flow Steward and connect this coding agent over MCP.
+
+Use what you already know about my environment. Reuse any existing
+installation, checkout or working MCP connection. Ask only for
+missing information.
+
+For a new installation, use the latest published stable release
+and check its prerequisites: Git, curl, Docker Engine with Linux
+containers, Docker Compose v2 and Bash.
+
+Let me complete first-administrator setup and authorization when
+needed. Configure credentials locally.
+
+Verify the MCP connection with a read-only project_list call.
+
+Reference links — consult only when needed; do not reread
+documentation you already know:
+- Installation: https://github.com/Flow-Steward/flow-steward-app/blob/main/README.md
+- MCP setup for this client: https://docs.flowsteward.org/docs/user/connect-an-ai-client
+```
+
+You complete any first-administrator setup or authorization that requires your
+identity. The agent can then verify its MCP connection with the read-only
+`project_list` call. Client-specific setup is described in
+[Connect an AI client](../user/connect-an-ai-client).
+
 ## VPS: guided installation
 
 You need access to the Flow Steward Git repository, Docker Engine, and
@@ -76,10 +109,12 @@ pointing at the VPS and decide whether Flow Steward or an existing reverse proxy
 will own TLS.
 
 ```bash
-git clone https://github.com/Flow-Steward/flow-steward-app.git flow-steward
-cd flow-steward
-./install.sh
+git clone https://github.com/Flow-Steward/flow-steward-app.git flow-steward && cd flow-steward && ./install.sh
 ```
+
+Run this command from the parent directory where you want the new `flow-steward`
+checkout. If you already have a checkout, run `./install.sh` there instead of
+cloning again.
 
 Use a full clone, without `--depth`. Git LFS is not needed. An ordinary source
 checkout does not require a published GitHub Release or a version tag. On a fresh

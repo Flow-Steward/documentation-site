@@ -50,10 +50,20 @@ If `docker info` fails, start Docker or fix access to its socket using Docker's
 [Linux post-install instructions](https://docs.docker.com/engine/install/linux-postinstall/).
 Do not solve access errors by running Flow Steward as root.
 
-From the Flow Steward application repository:
+For a new installation, run the same command shown on the Flow Steward website
+from the parent directory where you want the checkout:
 
 ```bash
-./install.sh
+git clone https://github.com/Flow-Steward/flow-steward-app.git flow-steward && cd flow-steward && ./install.sh
+```
+
+If you already have a checkout, run `./install.sh` in that directory instead of
+cloning it again. To ask your coding agent for help, copy the complete
+[installation and MCP setup prompt](../deploy/installation#install-with-a-coding-agent).
+
+After installation, check the result from the application repository:
+
+```bash
 ./flow-steward status
 ./flow-steward doctor
 ```

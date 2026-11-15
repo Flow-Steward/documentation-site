@@ -18,6 +18,19 @@ controls for long-running AI-assisted work. Project context is assembled by the
 runtime from canonical memory; it is not exposed as a public knowledge-base API
 or MCP tool.
 
+## Install Flow Steward
+
+For a new installation on a Docker host, use the same command as the website:
+
+```bash
+git clone https://github.com/Flow-Steward/flow-steward-app.git flow-steward && cd flow-steward && ./install.sh
+```
+
+First check the [Docker host prerequisites](deploy/installation#docker-host-prerequisites).
+If you already have an installation, reuse it. To install and connect a coding
+agent over MCP, use the shared
+[agent prompt](deploy/installation#install-with-a-coding-agent).
+
 ## Choose your path
 
 | Role | Start with | Then read |
