@@ -1,0 +1,27 @@
+.reference { margin: 28px 0 48px; padding: 24px; border: 1px solid var(--border-subtle); border-radius: 16px; background: var(--surface); min-width: 0; }
+.eyebrow { font-size: 14px; color: var(--primary); font-weight: 600; margin: 0 0 12px; }
+.metadata { font-size: 14px; overflow-wrap: anywhere; margin: 16px 0; }
+.tabs { display: flex; gap: 4px; padding: 4px; border-radius: 10px; background: var(--primary-wash); margin: 20px 0; }
+.tabs button { flex: 1; border: 0; border-radius: 7px; padding: 10px 12px; background: transparent; color: var(--ink-secondary); cursor: pointer; font-size: 15px; }
+.tabs button[aria-selected='true'] { background: var(--primary); color: white; }
+.tabs button:focus-visible { outline: 2px solid var(--primary); outline-offset: 3px; }
+.reference :global(.swagger-ui) { font-family: var(--ifm-font-family-base); color: var(--ink); font-size: 14px; }
+.reference :global(.swagger-ui .wrapper) { padding: 0; }
+.reference :global(.swagger-ui .info) { margin: 20px 0; }
+.reference :global(.swagger-ui .info .title) { font: 500 24px/1.2 var(--ifm-font-family-base); margin: 0 0 16px; }
+.reference :global(.swagger-ui .info .title small) { top: 0; vertical-align: middle; }
+.reference :global(.swagger-ui .opblock-tag) { font: 500 18px/1.4 var(--ifm-font-family-base); margin: 20px 0 8px; padding: 10px 0; }
+.reference :global(.swagger-ui .opblock .opblock-summary) { padding: 8px; flex-wrap: wrap; }
+.reference :global(.swagger-ui .opblock .opblock-summary-path) { font: 500 12px/1.5 var(--ifm-font-family-monospace); overflow-wrap: anywhere; }
+.reference :global(.swagger-ui .opblock .opblock-summary-description) { font-family: var(--ifm-font-family-base); font-size: 13px; }
+.reference :global(.swagger-ui .opblock .opblock-summary-control) { min-width: 0; }
+.reference :global(.swagger-ui input[type=text]) { width: 100%; border: 1px solid var(--border-subtle); border-radius: 8px; font: inherit; }
+.reference :global(.swagger-ui table) { display: block; overflow-x: auto; font-size: 13px; }
+.reference :global(.swagger-ui pre) { font-family: var(--ifm-font-family-monospace); font-size: 12px; }
+.reference :global(.swagger-ui .auth-wrapper), .reference :global(.swagger-ui .scheme-container) { display: none; }
+@media (max-width: 600px) {
+ .reference { padding: 16px 12px; margin-inline: -8px; }
+ .reference :global(.swagger-ui .opblock .opblock-summary-path) { max-width: 100%; }
+ .reference :global(.swagger-ui .opblock .opblock-summary-description) { flex-basis: 100%; margin-top: 6px; }
+ .reference :global(.swagger-ui .opblock-body) { overflow-x: auto; }
+}

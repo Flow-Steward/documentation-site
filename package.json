@@ -14,9 +14,15 @@
     "serve": "docusaurus serve",
     "write-translations": "docusaurus write-translations",
     "write-heading-ids": "docusaurus write-heading-ids",
-    "typecheck": "tsc"
+    "typecheck": "tsc",
+    "test": "node --test scripts/automation/*.test.mjs scripts/api-reference/*.test.mjs tests/*.test.mjs",
+    "api-reference:sync": "node scripts/api-reference/sync.mjs",
+    "api-reference:verify": "node scripts/api-reference/sync.mjs --verify",
+    "prebuild": "npm run api-reference:verify",
+    "build:release": "npm run api-reference:sync && npm run build"
   },
   "dependencies": {
+    "@apidevtools/swagger-parser": "13.1.0",
     "@docusaurus/core": "3.10.1",
     "@docusaurus/faster": "3.10.1",
     "@docusaurus/preset-classic": "3.10.1",
@@ -25,7 +31,8 @@
     "clsx": "^2.0.0",
     "prism-react-renderer": "^2.3.0",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "swagger-ui-react": "5.35.0"
   },
   "devDependencies": {
     "@docusaurus/module-type-aliases": "3.10.1",

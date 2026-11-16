@@ -47,7 +47,7 @@ need to build and serve that production output.
 ## Build
 
 ```bash
-npm run build
+npm run build:release
 ```
 
 This command generates static content into the `build` directory and can be served using any static contents hosting service.
@@ -190,3 +190,40 @@ After installing the restricted key, run `Deploy documentation to server` manual
 real accepted build. AI generation additionally needs the App and OpenAI secrets
 listed above. Do not merge or activate these workflows before credentials and
 review rules are configured.
+
+## Released API reference
+
+`npm run build:release` downloads the latest stable release from
+`Flow-Steward/flow-steward-app`, verifies its tag commit, manifest, exact file
+hashes and counts, local references and OpenAPI schemas, then builds the site.
+The three generated files live in ignored `static/api/reference/`; they are not
+committed. Set `GH_TOKEN` optionally for GitHub API rate limits.
+
+To bootstrap or review one published release locally:
+
+```sh
+API_REFERENCE_RELEASE=v0.9.18 npm run api-reference:sync
+npm test
+npm run typecheck
+npm run build
+```
+
+Raw `npm run build` verifies an existing downloaded snapshot without network
+access; a missing/invalid snapshot fails visibly. Tests use synthetic fixtures
+in temporary directories; never publish those fixtures. A failed refresh removes
+stale generated files and does not fall back to an older release.
+
+The deploy workflow accepts `api-reference-release` repository dispatches with
+`release` and `revision` fields as notification metadata. Every dispatch refreshes
+the latest stable release; its payload never pins the build or causes an older
+notification to fail a newer deployment. GitHub may replace a pending concurrency
+run, so even a delayed notification must build the latest version. Pushes to
+`main` and manual deployments also fetch the current stable release. All build workflows fetch
+verified assets before building. The API page bundles Swagger UI locally and
+loads it on that page only, with request execution, remote validation, and
+persisted authentication disabled.
+
+The browser fetches the manifest without cache, then requests each schema with
+its SHA-256 in the URL and caching disabled. It verifies exact-byte SHA-256,
+OpenAPI identity and counts before rendering either view. A mixed snapshot
+during deployment shows an explicit error and Retry control.

@@ -174,7 +174,7 @@ Either limit returns HTTP 429 with `stream_connection_limit` and
 variables also lack explicit production Compose app bindings and Compact child
 allowlist entries. Production runtime disables repository `.env` autoload by
 default, so do not present `.env.prod` editing alone as a supported tuning path;
-verify the actual service environment. See [API Reference](api.md#authentication-pagination-approvals-and-sse).
+verify the actual service environment. See [API Reference](api.mdx#authentication-pagination-approvals-and-sse).
 
 ## Workflow data and nesting limits
 

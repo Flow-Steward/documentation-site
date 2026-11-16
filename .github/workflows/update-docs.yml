@@ -169,8 +169,9 @@ jobs:
         run: node scripts/automation/run.mjs apply "$RUNNER_TEMP/proposal/combined.json" "$RUNNER_TEMP/context/metadata.json"
       - run: npm ci
       - run: npm run typecheck
-      - run: npm run build
+      - run: npm run build:release
         env:
+          GH_TOKEN: ${{ github.token }}
           SITE_URL: https://docs.flowsteward.org
           BASE_URL: /
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4

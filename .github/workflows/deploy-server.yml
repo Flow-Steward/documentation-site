@@ -2,6 +2,8 @@ name: Deploy documentation to server
 on:
   push:
     branches: [main]
+  repository_dispatch:
+    types: [api-reference-release]
   workflow_dispatch:
     inputs:
       skip_tests:
@@ -26,12 +28,16 @@ jobs:
         with:
           node-version: '22'
           cache: npm
-      - if: ${{ !(github.event_name == 'workflow_dispatch' && inputs.skip_tests) }}
-        run: node --test scripts/automation/*.test.mjs
       - run: npm ci
+      - if: ${{ !(github.event_name == 'workflow_dispatch' && inputs.skip_tests) }}
+        run: npm test
       - run: npm run typecheck
-      - run: npm run build
+      # A release dispatch is a refresh notification, never a version pin.
+      # GitHub may replace pending runs; an older notification still builds latest.
+      - name: Fetch verified release schemas and build
+        run: npm run build:release
         env:
+          GH_TOKEN: ${{ github.token }}
           SITE_URL: https://docs.flowsteward.org
           BASE_URL: /
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
