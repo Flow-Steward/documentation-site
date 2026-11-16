@@ -15,10 +15,10 @@ export default function Navbar(): ReactNode {
   const {pathname} = useLocation();
   const logo = useBaseUrl('/img/flow-steward-logo.svg');
   useEffect(() => {menu.current?.close();}, [pathname]);
-  const navigation = <>{links.map(([label, href]) => <Link key={label} to={href} aria-current={label === 'Docs' ? 'page' : undefined}>{label}</Link>)}</>;
+  const navigation = <>{links.map(([label, href]) => <Link key={label} to={href} target="_self" aria-current={label === 'Docs' ? 'page' : undefined}>{label}</Link>)}</>;
   return <header className={`navbar ${styles.header}`}>
     <div className={styles.inner}>
-      <Link className={styles.logo} to="https://flowsteward.org/" aria-label="Flow Steward home"><img src={logo} alt="Flow Steward" width="175" height="28" /></Link>
+      <Link className={styles.logo} to="https://flowsteward.org/" target="_self" aria-label="Flow Steward home"><img src={logo} alt="Flow Steward" width="175" height="28" /></Link>
       <nav className={styles.primary} aria-label="Primary">{navigation}</nav>
       <div className={styles.actions}>
         <div className={styles.search}><SearchBar /></div>
