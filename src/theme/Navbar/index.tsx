@@ -2,7 +2,7 @@ import React, {useEffect, useRef, type ReactNode} from 'react';
 import Link from '@docusaurus/Link';
 import useBaseUrl from '@docusaurus/useBaseUrl';
 import {useLocation} from '@docusaurus/router';
-import SearchBar from '@theme/SearchBar';
+import SearchDialog from '@site/src/components/SearchDialog';
 import styles from './styles.module.css';
 
 const links = [
@@ -21,7 +21,7 @@ export default function Navbar(): ReactNode {
       <Link className={styles.logo} to="https://flowsteward.org/" target="_self" aria-label="Flow Steward home"><img src={logo} alt="Flow Steward" width="175" height="28" /></Link>
       <nav className={styles.primary} aria-label="Primary">{navigation}</nav>
       <div className={styles.actions}>
-        <div className={styles.search}><SearchBar /></div>
+        <div className={styles.search}><SearchDialog /></div>
         <a className={styles.github} href="https://github.com/Flow-Steward/flow-steward-app" aria-label="Flow Steward on GitHub"><img src={useBaseUrl('/img/github.svg')} alt="" width="20" height="20" /></a>
         <Link className={styles.start} to="/docs/user/getting-started">Quick start</Link>
         <button className={styles.menuButton} type="button" aria-label="Open main menu" aria-haspopup="dialog" onClick={() => menu.current?.showModal()}><img src={useBaseUrl('/img/menu.svg')} alt="" width="20" height="20" /></button>

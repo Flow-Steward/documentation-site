@@ -11,9 +11,10 @@
 }
 
 .heroInner {
-  width: min(1180px, calc(100% - 40px));
+  width: 100%;
+  max-width: var(--hdr-max);
   margin: 0 auto;
-  padding: 46px 0;
+  padding: 46px var(--hdr-pad);
 }
 
 .kicker,
@@ -146,8 +147,7 @@
   }
 
   .heroInner {
-    width: min(100% - 28px, 720px);
-    padding: 40px 0;
+    padding-block: 40px;
   }
 
   .heroCopy {

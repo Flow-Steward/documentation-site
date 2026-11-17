@@ -25,7 +25,7 @@
   --ifm-menu-color:var(--ink-secondary); --ifm-menu-color-background-active:var(--primary-wash);
   --ifm-menu-color-background-hover:var(--surface-muted); --ifm-menu-color-active:var(--primary);
   --ifm-global-radius:8px; --ifm-link-color:var(--primary); --ifm-link-hover-color:var(--primary-hover);
-  --ifm-container-width:1360px; --ifm-container-width-xl:1360px;
+  --ifm-container-width:var(--hdr-max); --ifm-container-width-xl:var(--hdr-max);
   --doc-sidebar-width:232px; --docusaurus-highlighted-code-line-bg:rgba(87,199,158,.12);
 }
 html,body{background:var(--canvas);-webkit-font-smoothing:antialiased}
@@ -34,6 +34,10 @@ html,body{background:var(--canvas);-webkit-font-smoothing:antialiased}
 ::selection{background:#57c79e;color:var(--ink)}
 a{text-underline-offset:3px}button,input,select,textarea{font:inherit}
 :focus-visible{outline:2px solid var(--primary);outline-offset:4px}
+
+/* Match standalone page content to the header's usable horizontal bounds.
+   Article containers keep their existing explicit zero-padding overrides below. */
+.container{max-width:var(--hdr-max);width:100%;margin:0 auto;padding-inline:var(--hdr-pad)}
 
 /* Keep the native Docusaurus article and navigation; replace the shell geometry. */
 .fs-docs-layout{flex:1}
