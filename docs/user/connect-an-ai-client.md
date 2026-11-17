@@ -29,6 +29,9 @@ Choose what the client may do:
 | **Monitor and run workflows** | Find projects, read statuses, errors, reports and approvals, and start or cancel runs. |
 | **Full authoring** | Full access through `admin:all`, including creating and changing workflows, agents and skills. This is broad access and requires the corresponding authority in Flow Steward. |
 
+[Choose an access level](#choose-an-access-level) below explains exactly what each
+level can and cannot do.
+
 For clients on your computer, create a personal token in the setup page, choose an
 expiry and project restrictions, and copy it when shown. A token cannot grant more
 access than your own role. For cloud clients, sign in to Flow Steward and choose
@@ -42,6 +45,61 @@ remote connectors also connect from the cloud. If no usable address is shown,
 ask your administrator to configure the installation's public address and enable
 cloud AI app connections.
 :::
+
+## Choose an access level
+
+The access level decides which Flow Steward tools the AI client receives. A tool
+outside the level is not offered to the client at all, so the assistant usually
+says it "has no tool" for the task rather than showing an error.
+
+**Pick by what the person will do:**
+
+- **Monitor and run workflows** — for people who *use* automations: a manager
+  who asks for "the weekly sales report", approves a payment, or checks why a
+  run failed. This is the default and the right choice for most users.
+- **Full authoring** — for people who *build* automations: creating or changing
+  workflows, agents and skills, or switching a workflow on. Choose it only for
+  that work.
+
+| What you ask the assistant | Monitor and run workflows | Full authoring |
+| --- | :---: | :---: |
+| List projects and their connections | Yes | Yes |
+| Find workflows, read their inputs, definition, statistics and export | Yes | Yes |
+| Start a workflow run | Yes | Yes |
+| Follow a run: status, result, errors, logs, events and its report | Yes | Yes |
+| Approve or reject a run waiting for approval | Yes | Yes |
+| Cancel, restart or acknowledge a run | Yes | Yes |
+| Create and read operational reports (activity, project summary and statistics) | Yes | Yes |
+| Explore building blocks and check a workflow draft without saving it | Yes | Yes |
+| Save a new workflow, import a bundle, or change an existing workflow | No | Yes |
+| Switch a workflow on or off | No | Yes |
+| Connect hooks between workflows | No | Yes |
+| Create, read or change agents and skills | No | Yes |
+| List available AI models | No | Yes |
+| Read notification routes and deliveries, or send a project notification | No | Yes |
+
+A few rules apply to both levels:
+
+- **Your role is the ceiling.** The client never gets more than you can do
+  yourself. *Monitor and run workflows* needs the `operator` or `admin` role;
+  *Full authoring* needs `admin`. A level above your role is shown on the
+  consent page but cannot be selected. See
+  [Users, roles and access](users-roles-and-access).
+- **Full authoring is everything you can do.** It is `admin:all`, not a narrow
+  "authoring" permission: the client can also change settings and other
+  administrator objects within your authority. Restricting it to projects does
+  not isolate account-wide agents and skills.
+- **The level is fixed for the connection.** To change it, disconnect the
+  connector in the AI client, connect again, and pick the other level on the
+  consent page. Remove the old access under **Settings → Account → Personal
+  tokens** if it is still listed.
+- **Approvals stay a person's decision.** An assistant on either level can
+  approve or reject only when you ask it to; the approval is recorded as yours.
+
+A common setup is two people, two levels: the automation author connects with
+*Full authoring* to build and switch on a workflow such as "Weekly sales
+report", and the manager connects with *Monitor and run workflows* to run it from
+chat, approve it and read the report.
 
 ## In the cloud
 
