@@ -1,0 +1,175 @@
+manifest_version: 2
+lifecycle: {data_schema_version: 1, data_migrations: []}
+extension_id: flowsteward.example-showcase
+kind: tool_provider
+version: 1.2.6
+display_name: Example Showcase Extension
+description: |-
+  Example Showcase is an SDK reference bundle for developers building Flow Steward extensions. Explore project connection forms, encrypted secrets, declarative pages, queries, actions, workflow trigger declarations and packaged workflows, agents, tools, datasets and saved queries. Example operations demonstrate an external status request, record scoring with partial failures and reusable tool invocation.
+
+  The included workflows show sequential and parallel Groups, For each loops, collection, Break and Continue, and container error routes. A worked order-processing example introduces hooks: places where each project can add its own steps to an extension's workflow. Use these examples to learn how extension features fit together before adapting the patterns to a real integration.
+
+  Install the bundle on a compatible Flow Steward host and create a project connection for the API example. This is a demonstration rather than an operational service: the default status response and review notifications are simulated, and the OAuth example uses a placeholder provider. A live API example needs your own HTTPS endpoint and credentials. The dataset example separately requires the PostgreSQL connector and a project database connection.
+vendor:
+  name: Flow Steward
+  support_url: https://github.com/Flow-Steward/ext-example-showcase/issues
+  website_url: https://github.com/Flow-Steward/ext-example-showcase
+listing:
+  category: developer-tools
+  tags:
+  - example
+  - showcase
+  - extension-development
+  summary: |-
+    Explore the Flow Steward SDK through example extensions, declarative UI, workflow operations and runnable demo workflows.
+  setup_summary: |-
+    Install on a compatible Flow Steward host and create the example project connection; the default request example uses simulated responses. The dataset example additionally needs the PostgreSQL connector, a project database connection and dataset assignment.
+features:
+- tool
+- action
+- query
+- workflow_trigger
+- artifact_bundle
+required_scopes:
+- extension:invoke
+- read:projects
+# Where the extension connects: the example API's default host, or the base
+# URL a project sets on its connection.
+egress:
+  hosts:
+  - api.example.test
+  connection_fields:
+  - example_showcase_api.base_url
+schemas:
+  config: schemas/config.schema.yaml
+  secrets: schemas/secrets.schema.yaml
+  subscriptions: schemas/subscriptions.schema.yaml
+  input:
+    type: object
+    properties:
+      action:
+        type: string
+      query:
+        type: string
+      event:
+        type: object
+    required:
+    - action
+  output:
+    type: object
+    properties:
+      ok:
+        type: boolean
+      result:
+        type: object
+      errors:
+        type: array
+    required:
+    - ok
+machine_auth:
+  service_account_key: svc_ext_example_showcase
+  required_scopes:
+  - extension:invoke
+account_scope:
+  scope_type: project
+  description: Example Showcase is configured per project so config, secret refs, and workflow trigger examples stay project-scoped.
+dependencies:
+  extensions:
+  - extension_id: flowsteward.telegram
+    min_version: 1.0.0
+    max_version_exclusive: 2.0.0
+    required: false
+    reason: Demonstrates optional extension-to-extension notification dependency metadata.
+workflow_triggers:
+- trigger_type_id: example_showcase_event
+  provider_key: example_showcase
+  display_name: Example Showcase Event
+  description: Example provider-owned trigger that maps a third-party event into a workflow run.
+  event_name: external.comment.received
+  provider_ingress_url_required: true
+  config_schema:
+    type: object
+    additionalProperties: false
+    required:
+    - source
+    properties:
+      source:
+        type: string
+        enum:
+        - support
+        - billing
+        - approval
+      require_signature:
+        type: boolean
+        default: true
+      default_priority:
+        type: string
+        enum:
+        - low
+        - medium
+        - high
+        default: medium
+  ui_schema:
+    fields:
+    - name: source
+      widget_type: select
+      label: Source
+      options:
+      - label: Support
+        value: support
+      - label: Billing
+        value: billing
+      - label: Approval
+        value: approval
+    - name: require_signature
+      widget_type: boolean
+      label: Require Signature
+    - name: default_priority
+      widget_type: select
+      label: Default Priority
+      options:
+      - label: Low
+        value: low
+      - label: Medium
+        value: medium
+      - label: High
+        value: high
+# A provider posts events to /webhook/extensions/flowsteward.example-showcase/events/<token>.
+# Core checks the HMAC-SHA256 signature over "<timestamp>.<delivery-id>.<raw-body>"
+# with the registration secret, refuses a delivery older than max_age_seconds
+# or a repeated delivery id, and only then runs receive_provider_event.
+callbacks:
+- callback_id: events
+  purpose: inbound_events
+  methods:
+  - POST
+  action_id: receive_provider_event
+  connection_scoped: false
+  auth:
+    type: hmac_sha256
+    signature_header: X-Example-Showcase-Signature
+    timestamp_header: X-Example-Showcase-Timestamp
+    delivery_id_header: X-Example-Showcase-Delivery
+    max_age_seconds: 300
+entrypoint:
+  mode: subprocess
+  command:
+  - python3
+  - main.py
+health:
+  command:
+  - python3
+  - health.py
+  timeout_seconds: 5
+ui_manifest: ui/ui_manifest.yaml
+query_manifest: ui/queries/queries.yaml
+action_manifest: ui/actions/actions.yaml
+runtime:
+  contract_version: extension_host_v2
+  extension_contract_v2:
+    connection_types: contracts/connection_types.yaml
+    operation_manifest: contracts/operation_manifest.yaml
+    step_ui_manifest: contracts/step_ui_manifest.yaml
+    resource_query_manifest: contracts/resource_query_manifest.yaml
+    event_bindings: contracts/event_bindings.yaml
+    artifact_policies: contracts/artifact_policies.yaml

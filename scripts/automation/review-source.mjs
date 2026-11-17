@@ -1,5 +1,5 @@
 // Read-only, bounded source retrieval for page reviewers. Never executes product code.
-import {readFileSync, lstatSync, realpathSync} from 'node:fs';
+import {readFileSync, lstatSync, realpathSync, existsSync} from 'node:fs';
 import {resolve, relative} from 'node:path';
 
 const root = realpathSync(resolve('../product'));
@@ -11,7 +11,15 @@ if (!Array.isArray(inventory) || inventory.length > 10000 || inventory.some(path
 // Public source contracts include extensionless CLI wrappers and Dockerfile.*.
 // Do not infer readability from a filename extension. Skip real dotenv files;
 // tracked example files remain valid reference material.
-const files = inventory.filter(path => !excluded.test(path) && !binary.test(path) && !/(?:^|\/)\.env(?!\.example)(?:[./-]|$)/.test(path)).sort();
+let allowed = new Set(inventory);
+if (existsSync('../automation-context/task.json')) {
+  const task = JSON.parse(readFileSync('../automation-context/task.json', 'utf8'));
+  if (task.source_allowlist !== undefined) {
+    if (!Array.isArray(task.source_allowlist) || task.source_allowlist.some(path => !inventory.includes(path))) throw new Error('invalid task source allowlist');
+    allowed = new Set(task.source_allowlist);
+  } else if (task.incremental === true) throw new Error('incremental review requires an explicit source allowlist');
+}
+const files = inventory.filter(path => allowed.has(path) && !excluded.test(path) && !binary.test(path) && !/(?:^|\/)\.env(?!\.example)(?:[./-]|$)/.test(path)).sort();
 function contents(path, maxBytes = 256 * 1024) {
   if (!files.includes(path)) throw new Error('path is outside the supported tracked source set');
   const absolute = resolve(root, path);

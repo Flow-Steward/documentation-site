@@ -1,0 +1,155 @@
+{
+  "version": 1,
+  "repositories": {
+    "flow-steward-deploy": {
+      "repository": "Flow-Steward/flow-steward-deploy",
+      "revision": "ded2e880c886db0ca504e6c86fafc8d12a576a7e",
+      "status": "pinned_reference",
+      "files": [
+        {
+          "path": "README.md",
+          "sha256": "e4bdce6aeecf53c53282916b75e44a8e9a9771c44fe0a9b8fe038d3eedd944fe",
+          "url": "https://raw.githubusercontent.com/Flow-Steward/flow-steward-deploy/ded2e880c886db0ca504e6c86fafc8d12a576a7e/README.md"
+        },
+        {
+          "path": "docker-compose.yml",
+          "sha256": "85a679d9abf669b6e74500c1a477a13dcbdafd353c1600b24eb9c93a5d7153d5",
+          "url": "https://raw.githubusercontent.com/Flow-Steward/flow-steward-deploy/ded2e880c886db0ca504e6c86fafc8d12a576a7e/docker-compose.yml"
+        },
+        {
+          "path": "elestio.yml",
+          "sha256": "65354aa54ea5aa8a564a6c90f1b7ad9469d625465afe7fbe741acb1266c1f80f",
+          "url": "https://raw.githubusercontent.com/Flow-Steward/flow-steward-deploy/ded2e880c886db0ca504e6c86fafc8d12a576a7e/elestio.yml"
+        },
+        {
+          "path": "fly/compact.toml",
+          "sha256": "8a38a9697d207752b6c273618c0186655332f9dcb9969fe166f95f78dfad40e4",
+          "url": "https://raw.githubusercontent.com/Flow-Steward/flow-steward-deploy/ded2e880c886db0ca504e6c86fafc8d12a576a7e/fly/compact.toml"
+        },
+        {
+          "path": "fly/postgres.toml",
+          "sha256": "e2a436e5dc9e9347a5501a1d1fba7d22a581052e63708dfa7be9a2684fa53735",
+          "url": "https://raw.githubusercontent.com/Flow-Steward/flow-steward-deploy/ded2e880c886db0ca504e6c86fafc8d12a576a7e/fly/postgres.toml"
+        },
+        {
+          "path": "fly/rabbitmq.toml",
+          "sha256": "112cc9c4114dd840febf05f883234c9f05098756dfd5eef0443e6f4f44d5e27b",
+          "url": "https://raw.githubusercontent.com/Flow-Steward/flow-steward-deploy/ded2e880c886db0ca504e6c86fafc8d12a576a7e/fly/rabbitmq.toml"
+        },
+        {
+          "path": "render.yaml",
+          "sha256": "a6767a3b42819a9708ead67c747177a0c0c2d91e47e693ce6881e28b8526c5b2",
+          "url": "https://raw.githubusercontent.com/Flow-Steward/flow-steward-deploy/ded2e880c886db0ca504e6c86fafc8d12a576a7e/render.yaml"
+        }
+      ],
+      "boundary": "Public source/reference snapshot only; no claim of live provider execution or historical deployment re-verification."
+    },
+    "extensions": {
+      "repository": "Flow-Steward/extensions",
+      "revision": "98a0294bfd43f94c62a91fa3afa4ddb2b73635df",
+      "status": "pinned_reference",
+      "files": [
+        {
+          "path": "README.md",
+          "sha256": "848e12391e01f0eccae836acc9df5e4299b1ba89bfa45f8939ec67395d85c311",
+          "url": "https://raw.githubusercontent.com/Flow-Steward/extensions/98a0294bfd43f94c62a91fa3afa4ddb2b73635df/README.md"
+        },
+        {
+          "path": "categories.json",
+          "sha256": "c80cfd8078c4a24613261a2eefe6bb1ff5c98a3503d17436eac339f548dfe9b1",
+          "url": "https://raw.githubusercontent.com/Flow-Steward/extensions/98a0294bfd43f94c62a91fa3afa4ddb2b73635df/categories.json"
+        },
+        {
+          "path": "category_overrides.json",
+          "sha256": "af35dfc9372d3b42424993e96d4a77fa1ad04053b9debb6e6d0b7b3fd708baa0",
+          "url": "https://raw.githubusercontent.com/Flow-Steward/extensions/98a0294bfd43f94c62a91fa3afa4ddb2b73635df/category_overrides.json"
+        },
+        {
+          "path": "index.json",
+          "sha256": "1f3e21820be271a72115b80ff76c5e250c9cb33c6330b209ee5f435e3f2e713e",
+          "url": "https://raw.githubusercontent.com/Flow-Steward/extensions/98a0294bfd43f94c62a91fa3afa4ddb2b73635df/index.json"
+        },
+        {
+          "path": "verified_publishers.json",
+          "sha256": "9b9d8903a45d34f6e81739b609e406d39cdfd250b2f47e506f25952591ff98b8",
+          "url": "https://raw.githubusercontent.com/Flow-Steward/extensions/98a0294bfd43f94c62a91fa3afa4ddb2b73635df/verified_publishers.json"
+        }
+      ],
+      "boundary": "Public source/reference snapshot only; no claim of live provider execution or historical deployment re-verification."
+    },
+    "workflows": {
+      "repository": "Flow-Steward/workflows",
+      "revision": "9b6cb07de63a6a285a50ab310c3dbce9b8b4cf0f",
+      "status": "pinned_reference",
+      "files": [
+        {
+          "path": "README.md",
+          "sha256": "0bb185c5098e0b1a86bc595d6f7b6998fa701ec96a780ab30482ceb648c3c612",
+          "url": "https://raw.githubusercontent.com/Flow-Steward/workflows/9b6cb07de63a6a285a50ab310c3dbce9b8b4cf0f/README.md"
+        },
+        {
+          "path": "categories.json",
+          "sha256": "c80cfd8078c4a24613261a2eefe6bb1ff5c98a3503d17436eac339f548dfe9b1",
+          "url": "https://raw.githubusercontent.com/Flow-Steward/workflows/9b6cb07de63a6a285a50ab310c3dbce9b8b4cf0f/categories.json"
+        },
+        {
+          "path": "index.json",
+          "sha256": "dbbc437e16b37a1a380776ff25be433f9bddb0dee3905093b4c15609c8876127",
+          "url": "https://raw.githubusercontent.com/Flow-Steward/workflows/9b6cb07de63a6a285a50ab310c3dbce9b8b4cf0f/index.json"
+        },
+        {
+          "path": "withdrawn.json",
+          "sha256": "66de6c6c6165ffbfaf556484bf8559e857b5d8b699d9a84d61ea8956bbb10599",
+          "url": "https://raw.githubusercontent.com/Flow-Steward/workflows/9b6cb07de63a6a285a50ab310c3dbce9b8b4cf0f/withdrawn.json"
+        }
+      ],
+      "boundary": "Public source/reference snapshot only; no claim of live provider execution or historical deployment re-verification."
+    },
+    "ext-example-showcase": {
+      "repository": "Flow-Steward/ext-example-showcase",
+      "revision": "44a365763bf529dd35434b66e7e546858d82c9b3",
+      "status": "pinned_reference",
+      "files": [
+        {
+          "path": "README.md",
+          "sha256": "c89f769753af41828db7ea23e72c5b72afba02cddb60aa2b8c27107336f320a7",
+          "url": "https://raw.githubusercontent.com/Flow-Steward/ext-example-showcase/44a365763bf529dd35434b66e7e546858d82c9b3/README.md"
+        },
+        {
+          "path": "extension-descriptor.yaml",
+          "sha256": "a7540a63e7f11a8cb370b46ae5b80756ffa8dd19c4e4ecd6f1b7c6af14c85a1e",
+          "url": "https://raw.githubusercontent.com/Flow-Steward/ext-example-showcase/44a365763bf529dd35434b66e7e546858d82c9b3/extension-descriptor.yaml"
+        },
+        {
+          "path": "extension.yaml",
+          "sha256": "f14233f066adc34c5e5500852c2c6e5d4af9d9d4c8a25a74eccbf7ad94375e71",
+          "url": "https://raw.githubusercontent.com/Flow-Steward/ext-example-showcase/44a365763bf529dd35434b66e7e546858d82c9b3/extension.yaml"
+        }
+      ],
+      "boundary": "Public source/reference snapshot only; no claim of live provider execution or historical deployment re-verification."
+    },
+    "ext-file-transfer-sftp": {
+      "repository": "Flow-Steward/ext-file-transfer-sftp",
+      "revision": "f4c4197f5795768202da2aed99c25155b78ff4f4",
+      "status": "pinned_reference",
+      "files": [
+        {
+          "path": "README.md",
+          "sha256": "30b10b8606a5403ce3aa125ff9098cd540df3109e3bf5191fe764b3c235a027e",
+          "url": "https://raw.githubusercontent.com/Flow-Steward/ext-file-transfer-sftp/f4c4197f5795768202da2aed99c25155b78ff4f4/README.md"
+        },
+        {
+          "path": "dependency-sources.json",
+          "sha256": "0323ab89d6a23d7eee7685324a932d0d5b444319eea9a1a8b1cf6eab6948d8a7",
+          "url": "https://raw.githubusercontent.com/Flow-Steward/ext-file-transfer-sftp/f4c4197f5795768202da2aed99c25155b78ff4f4/dependency-sources.json"
+        },
+        {
+          "path": "extension.yaml",
+          "sha256": "e5f7fa766063893cc6af1244972d21257d826b0a8edf8ebe92a8ffc3a764ff27",
+          "url": "https://raw.githubusercontent.com/Flow-Steward/ext-file-transfer-sftp/f4c4197f5795768202da2aed99c25155b78ff4f4/extension.yaml"
+        }
+      ],
+      "boundary": "Public source/reference snapshot only; no claim of live provider execution or historical deployment re-verification."
+    }
+  }
+}
