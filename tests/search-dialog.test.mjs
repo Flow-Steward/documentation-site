@@ -49,3 +49,10 @@ test('a queued prior close event cannot unlock or steal focus from a reopened mo
  const focused=f.focus.length;f.flushClose();assert.equal(f.dialog.open,true);assert.equal(f.document.body.style.overflow,'hidden');assert.equal(f.focus.length,focused);
  f.controller.dispose();assert.equal(f.document.body.style.overflow,'auto');
 });
+
+test('opening synchronizes the footer query with the actual search input after navigation',()=>{
+ const f=fixture();f.controller.dispose();const values=[];
+ const controller=bindSearchDialog(f.dialog,f.trigger,value=>values.push(value));
+ const input=f.dialog.querySelector();input.value='workflow';controller.open();controller.close();
+ input.value='';controller.open();assert.deepEqual(values,['workflow','']);controller.dispose();
+});

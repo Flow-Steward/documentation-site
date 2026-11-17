@@ -1,5 +1,5 @@
 /** Own modal lifecycle only; EasyOps continues to own index/results and selection. */
-export function bindSearchDialog(dialog: HTMLDialogElement, trigger: HTMLButtonElement) {
+export function bindSearchDialog(dialog: HTMLDialogElement, trigger: HTMLButtonElement, onOpen: (query: string) => void = () => {}) {
  const document = dialog.ownerDocument;
  const capture = {capture: true};
  let disposed = false;
@@ -8,6 +8,7 @@ export function bindSearchDialog(dialog: HTMLDialogElement, trigger: HTMLButtonE
  const focusSearch = () => {
   const input = dialog.querySelector<HTMLInputElement>('input[aria-label="Search"]');
   input?.focus(); input?.select();
+  return input?.value ?? "";
  };
  const open = (fromPointer = false) => {
   if (disposed) return;
@@ -17,7 +18,7 @@ export function bindSearchDialog(dialog: HTMLDialogElement, trigger: HTMLButtonE
    dialog.showModal();
    document.body.style.overflow = 'hidden';
   }
-  focusSearch();
+  onOpen(focusSearch());
  };
  const close = () => {
   if (dialog.open) dialog.close();

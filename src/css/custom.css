@@ -99,13 +99,28 @@ a{text-underline-offset:3px}button,input,select,textarea{font:inherit}
 .theme-doc-markdown .hash-link{color:var(--primary)}
 .theme-doc-markdown code{font-family:var(--ifm-font-family-monospace);font-weight:400;padding:2px 6px;border:0;background:var(--ifm-code-background);box-decoration-break:clone}
 .theme-code-block{margin:16px 0;border-radius:14px;background:var(--term)!important;box-shadow:none;overflow:hidden}
-.theme-code-block [class*='codeBlockContent']{display:flex;align-items:flex-start}
-.theme-code-block pre{flex:1;min-width:0;margin:0;padding:18px 20px;background:var(--term)!important;color:var(--term-ink)!important;border-radius:14px;font:400 13.5px/1.7 var(--ifm-font-family-monospace)}
+.theme-code-block pre{margin:0;padding:16px 18px 18px;background:var(--term)!important;color:var(--term-ink)!important;border-radius:0;font:400 13.5px/1.7 var(--ifm-font-family-monospace);overflow-x:auto}
 .theme-code-block pre code{padding:0;background:transparent;border-radius:0;font:inherit;color:inherit;box-decoration-break:slice}
-.theme-code-block [class*='codeBlockTitle']{border-color:rgba(236,239,238,.16);background:var(--term);color:var(--term-ink);padding:10px 20px;font-size:13px;font-weight:400}
-.theme-code-block [class*='buttonGroup']{position:static;flex:none;gap:4px;padding:10px 10px 10px 0}
-.theme-code-block [class*='buttonGroup'] button{width:36px;height:36px;padding:8px;border:1px solid rgba(236,239,238,.16);border-radius:8px;background:var(--term);color:var(--term-ink);opacity:1}
-.theme-code-block [class*='buttonGroup'] button:hover{background:#1e2a30}
+.fs-code-header{display:flex;align-items:center;gap:12px;min-height:49px;padding:8px 8px 8px 18px;border-bottom:1px solid rgba(236,239,238,.1)}
+.fs-code-heading{display:flex;align-items:center;gap:10px;flex:1;min-width:0}
+.fs-code-title{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:500 13px/1.4 var(--ifm-font-family-monospace);color:var(--term-ink)}
+.fs-code-language{flex:none;padding:4px 7px;border-radius:6px;background:rgba(236,239,238,.08);color:rgba(236,239,238,.62);font:500 12px/1 var(--ifm-font-family-monospace)}
+.fs-code-actions{display:flex;align-items:center;gap:4px;flex:none}
+.fs-code-actions button{display:inline-flex;align-items:center;justify-content:center;flex:none;min-height:32px;padding:0 12px;border:0;border-radius:8px;background:transparent;color:#57C79E;font:500 13px/1 var(--ifm-font-family-monospace);cursor:pointer}
+.fs-code-actions button:hover{background:rgba(236,239,238,.08)}
+.fs-code-actions .fs-code-wrap{width:32px;height:32px;padding:8px;color:rgba(236,239,238,.62)}
+.fs-code-copy-status{position:absolute;width:1px;height:1px;padding:0;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+.fs-code-wrap svg{width:16px;height:16px}
+.fs-code-actions .fs-code-wrap[aria-pressed='true']{background:rgba(236,239,238,.12);color:#ECEFEE}
+.fs-code-block pre code{display:block;float:none;white-space:pre;min-width:100%}
+.fs-code-block[data-code-wrap='true'] pre code{white-space:pre-wrap;overflow-wrap:anywhere}
+.fs-code-block [class*='codeBlockLinesWithNumbering']{display:block}
+.fs-code-block .token-line{min-height:1.7em}
+.fs-code-block .token-line:has([class*='codeLineNumber']){display:flex}
+.fs-code-block [class*='codeLineNumber']{position:static;display:block;flex:none;width:3ch;margin-right:16px;padding:0;background:transparent;color:rgba(236,239,238,.38);user-select:none}
+.fs-code-block [class*='codeLineNumber']::before{opacity:1}
+.fs-code-block [class*='codeLineContent']{display:block;min-width:0;padding:0}
+.fs-code-block .theme-code-block-highlighted-line{margin:0;padding:0;background:rgba(87,199,158,.1);box-shadow:inset 2px 0 0 #57C79E}
 .theme-doc-markdown table{display:table;width:100%;margin:20px 0;border-collapse:collapse;font-size:16px;line-height:1.55}
 .theme-doc-markdown table th,.theme-doc-markdown table td{padding:16px 12px;text-align:left;border:0;border-bottom:1px solid var(--border-subtle);vertical-align:top}
 .theme-doc-markdown table th{font-weight:500;color:var(--ink);background:transparent;border-top:1px solid var(--border-subtle)}
@@ -157,7 +172,7 @@ a{text-underline-offset:3px}button,input,select,textarea{font:inherit}
   .pagination-nav{grid-template-columns:1fr}
   .pagination-nav__link--next{grid-column:1}
   .pagination-nav__link{min-height:100px}
-  .theme-code-block pre{padding:18px 16px}
+  .theme-code-block pre{padding:16px 18px 18px}
   .theme-admonition{padding-right:16px}
 }
 @media(max-width:389px){.fs-docs-root{padding-bottom:68px}}
