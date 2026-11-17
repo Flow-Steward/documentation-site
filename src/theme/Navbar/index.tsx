@@ -8,7 +8,7 @@ import styles from './styles.module.css';
 const links = [
   ['Docs', '/docs/intro'], ['Workflows', 'https://flowsteward.org/workflows/'],
   ['Extensions', 'https://flowsteward.org/extensions/'], ['MCP', 'https://flowsteward.org/mcp/'],
-  ['Features', 'https://flowsteward.org/features/'], ['Blog', 'https://flowsteward.org/blog/'],
+  ['Features', 'https://flowsteward.org/features/'],
 ];
 export default function Navbar(): ReactNode {
   const menu = useRef<HTMLDialogElement>(null);

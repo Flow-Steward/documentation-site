@@ -43,6 +43,7 @@ const config: Config = {
           sidebarPath: './sidebars.ts',
         },
         blog: false,
+        sitemap: {ignorePatterns: ['/search', '/search/**']},
         theme: {
           customCss: './src/css/custom.css',
         },

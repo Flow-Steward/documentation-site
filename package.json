@@ -19,7 +19,8 @@
     "api-reference:sync": "node scripts/api-reference/sync.mjs",
     "api-reference:verify": "node scripts/api-reference/sync.mjs --verify",
     "prebuild": "npm run api-reference:verify",
-    "build:release": "npm run api-reference:sync && npm run build"
+    "build:release": "npm run api-reference:sync && npm run build",
+    "postbuild": "node scripts/verify-seo-build.mjs"
   },
   "dependencies": {
     "@apidevtools/swagger-parser": "13.1.0",
