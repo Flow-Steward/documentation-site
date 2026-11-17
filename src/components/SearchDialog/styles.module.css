@@ -6,12 +6,12 @@
 .hiddenLabel{position:absolute;width:1px;height:1px;padding:0;overflow:hidden;clip-path:inset(50%);white-space:nowrap;}
 .dialog[open]{display:flex;flex-direction:column;}
 .search{position:relative;display:flex;flex-direction:column;flex:1 1 auto;min-height:0;overflow:hidden;}
-.searchIcon{position:absolute;top:22px;left:20px;pointer-events:none;color:var(--ink-tertiary,#656d72);}
-.close{position:absolute;top:10px;right:12px;display:grid;place-items:center;height:44px;padding:0 8px;border:0;background:none;cursor:pointer;}
+.searchIcon{position:absolute;top:21.5px;left:20px;pointer-events:none;color:var(--ink-tertiary,#656d72);}
+.close{position:absolute;top:9.5px;right:12px;width:50px;display:grid;place-items:center;height:44px;padding:0 8px;border:0;background:none;cursor:pointer;}
 .dialog kbd{display:inline-grid;place-items:center;min-width:22px;height:22px;padding:0 6px;border:0;border-radius:6px;background:color-mix(in srgb,var(--ink,#000509) 6%,transparent);font:500 12px/1 var(--ifm-font-family-monospace);color:var(--ink-secondary,#3c4448);box-shadow:none;}
 .close kbd{transition:background-color .2s ease;}.close:hover kbd{background:color-mix(in srgb,var(--ink,#000509) 12%,transparent);}
 .search :global(.navbar__search){margin:0;width:100%;position:static;display:flex;flex-direction:column;flex:1 1 auto;min-height:0;}
-.search :global(.navbar__search-input){flex:none;display:block;width:100%!important;max-width:none;height:64px;padding:0 110px 0 54px;border:0;border-bottom:1px solid var(--border-subtle,#e6e9ea);border-radius:0;background:none!important;color:var(--ink,#000509);font:400 18px/1 var(--ifm-font-family-base);letter-spacing:-.01em;outline:none!important;box-shadow:none!important;}
+.search :global(.navbar__search-input){flex:none;display:block;width:100%!important;max-width:none;height:64px;padding:0 126px 0 54px;border:0;border-bottom:1px solid var(--border-subtle,#e6e9ea);border-radius:0;background:none!important;color:var(--ink,#000509);font:400 18px/1 var(--ifm-font-family-base);letter-spacing:-.01em;outline:none!important;box-shadow:none!important;}
 .search :global([class*='searchBar_']){display:flex!important;flex-direction:column;flex:1 1 auto;min-height:0;width:100%;}
 .search :global([class*='searchHintContainer']){display:none;}
 .search :global([role='listbox']){flex:1 1 auto;position:relative!important;inset:auto!important;width:100%!important;max-width:none!important;margin:0;min-height:72px;max-height:calc(var(--search-max-height) - 112px);padding:8px 8px 12px;border-radius:0;background:transparent;box-shadow:none;overflow-y:auto;overscroll-behavior:contain;}
@@ -29,18 +29,19 @@
 .dialog .search :global([class*='suggestion_']:is(:hover,:focus-visible,[class*='cursor_']) :is([class*='hitTitle'],mark)){color:var(--ink,#000509)!important;text-decoration:none;}
 .dialog .search :global([class*='suggestion_']:is(:hover,:focus-visible,[class*='cursor_']) [class*='hitPath']){color:var(--ink-tertiary,#656d72)!important;}
 .search :global([class*='suggestion_']:is(:hover,:focus-visible,[class*='cursor_']) [class*='hitAction']){opacity:1;transform:scale(1);}
-.dialog .search :global(.navbar__search [class*='searchClearButton']){position:absolute;top:10px;right:64px;transform:none;display:grid;width:44px;height:44px;padding:0;place-items:center;font-size:0;line-height:1;border:0;background:none;color:var(--ink-secondary,#3c4448);cursor:pointer;}
-.search :global([class*='searchClearButton'])::before{content:'';position:absolute;width:24px;height:24px;border-radius:50%;background:color-mix(in srgb,var(--ink,#000509) 6%,transparent);}
-.search :global([class*='searchClearButton'])::after{content:'×';position:relative;font:400 16px/1 var(--ifm-font-family-base);}
+.dialog .search :global(.navbar__search [class*='searchClearButton']){position:absolute;top:13.5px;right:76px;transform:none;display:grid;width:36px;height:36px;padding:0;place-items:center;font-size:0;line-height:1;border:0;background:none;color:var(--ink-secondary,#3c4448);cursor:pointer;}
+.search :global([class*='searchClearButton'])::before,.search :global([class*='searchClearButton'])::after{content:'';position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);}
+.search :global([class*='searchClearButton'])::before{width:24px;height:24px;border-radius:50%;background:color-mix(in srgb,var(--ink,#000509) 6%,transparent);transition:background-color .2s ease;}
+.search :global([class*='searchClearButton'])::after{width:12px;height:12px;background:var(--ink-secondary,#3c4448);mask:url('data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2.5" stroke-linecap="round"%3E%3Cpath d="M18 6 6 18M6 6l12 12"/%3E%3C/svg%3E') center/contain no-repeat;}
 .search :global([class*='searchClearButton']):hover::before{background:color-mix(in srgb,var(--ink,#000509) 12%,transparent);}
 .search:has(:global([class*='searchIndexLoading'])) .searchIcon{visibility:hidden;}
-.search :global([class*='searchBarLoadingRing']){top:22px;left:20px;}
+.search :global([class*='searchBarLoadingRing']){top:21.5px;left:20px;}
 .search :global([class*='noResults']){padding:32px 16px 40px;color:var(--ink-tertiary,#656d72);font-size:15px;}
 .help{flex:none;display:flex;align-items:center;flex-wrap:wrap;gap:8px 20px;margin:0;padding:12px 20px;border-top:1px solid var(--border-subtle,#e6e9ea);font-size:13px;color:var(--ink-tertiary,#656d72);}
 .help>span{display:inline-flex;align-items:center;gap:6px;}
 .allResults{margin-left:auto;color:inherit;text-decoration:none!important;white-space:nowrap;}.allResults:hover{color:var(--ink,#000509);}.allResults[aria-disabled='true']{visibility:hidden;}
 @media(pointer:coarse){.help>span{display:none;}}
-@media(max-width:440px){.searchIcon{left:14px;}.search :global(.navbar__search-input){padding-left:42px;font-size:18px;}.dialog .search :global([role='listbox'] [class*='suggestion_']){gap:8px;}.help{gap:8px 12px;padding-inline:14px;}}
+@media(max-width:440px){.searchIcon{left:14px;}.search :global(.navbar__search-input){padding-left:42px;padding-right:114px;font-size:18px;}.dialog .search :global(.navbar__search [class*='searchClearButton']){right:70px;}.dialog .search :global([role='listbox'] [class*='suggestion_']){gap:8px;}.help{gap:8px 12px;padding-inline:14px;}}
 @media(prefers-reduced-motion:reduce){.search :global([class*='hitAction']){transition:none;}}
 @media(max-width:1270px){.trigger kbd{display:none;}}
 @media(max-width:599px){.trigger{justify-content:center;width:36px;padding:0;}.trigger span,.trigger kbd{display:none;}}
