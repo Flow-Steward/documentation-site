@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "id": "public-default-v1",
+  "model": "gpt-6-luna",
+  "sourceCoverage": "tracked-public-product-source-and-pinned-public-reference-snapshots",
+  "runtimeCoverage": "standard-public-installation",
+  "excludedBehavior": [
+    "Installed optional private bootstrap module implementations",
+    "Custom tool implementation modules selected by runtime manifests",
+    "Custom frontend extension manifests and injected module loaders",
+    "Live provider state, live installation data and secret values"
+  ],
+  "includedContracts": [
+    "Public loader, manifest, validation, permission and failure contracts",
+    "First-party static registry and CLI service bindings",
+    "Default frontend extension manifest and tracked platform-kit assets"
+  ],
+  "scopeExpansion": "Out-of-profile claims require a new reviewed input profile; never silently widen or auto-retry generation.",
+  "generationEnabled": false,
+  "chromaEnabled": false
+}

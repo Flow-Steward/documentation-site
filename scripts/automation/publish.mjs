@@ -8,11 +8,13 @@ export async function publishProposal({api, metadata, changes, summary, evidence
   const tree = publicationPlan(changes, metadata);
   const base = `/repos/${DOCS_REPO}`;
   const main = await api('GET', `${base}/git/ref/heads/main`);
-  if (main.object.sha !== metadata.docsSha) throw new Error('documentation main changed; rerun generation');
+  if (main.object.sha !== metadata.docsSha) throw new Error('documentation main changed; reconcile preserved receipts without regeneration');
   const branch = await api('GET', `${base}/git/ref/heads/${BRANCH}`, undefined, true);
-  if ((branch?.object.sha ?? null) !== metadata.branchSha) throw new Error('automation branch changed; rerun generation');
+  if ((branch?.object.sha ?? null) !== metadata.branchSha) throw new Error('automation branch changed; reconcile preserved receipts without regeneration');
+  let existingTreeSha = null;
   if (branch) {
     const commit = await api('GET', `${base}/git/commits/${branch.object.sha}`);
+    existingTreeSha = commit.tree.sha;
     if (commit.author.email !== BOT_EMAIL || !/^docs: synchronize public source [a-f0-9]{40}(?: \[skip ci\])?$/.test(commit.message)) throw new Error('human edits on automation branch require manual review');
   }
   const prs = await api('GET', `${base}/pulls?state=all&head=Flow-Steward%3Acodex%2Fdocumentation-sync&base=main&per_page=100`);
@@ -23,6 +25,7 @@ export async function publishProposal({api, metadata, changes, summary, evidence
   // A reverted product change must also remove obsolete changes from the pending
   // bot PR. Reuse main's tree, including its unchanged accepted checkpoint.
   const newTree = tree.length ? await api('POST', `${base}/git/trees`, {base_tree: baseCommit.tree.sha, tree}) : baseCommit.tree;
+  if (existing && newTree.sha === existingTreeSha) return {...existing, unchanged: true};
   const parents = [...new Set([metadata.docsSha, ...(branch ? [branch.object.sha] : [])])];
   const commit = await api('POST', `${base}/git/commits`, {message: `docs: synchronize public source ${metadata.sourceSha}${metadata.skipTests ? ' [skip ci]' : ''}`, tree: newTree.sha, parents, author: {name: 'github-actions[bot]', email: BOT_EMAIL}});
   if (branch) await api('PATCH', `${base}/git/refs/heads/${BRANCH}`, {sha: commit.sha, force: false});

@@ -1,10 +1,9 @@
-import {readFileSync, writeFileSync, appendFileSync, statSync, readdirSync, existsSync} from 'node:fs';
+import {readFileSync, writeFileSync, appendFileSync, statSync, readdirSync} from 'node:fs';
 import {execFileSync} from 'node:child_process';
 import {resolve} from 'node:path';
-import {checkpoint, SHA, validateProposal} from './proposal.mjs';
-import {sourceContext} from './source.mjs';
-import {reviewPlan, checkPlan, checkReceipt, combineReceipts} from './batches.mjs';
-import {githubApi, publishProposal, DOCS_REPO, BRANCH} from './publish.mjs';
+import {validateProposal} from './proposal.mjs';
+import {checkPlan, checkReceipt, combineReceipts} from './batches.mjs';
+import {githubApi, publishProposal} from './publish.mjs';
 
 const [action, input, metadataPath, extra, taskId] = process.argv.slice(2);
 const gitSha = root => execFileSync('git', ['rev-parse', 'HEAD'], {cwd: root, encoding: 'utf8'}).trim();
@@ -15,39 +14,39 @@ function loadJSON(path, maxBytes = 2 * 1024 * 1024) {
 function output(name, value) {
   if (process.env.GITHUB_OUTPUT) appendFileSync(process.env.GITHUB_OUTPUT, `${name}=${value}\n`);
 }
-if (action === 'prepare') {
+if (action === 'prepare-cache-only') {
+  const {prepareConnectedQueue} = await import('./connected-queue.mjs');
+  if (!input || !metadataPath || !extra) throw new Error('usage: prepare-cache-only <product> <new-output-directory> <candidate-graph>');
+  const report = await prepareConnectedQueue({docsRoot: process.cwd(), productRoot: input, outputRoot: metadataPath, candidateGraphPath: extra, token: process.env.GH_TOKEN});
+  output('publish', report.publish ? 'true' : 'false');
+  output('persist_coverage', report.persistCoverage ? 'true' : 'false');
+  output('docs_sha', report.plan?.docsSha ?? gitSha(process.cwd()));
+  console.log(`${report.status}; ${report.reuseProofs?.length ?? 0} cached receipts; zero AI calls.`);
+  if (report.blockers.length) process.exitCode = 1;
+} else if (action === 'publish-cache-only') {
+  const {publishConnectedQueue} = await import('./connected-queue.mjs');
+  console.log(JSON.stringify(await publishConnectedQueue({directory: input, docsRoot: process.cwd(), token: process.env.GH_TOKEN})));
+} else if (action === 'prepare-incremental-queue') {
+  if (!input || !metadataPath) throw new Error('usage: prepare-incremental-queue <product-checkout> <new-report.json> [receipt-cache]');
+  const {planIncremental} = await import('./incremental-plan.mjs');
+  const {prepareWorkQueue} = await import('./work-queue.mjs');
   const root = process.cwd();
-  const sourceSha = gitSha(input), docsSha = gitSha(root);
-  if (!SHA.test(sourceSha) || !SHA.test(docsSha)) throw new Error('invalid checkout SHA');
-  // A cancelled/failed run can contain paid results. Never silently regenerate
-  // that source revision; recover saved receipts without model calls first.
-  const recoveryRoot = resolve(root, '.automation/recovery');
-  if (existsSync(recoveryRoot)) {
-    for (const entry of readdirSync(recoveryRoot, {withFileTypes: true})) {
-      if (!entry.isDirectory() || !/^\d+$/.test(entry.name)) continue;
-      const saved = loadJSON(resolve(recoveryRoot, entry.name, 'context/metadata.json'));
-      if (saved.sourceSha === sourceSha) throw new Error(`Paid receipts exist for ${sourceSha} in .automation/recovery/${entry.name}; use offline recover.mjs. Automatic regeneration is blocked.`);
-    }
-  }
-  const requested = process.env.REQUESTED_SOURCE_SHA;
-  if (requested) sourceContext(input, requested, null);
-  const context = sourceContext(input, sourceSha, checkpoint(root));
-  const api = githubApi(process.env.GH_TOKEN);
-  const branch = await api('GET', `/repos/${DOCS_REPO}/git/ref/heads/${BRANCH}`, undefined, true);
-  const metadata = {sourceSha, docsSha, branchSha: branch?.object.sha ?? null, context, skipTests: process.env.SKIP_TESTS === 'true'};
-  writeFileSync(metadataPath, JSON.stringify(metadata, null, 2) + '\n');
-  const directory = resolve(metadataPath, '..');
-  // Prepare the tracked inventory outside the model sandbox. Review retrieval
-  // only reads files and must not require child-process privileges.
-  const sourcePaths = execFileSync('git', ['ls-files', '-z'], {cwd: input, encoding: 'utf8', maxBuffer: 16 * 1024 * 1024}).split('\0').filter(Boolean);
-  writeFileSync(resolve(directory, 'source-paths.json'), JSON.stringify(sourcePaths) + '\n');
-  const plan = reviewPlan(root, metadata);
-  writeFileSync(resolve(directory, 'plan.json'), JSON.stringify(plan, null, 2) + '\n');
-  writeFileSync(resolve(directory, 'changed-paths.txt'), context.changedPaths.join('\n') + '\n');
-  output('tasks', JSON.stringify(plan.tasks.map(task => task.id)));
-  output('source_sha', sourceSha); output('docs_sha', docsSha);
-  output('needed', context.mode === 'unchanged' ? 'false' : 'true');
-  console.log(`Documentation context: ${context.mode}, ${context.changedPaths.length} source paths`);
+  const plan = planIncremental({docsRoot: root, productRoot: input, cacheRoot: extra ?? null});
+  const queue = prepareWorkQueue({plan, docsRoot: root,
+    dependencies: loadJSON(resolve('.automation/page-dependencies.json')),
+    audit: loadJSON(resolve('.automation/dependency-audit.json')),
+    policy: loadJSON(resolve('.automation/incremental-queue.json'))});
+  writeFileSync(metadataPath, JSON.stringify({plan, queue}, null, 2) + '\n', {flag: 'wx'});
+  console.log(`${queue.status}: ${queue.proposedTasks.length} proposed tasks; generation is disabled.`);
+  if (queue.status === 'blocked') process.exitCode = 1;
+} else if (action === 'plan-incremental') {
+  const {planIncremental} = await import('./incremental-plan.mjs');
+  if (!input || !metadataPath) throw new Error('usage: plan-incremental <product-checkout> <new-report.json> [receipt-cache]');
+  const report = planIncremental({docsRoot: process.cwd(), productRoot: input, cacheRoot: extra ?? null});
+  writeFileSync(metadataPath, JSON.stringify(report, null, 2) + '\n', {flag: 'wx'});
+  console.log(`${report.status}: ${report.tasks.length} required pages; ${report.budget.cacheMisses} cache misses. No generation, tests or publication performed.`);
+} else if (action === 'prepare') {
+  throw new Error('Legacy full-site paid preparation is disabled. Use prepare-cache-only; do not rerun generation.');
 } else if (action === 'select-task') {
   const metadata = loadJSON(metadataPath), directory = resolve(metadataPath, '..');
   if (gitSha(process.cwd()) !== metadata.docsSha) throw new Error('checkout differs from documentation base');

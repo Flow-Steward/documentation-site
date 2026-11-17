@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "mode": "planning_only",
+  "generationEnabled": false,
+  "model": "gpt-6-luna",
+  "maxNewPages": 10,
+  "maxSourceFilesPerPage": 256,
+  "coverageProfile": "public-default-v1"
+}
