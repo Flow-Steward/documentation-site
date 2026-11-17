@@ -17,11 +17,8 @@ concurrency:
   cancel-in-progress: false
 jobs:
   prepare:
-    if: >-
-      github.repository == 'Flow-Steward/documentation-site' &&
-      ((github.event_name == 'repository_dispatch' && github.actor == vars.DOCS_SYNC_ACTOR) ||
-       (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main') ||
-       (github.event_name == 'push' && github.ref == 'refs/heads/main'))
+    # Paid full-site traversal disabled by owner request. Preserve existing artifacts.
+    if: ${{ false }}
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     outputs:
