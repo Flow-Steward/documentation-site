@@ -83,7 +83,11 @@ A few rules apply to both levels:
 - **Your role is the ceiling.** The client never gets more than you can do
   yourself. *Monitor and run workflows* needs the `operator` or `admin` role;
   *Full authoring* needs `admin`. A level above your role is shown on the
-  consent page but cannot be selected. See
+  consent page but cannot be selected, and Flow Steward checks it again when you
+  approve. A `viewer` cannot approve either level. Your current role is checked on
+  every request: if an administrator lowers your role later, the connection
+  loses what the new role does not allow at once, and removing you from the
+  account or deactivating you ends it. See
   [Users, roles and access](users-roles-and-access).
 - **Full authoring is everything you can do.** It is `admin:all`, not a narrow
   "authoring" permission: the client can also change settings and other
