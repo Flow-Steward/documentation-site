@@ -1,6 +1,8 @@
 /** Own modal lifecycle only; EasyOps continues to own index/results and selection. */
 export function bindSearchDialog(dialog: HTMLDialogElement, trigger: HTMLButtonElement) {
  const document = dialog.ownerDocument;
+ const capture = {capture: true};
+ let disposed = false;
  let openedWithPointer = false;
  let previousOverflow: string | null = null;
  const focusSearch = () => {
@@ -8,6 +10,7 @@ export function bindSearchDialog(dialog: HTMLDialogElement, trigger: HTMLButtonE
   input?.focus(); input?.select();
  };
  const open = (fromPointer = false) => {
+  if (disposed) return;
   if (!dialog.open) {
    openedWithPointer = fromPointer;
    previousOverflow = document.body.style.overflow;
@@ -31,6 +34,7 @@ export function bindSearchDialog(dialog: HTMLDialogElement, trigger: HTMLButtonE
  };
  const clickTrigger = (event: MouseEvent) => {open(event.detail > 0);};
  const keyDown = (event: KeyboardEvent) => {
+  if (disposed) return;
   // Preserve the opening modality through in-modal Escape/typing.
   if (!dialog.open) delete trigger.dataset.pointerFocus;
   if ((event.metaKey || event.ctrlKey) && !event.altKey && !event.shiftKey && event.key.toLowerCase() === 'k') {
@@ -51,13 +55,15 @@ export function bindSearchDialog(dialog: HTMLDialogElement, trigger: HTMLButtonE
  dialog.addEventListener('click', backdrop);
  dialog.addEventListener('cancel', cancel);
  dialog.addEventListener('close', restore);
- document.addEventListener('keydown', keyDown, true);
+ document.addEventListener('keydown', keyDown, capture);
  return {open, close, dispose() {
+  if (disposed) return;
+  disposed = true;
   close();
   trigger.removeEventListener('click', clickTrigger);
   dialog.removeEventListener('click', backdrop);
   dialog.removeEventListener('cancel', cancel);
   dialog.removeEventListener('close', restore);
-  document.removeEventListener('keydown', keyDown, true);
+  document.removeEventListener('keydown', keyDown, capture);
  }};
 }
