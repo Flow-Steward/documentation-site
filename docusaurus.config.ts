@@ -51,6 +51,9 @@ const config: Config = {
     ],
   ],
 
+  clientModules: ['./src/privacy/client.js'],
+  stylesheets: ['/privacy/vendor/cookieconsent.css', '/privacy/style.css'],
+
   themes: [
     [
       '@easyops-cn/docusaurus-search-local',

@@ -1,0 +1,20 @@
+/* Flow Steward skin. Keep behavior in CookieConsent; designer edits this file. */
+#cc-main{color-scheme:light;--cc-font-family:'Google Sans Flex',system-ui,sans-serif;--cc-bg:#fff;--cc-primary-color:#000509;--cc-secondary-color:#656d72;--cc-modal-border-radius:20px;--cc-btn-border-radius:6px;--cc-modal-margin:20px;--cc-btn-primary-bg:#1e6251;--cc-btn-primary-color:#fff;--cc-btn-primary-border-color:#1e6251;--cc-btn-primary-hover-bg:#16493d;--cc-btn-primary-hover-color:#fff;--cc-btn-primary-hover-border-color:#16493d;--cc-btn-secondary-bg:#f4f5f5;--cc-btn-secondary-color:#3c4448;--cc-btn-secondary-border-color:#e6e9ea;--cc-btn-secondary-hover-bg:#eceeee;--cc-btn-secondary-hover-color:#000509;--cc-btn-secondary-hover-border-color:#c9ced1;--cc-toggle-on-bg:#1e6251;--cc-toggle-off-bg:#868b8f;--cc-cookie-category-block-bg:#f4f5f5;--cc-cookie-category-block-border:#e6e9ea;--cc-cookie-category-block-hover-bg:#eceeee;--cc-cookie-category-expanded-block-bg:#fff;--cc-separator-border-color:#e6e9ea;--cc-footer-bg:#f4f5f5;--cc-footer-border-color:#e6e9ea;--cc-footer-color:#656d72;--cc-link-color:#1e6251;--cc-overlay-bg:rgba(0,5,9,.4);--cc-z-index:100000}
+#cc-main .cm{border:1px solid #e6e9ea;box-shadow:0 12px 48px #0005091a;max-width:440px}
+#cc-main .cm__title,#cc-main .pm__title{font-size:20px;font-weight:500;letter-spacing:-.02em;line-height:1.3}
+#cc-main .cm__desc,#cc-main .pm__section-desc{font-size:14px;line-height:1.6}
+#cc-main .cm__texts{padding:24px 24px 0}
+#cc-main .cm__btns{padding:20px 24px 24px;border:0}
+#cc-main .cm__btn,#cc-main .pm__btn{font-weight:500;font-size:14px;min-height:44px;padding:10px 16px}
+#cc-main .cm__btn-group{gap:8px}
+#cc-main .cm__btn--secondary{background:#f4f5f5;color:#3c4448;border-color:#e6e9ea}
+#cc-main .cm__btn--secondary:hover{background:#eceeee;color:#000509;border-color:#c9ced1}
+#cc-main .pm{border:1px solid #e6e9ea;box-shadow:0 16px 64px #00050926}
+#cc-main :is(button,a):focus-visible{outline:2px solid #1e6251;outline-offset:3px}
+#cc-main a{color:#1e6251;text-underline-offset:3px}
+.fs-legal-links{display:flex;flex-wrap:wrap;align-items:center;gap:8px 24px;margin-top:32px;font-size:14px;line-height:1.5}
+.fs-legal-links a,.fs-legal-links button{font:inherit;color:#656d72;text-decoration:none}
+.fs-legal-links button{padding:4px 0;border:0;background:transparent;cursor:pointer}
+.fs-legal-links a:hover,.fs-legal-links button:hover{color:#1e6251;text-decoration:underline;text-underline-offset:3px}
+@media(max-width:480px){#cc-main{--cc-modal-margin:12px}#cc-main .cm__texts{padding:20px 20px 0}#cc-main .cm__btns{padding:16px 20px 20px}#cc-main .cm__btn-group{flex-direction:column}.fs-legal-links{gap:8px 20px}}
+@media(prefers-reduced-motion:reduce){#cc-main{--cc-modal-transition-duration:0s}}
