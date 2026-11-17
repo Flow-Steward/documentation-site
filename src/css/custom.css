@@ -99,9 +99,11 @@ a{text-underline-offset:3px}button,input,select,textarea{font:inherit}
 .theme-doc-markdown .hash-link{color:var(--primary)}
 .theme-doc-markdown code{font-family:var(--ifm-font-family-monospace);font-weight:400;padding:2px 6px;border:0;background:var(--ifm-code-background);box-decoration-break:clone}
 .theme-code-block{margin:16px 0;border-radius:14px;background:var(--term)!important;box-shadow:none;overflow:hidden}
-.theme-code-block pre{margin:0;padding:18px 20px;background:var(--term)!important;color:var(--term-ink)!important;border-radius:14px;font:400 13.5px/1.7 var(--ifm-font-family-monospace)}
+.theme-code-block [class*='codeBlockContent']{display:flex;align-items:flex-start}
+.theme-code-block pre{flex:1;min-width:0;margin:0;padding:18px 20px;background:var(--term)!important;color:var(--term-ink)!important;border-radius:14px;font:400 13.5px/1.7 var(--ifm-font-family-monospace)}
 .theme-code-block pre code{padding:0;background:transparent;border-radius:0;font:inherit;color:inherit;box-decoration-break:slice}
 .theme-code-block [class*='codeBlockTitle']{border-color:rgba(236,239,238,.16);background:var(--term);color:var(--term-ink);padding:10px 20px;font-size:13px;font-weight:400}
+.theme-code-block [class*='buttonGroup']{position:static;flex:none;gap:4px;padding:10px 10px 10px 0}
 .theme-code-block [class*='buttonGroup'] button{width:36px;height:36px;padding:8px;border:1px solid rgba(236,239,238,.16);border-radius:8px;background:var(--term);color:var(--term-ink);opacity:1}
 .theme-code-block [class*='buttonGroup'] button:hover{background:#1e2a30}
 .theme-doc-markdown table{display:table;width:100%;margin:20px 0;border-collapse:collapse;font-size:16px;line-height:1.55}
