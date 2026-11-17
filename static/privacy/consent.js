@@ -63,7 +63,13 @@ async function run(config) {
     return changed;
   }
   function synchronize() {
-    if (pauseOnChangedChoice() && document.visibilityState !== 'hidden') location.reload();
+    if (!pauseOnChangedChoice() || document.visibilityState === 'hidden') return;
+    // Cookie Store can notify before CookieConsent's deferred callback updates
+    // observed. Let that callback commit our own choice; other-tab changes
+    // remain different and reload. Tracking is already paused synchronously.
+    requestAnimationFrame(() => setTimeout(() => {
+      if (rawConsent() !== observed && document.visibilityState !== 'hidden') location.reload();
+    }, 0));
   }
   // Register before loading GA: stop pagehide/engagement beacons synchronously,
   // including while CookieConsent's change callback is still queued.
