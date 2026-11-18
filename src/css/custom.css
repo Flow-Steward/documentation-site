@@ -12,7 +12,7 @@
   --primary:#1e6251; --primary-hover:#16493d; --primary-text:#fff; --primary-wash:#eaf2ef;
   --accent:#ff7504; --accent-hover:#c25800; --danger:#b3322b;
   --term:#000509; --term-ink:#ecefee;
-  --hdr-max:1360px; --hdr-pad:clamp(20px,4vw,56px); --docs-gap:clamp(24px,4vw,56px);
+  --hdr-mix:82%; --hdr-max:1360px; --hdr-pad:clamp(20px,4vw,56px); --docs-gap:clamp(24px,4vw,56px);
   --ifm-color-primary:var(--primary); --ifm-color-primary-dark:#195645; --ifm-color-primary-darker:#164d3f; --ifm-color-primary-darkest:#103b30;
   --ifm-color-primary-light:#287b66; --ifm-color-primary-lighter:#2e8c74; --ifm-color-primary-lightest:#3fa68d;
   --ifm-font-family-base:'Google Sans Flex',system-ui,sans-serif; --ifm-font-family-monospace:'Google Sans Code',monospace;
@@ -142,6 +142,13 @@ a{text-underline-offset:3px}button,input,select,textarea{font:inherit}
 
 /* Native paginator links retain their route metadata and keyboard behavior. */
 .pagination-nav{gap:1px;margin-top:clamp(64px,8vw,96px);background:var(--border-subtle);grid-template-columns:repeat(2,minmax(0,1fr))}
+/* No phantom previous/next cell when only one real link exists. */
+.pagination-nav:not(:has(.pagination-nav__link--prev)),.pagination-nav:not(:has(.pagination-nav__link--next)){display:flex;background:transparent}
+.pagination-nav:not(:has(.pagination-nav__link--prev)){justify-content:flex-end}
+.pagination-nav:not(:has(.pagination-nav__link--next)){justify-content:flex-start}
+.pagination-nav:not(:has(.pagination-nav__link--prev))>.pagination-nav__link,.pagination-nav:not(:has(.pagination-nav__link--next))>.pagination-nav__link{width:calc(50% - .5px)}
+.pagination-nav:empty{display:none}
+@media(max-width:767px){.pagination-nav:not(:has(.pagination-nav__link--prev))>.pagination-nav__link,.pagination-nav:not(:has(.pagination-nav__link--next))>.pagination-nav__link{width:100%}}
 .pagination-nav__link{position:relative;display:flex;flex-direction:column;justify-content:center;min-height:112px;padding:24px 68px 24px 0;border:0;border-radius:0;background:var(--canvas);color:var(--ink)}
 .pagination-nav__link--next{padding:24px 68px 24px 24px;text-align:right}
 .pagination-nav__link--prev{padding:24px 24px 24px 68px}
@@ -207,4 +214,23 @@ a{text-underline-offset:3px}button,input,select,textarea{font:inherit}
 
 .theme-doc-toc-desktop .table-of-contents ul .table-of-contents__link--active::before {
   left: calc(-4 * var(--ifm-toc-padding-horizontal) - 1px);
+}
+
+/* Same single-border search control and neutral clear button as the catalogs. */
+.docs-results-search-field{display:flex;align-items:center;gap:10px;min-width:0;height:44px;margin-bottom:1rem;padding:0 14px;border:1px solid var(--border-control);border-radius:6px;background:#fff;transition:border-color .2s ease}
+.docs-results-search-field:focus-within{border-color:var(--primary);outline:none;box-shadow:none}
+.docs-results-search-field>svg{flex:none;color:var(--ink-tertiary)}
+.docs-results-search-field input[type=search]{flex:1;width:0;min-width:0;height:42px;margin:0;padding:0;border:0;border-radius:0;background:transparent;color:var(--ink);font:400 15px/1.4 var(--ifm-font-family-base);appearance:none;outline:none!important;box-shadow:none!important}
+.docs-results-search-field input[type=search]:is(:focus,:focus-visible,:active){border:0;outline:none!important;box-shadow:none!important}
+.docs-results-search-field input::-webkit-search-cancel-button,.docs-results-search-field input::-webkit-search-decoration{appearance:none;-webkit-appearance:none;display:none}
+.docs-results-search-clear{display:grid;place-items:center;flex:none;width:36px;height:36px;margin-right:-10px;padding:0;border:0;border-radius:50%;background:transparent;color:var(--ink-secondary);cursor:pointer}
+.docs-results-search-clear[hidden]{display:none}
+.docs-results-search-clear>span{display:grid;place-items:center;width:24px;height:24px;border-radius:50%;background:color-mix(in srgb,var(--ink) 6%,transparent);transition:background-color .2s ease}
+.docs-results-search-clear:hover{color:var(--ink)}
+.docs-results-search-clear:hover>span{background:color-mix(in srgb,var(--ink) 12%,transparent)}
+.docs-results-search-clear:focus-visible{outline:2px solid var(--ink-tertiary);outline-offset:1px;box-shadow:none}
+
+/* Keep the back-to-top control above the fixed 72px mobile Quick start area. */
+@media(max-width:767px){
+  .theme-back-to-top-button{bottom:calc(72px + env(safe-area-inset-bottom,0px))}
 }

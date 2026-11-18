@@ -5,6 +5,7 @@ export function bindSearchDialog(dialog: HTMLDialogElement, trigger: HTMLButtonE
  let disposed = false;
  let openedWithPointer = false;
  let previousOverflow: string | null = null;
+ let previousRootOverflow: string | null = null;
  const focusSearch = () => {
   const input = dialog.querySelector<HTMLInputElement>('input[aria-label="Search"]');
   input?.focus(); input?.select();
@@ -15,6 +16,7 @@ export function bindSearchDialog(dialog: HTMLDialogElement, trigger: HTMLButtonE
   if (!dialog.open) {
    openedWithPointer = fromPointer;
    previousOverflow = document.body.style.overflow;
+   if (document.documentElement) {previousRootOverflow = document.documentElement.style.overflow; document.documentElement.style.overflow = 'hidden';}
    dialog.showModal();
    document.body.style.overflow = 'hidden';
   }
@@ -29,6 +31,7 @@ export function bindSearchDialog(dialog: HTMLDialogElement, trigger: HTMLButtonE
   // Ignore a queued old close after reopening, and make synchronous/queued cleanup idempotent.
   if (dialog.open || previousOverflow === null) return;
   document.body.style.overflow = previousOverflow; previousOverflow = null;
+  if (previousRootOverflow !== null) {document.documentElement.style.overflow = previousRootOverflow; previousRootOverflow = null;}
   if (openedWithPointer) trigger.dataset.pointerFocus = 'true';
   else delete trigger.dataset.pointerFocus;
   trigger.focus({preventScroll: true});

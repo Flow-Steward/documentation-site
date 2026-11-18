@@ -17,10 +17,6 @@ const sidebars: SidebarsConfig = {
     {
       type: 'category',
       label: 'Start Here',
-      link: {
-        type: 'generated-index',
-        description: 'Fast orientation for builders, admins, operators, developers, and MCP client users.',
-      },
       items: [
         'intro',
         'user/product-tour',

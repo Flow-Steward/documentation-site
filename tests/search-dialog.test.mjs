@@ -56,3 +56,11 @@ test('opening synchronizes the footer query with the actual search input after n
  const input=f.dialog.querySelector();input.value='workflow';controller.open();controller.close();
  input.value='';controller.open();assert.deepEqual(values,['workflow','']);controller.dispose();
 });
+
+test('search locks and restores the html scroller as well as body, including synchronous disposal',()=>{
+ const f=fixture({asyncClose:true});f.document.documentElement={style:{overflow:'clip'}};
+ f.controller.open();assert.equal(f.document.documentElement.style.overflow,'hidden');
+ f.controller.close();assert.equal(f.document.documentElement.style.overflow,'clip');
+ f.controller.open();f.controller.dispose();assert.equal(f.document.documentElement.style.overflow,'clip');
+ f.flushClose();assert.equal(f.document.documentElement.style.overflow,'clip');
+});

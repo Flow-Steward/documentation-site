@@ -16,6 +16,6 @@ export default function Footer(): ReactNode {
         <nav aria-label="Documentation"><h2>Documentation</h2>{groups.slice(0,2).flatMap(group=>group.items ?? []).map((item,i)=><Link key={i} to={item.to || item.href || '#'}>{item.label}</Link>)}</nav>
         <nav aria-label="Resources"><h2>Resources</h2>{groups.slice(2).flatMap(group=>group.items ?? []).map((item,i)=><Link key={i} to={item.to || item.href || '#'}>{item.label}</Link>)}<a href="https://github.com/Flow-Steward/flow-steward-app">GitHub</a></nav>
       </div>
-    </div><nav className="fs-legal-links" aria-label="Legal and privacy"><button type="button" onClick={() => window.dispatchEvent(new Event('fs:cookie-settings'))}>Cookie settings</button></nav><div className={styles.bottom}><span>© {new Date().getFullYear()} Flow Steward contributors · License: <a href="https://github.com/Flow-Steward/flow-steward-app/blob/main/LICENSE">Apache-2.0</a></span><span><img src={useBaseUrl('/img/eu-flag.svg')} alt="European Union flag" width="16" height="12" /> Built in Lithuania, EU</span></div></div>
+    </div><div className={styles.bottom}><span>© {new Date().getFullYear()} Flow Steward contributors · License: <a href="https://github.com/Flow-Steward/flow-steward-app/blob/main/LICENSE">Apache-2.0</a></span><span><img src={useBaseUrl('/img/eu-flag.svg')} alt="European Union flag" width="16" height="12" /> Built in Lithuania, EU</span></div></div>
   </footer>;
 }

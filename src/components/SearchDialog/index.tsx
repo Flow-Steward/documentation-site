@@ -8,6 +8,7 @@ import styles from './styles.module.css';
 
 export default function SearchDialog() {
  const [query, setQuery] = useState('');
+ const [shortcut, setShortcut] = useState('Ctrl K');
  const resultsUrl = useBaseUrl('/search/');
  const trigger = useRef<HTMLButtonElement>(null);
  const dialog = useRef<HTMLDialogElement>(null);
@@ -16,14 +17,17 @@ export default function SearchDialog() {
  useEffect(() => {
   if (!dialog.current || !trigger.current) return;
   controls.current = bindSearchDialog(dialog.current, trigger.current, setQuery);
-  return () => {controls.current?.dispose(); controls.current = null;};
+  setShortcut(/Mac|iPhone|iPad|iPod/i.test(navigator.platform || '') ? '⌘K' : 'Ctrl K');
+  const openSearch = () => controls.current?.open(true);
+  document.addEventListener('fs:open-docs-search', openSearch);
+  return () => {document.removeEventListener('fs:open-docs-search', openSearch); controls.current?.dispose(); controls.current = null;};
  }, []);
  useEffect(() => {dialog.current?.querySelector('[class*="searchClearButton"]')?.setAttribute('aria-label', 'Clear search');}, [query]);
  useEffect(() => {controls.current?.close();}, [pathname, search, hash]);
  return <>
-  <button ref={trigger} type="button" className={styles.trigger} aria-label="Search documentation" aria-haspopup="dialog" aria-controls="documentation-search-dialog">
-   <svg viewBox="0 0 20 20" width="18" height="18" fill="none" aria-hidden="true"><circle cx="8.5" cy="8.5" r="5.5" stroke="currentColor" strokeWidth="1.5"/><path d="m13 13 4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
-   <span>Search</span><kbd>⌘ / Ctrl K</kbd>
+  <button ref={trigger} type="button" className={styles.trigger} aria-label={`Search documentation (${shortcut})`} title={`Search (${shortcut})`} aria-haspopup="dialog" aria-controls="documentation-search-dialog">
+   <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+   <span>Search</span><kbd>{shortcut}</kbd>
   </button>
   <dialog ref={dialog} id="documentation-search-dialog" className={styles.dialog} aria-labelledby="documentation-search-heading">
    <h2 id="documentation-search-heading" className={styles.hiddenLabel}>Search documentation</h2>

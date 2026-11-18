@@ -45,3 +45,9 @@
 @media(prefers-reduced-motion:reduce){.search :global([class*='hitAction']){transition:none;}}
 @media(max-width:1270px){.trigger kbd{display:none;}}
 @media(max-width:599px){.trigger{justify-content:center;width:36px;padding:0;}.trigger span,.trigger kbd{display:none;}}
+/* Shared SiteHeader controls; the existing Docs result index stays unchanged. */
+.trigger{gap:10px;height:36px;min-width:200px;padding:0 8px 0 10px;border-color:#bbbfc1;border-radius:6px;background:#fff;color:#656d72;line-height:1;transition:border-color .2s ease;}
+.trigger:hover{border-color:#000509;color:#3c4448;}.trigger kbd{display:inline-block;padding:3px 5px;border:1px solid #e6e9ea;border-radius:4px;background:#f4f5f5;font:500 11px/1 var(--ifm-font-family-monospace);letter-spacing:.04em;color:#656d72;}
+.trigger:focus-visible{outline:none;box-shadow:0 0 0 2px var(--canvas,#fff),0 0 0 4px var(--primary,#1e6251);}.trigger[data-pointer-focus]:focus{outline:none;box-shadow:none;}
+@media(min-width:960px) and (max-width:1199px){.trigger{min-width:36px;width:36px;padding:0;justify-content:center;color:#000509;}.trigger span,.trigger kbd{display:none;}}
+@media(max-width:959px){.trigger{justify-content:center;width:44px;height:44px;min-width:44px;padding:0;border:0;background:transparent;color:#000509;}.trigger svg{width:20px;height:20px;}.trigger span,.trigger kbd{display:none;}}
