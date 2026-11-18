@@ -1,3 +1,3 @@
-import {initConsent} from './consent.js?v=1.0.1';
-// The docs site deliberately has no analytics property of its own.
-initConsent({domain:'flowsteward.org',measurementId:'',policyLinks:[]}).catch(error => console.error('Privacy controls could not initialize',error));
+import {initConsent} from './consent.js?v=1.1.0';
+// Same GA4 web stream as the main site; CookieConsent controls all tag loading.
+initConsent({domain:'flowsteward.org',measurementId:'G-F7JFTT4K8M',policyLinks:[]}).catch(error => console.error('Privacy controls could not initialize',error));

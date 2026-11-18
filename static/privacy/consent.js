@@ -78,7 +78,7 @@ async function run(config) {
   window.addEventListener('pageshow', synchronize, true);
   window.addEventListener('focus', synchronize, true);
   await CookieConsent.run({
-    mode: 'opt-in', revision: 1, autoShow: true, hideFromBots: true,
+    mode: 'opt-in', revision: 2, autoShow: true, hideFromBots: true,
     disablePageInteraction: false,
     cookie: {name: cookieName, domain, path: '/', secure: true, sameSite: 'Lax', expiresAfterDays: 180},
     guiOptions: {
@@ -95,7 +95,7 @@ async function run(config) {
     language: {default: 'en', translations: {en: {
       consentModal: {
         title: 'Your privacy, your choice',
-        description: 'We use necessary storage to keep the site working and remember your choice. With your permission, Google Analytics helps us understand how the main website is used. You can change your choice at any time in Cookie settings.',
+        description: 'We use necessary storage to keep the site working and remember your choice. With your permission, Google Analytics helps us understand how the website and documentation are used. You can change your choice at any time in Cookie settings.',
         acceptAllBtn: 'Accept analytics', acceptNecessaryBtn: 'Reject', showPreferencesBtn: 'Settings',
         ...(footer ? {footer} : {}),
       },
@@ -104,7 +104,7 @@ async function run(config) {
         sections: [
           {description: 'UAB Seek Around, Lithuania, operates flowsteward.org and docs.flowsteward.org. Your choice is shared across these two sites and remembered for 180 days. Rejecting analytics does not limit access to the website or documentation.'},
           {title: 'Necessary', description: 'Always active. The fs_consent cookie remembers your privacy choice. WordPress also uses necessary login and security cookies when you access the administration area. Documentation may store interface preferences in your browser.', linkedCategory: 'necessary'},
-          {title: 'Analytics', description: 'Optional. Google Analytics measures page visits and interactions on flowsteward.org. Its tag is blocked until you accept. We configure _ga and _ga_* cookies for up to 180 days; browsers may shorten this. The documentation site does not load Google Analytics. Withdrawing consent stops analytics and removes its accessible cookies. <a href="https://policies.google.com/technologies/partner-sites" target="_blank" rel="noopener noreferrer">How Google uses information</a>.', linkedCategory: 'analytics'},
+          {title: 'Analytics', description: 'Optional. Google Analytics measures page visits and interactions on flowsteward.org and docs.flowsteward.org. Its tag is blocked until you accept. We configure _ga and _ga_* cookies for up to 180 days; browsers may shorten this. Withdrawing consent stops analytics and removes its accessible cookies. <a href="https://policies.google.com/technologies/partner-sites" target="_blank" rel="noopener noreferrer">How Google uses information</a>.', linkedCategory: 'analytics'},
           ...(footer ? [{title: 'More information', description: footer}] : []),
         ],
       },

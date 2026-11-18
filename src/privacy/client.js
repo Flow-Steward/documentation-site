@@ -5,6 +5,6 @@ export function onRouteDidUpdate() {
   const script=document.createElement('script');
   script.id='fs-privacy-client';
   script.type='module';
-  script.src='/privacy/docs.js?v=1.0.1';
+  script.src='/privacy/docs.js?v=1.1.0';
   document.head.append(script);
 }
