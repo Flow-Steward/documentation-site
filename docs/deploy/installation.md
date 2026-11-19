@@ -13,12 +13,15 @@ exactly at its `v<VERSION>` tag instead resolves that release's official images
 through published release metadata; unavailable or mismatched release images stop
 installation rather than falling back to a source build.
 Railway uses a published Compact image
-and three Railway services; the downloadable fresh-project example stages them
-in dependency order.
+and three Railway services; the guided installer stages them in dependency order.
 
-The hosted-provider examples below retain the reported 2026-09-28 deployment
-results and pinned images. The public product checkout does not establish the
-current contents of the external deployment repository or downloaded helpers,
+Every provider installation lives in the public
+[deployment configuration repository](https://github.com/Flow-Steward/flow-steward-deploy), one folder per
+provider. Its [`release.env`](https://github.com/Flow-Steward/flow-steward-deploy/blob/main/release.env) pins the latest published release, and a scheduled job
+moves every provider file to each new release automatically, so this page names
+no image digests. The hosted-provider sections below retain their dated
+deployment results. The public product checkout does not establish the
+current contents of the external deployment repository,
 registry image availability, provider CLI behavior, account requirements or
 pricing. Verify those with the linked providers before use. The dated checks do
 not certify a deployment of current main; current-source requirements called out
@@ -26,11 +29,11 @@ below do not establish that a corresponding release has been published.
 
 | Destination | Application layout | Entry point |
 | --- | --- | --- |
-| VPS with Docker | Compact (default) or Scalable | `./install.sh` in a Git checkout |
-| Railway | One Compact runtime, separate PostgreSQL and RabbitMQ | `bash deploy-compact.sh` with guided project setup |
+| VPS with Docker (DigitalOcean Droplet, Hostinger, Hetzner, …) | Compact (default) or Scalable | `./install.sh` in a checkout of the latest release ([`vps/`](https://github.com/Flow-Steward/flow-steward-deploy/tree/main/vps)) |
+| Railway | One Compact runtime, separate PostgreSQL and RabbitMQ | `bash railway/install.sh` from the [deployment repository](https://github.com/Flow-Steward/flow-steward-deploy/tree/main/railway) |
 | Render | One Compact runtime, separate PostgreSQL and RabbitMQ | [One public Blueprint](render) that pulls the Compact image |
 | Elestio | Compact, PostgreSQL and RabbitMQ on one dedicated VM | [Compose template](elestio) using the same public images |
-| Fly.io | One Compact Machine, separate PostgreSQL and RabbitMQ Machines | [Guided installer and three TOML examples](#flyio-compact-with-persistent-volumes) |
+| Fly.io | One Compact Machine, separate PostgreSQL and RabbitMQ Machines | `bash fly/install.sh` from the [deployment repository](https://github.com/Flow-Steward/flow-steward-deploy/tree/main/fly) |
 
 The Railway, Render, Elestio and Fly.io guides cover Compact. For Scalable, use the VPS
 installation path until a separate hosted deployment has been tested and
@@ -109,7 +112,18 @@ pointing at the VPS and decide whether Flow Steward or an existing reverse proxy
 will own TLS.
 
 ```bash
-git clone https://github.com/Flow-Steward/flow-steward-app.git flow-steward && cd flow-steward && ./install.sh
+bash <(curl -fsSL https://raw.githubusercontent.com/Flow-Steward/flow-steward-deploy/main/vps/install.sh)
+```
+
+The [VPS launcher](https://github.com/Flow-Steward/flow-steward-deploy/tree/main/vps) asks GitHub for the latest
+published release when it runs, clones the application repository at that
+release tag into `./flow-steward` and starts `./install.sh`. The equivalent
+manual commands:
+
+```bash
+tag=$(curl -fsSL https://api.github.com/repos/Flow-Steward/flow-steward-app/releases/latest | grep -oE '"tag_name": *"[^"]+"' | cut -d'"' -f4)
+git clone --branch "$tag" https://github.com/Flow-Steward/flow-steward-app.git flow-steward
+cd flow-steward && ./install.sh
 ```
 
 Run this command from the parent directory where you want the new `flow-steward`
@@ -301,11 +315,13 @@ RabbitMQ before database bootstrap, using `FS_DB_DSN` and `RABBITMQ_URL` and
 preserving RabbitMQ TLS verification. It defaults to `0`; retain staged dependency
 startup unless you explicitly configure this wait in an image that supports it.
 
-Download the [Compact installer](/examples/railway/deploy-compact.sh), then
-run it from a new directory:
+Clone the [deployment repository](https://github.com/Flow-Steward/flow-steward-deploy) and run the Railway
+installer from it:
 
 ```bash
-bash deploy-compact.sh
+git clone https://github.com/Flow-Steward/flow-steward-deploy.git
+cd flow-steward-deploy
+bash railway/install.sh
 ```
 
 The installer signs you in through Railway's browser flow if needed and creates
@@ -323,12 +339,11 @@ If you already linked an empty project in that directory, the installer uses it.
 It refuses to modify a project that already has services. It generates
 distinct PostgreSQL and RabbitMQ passwords, creates
 the three services and their volumes before connecting images, waits for the
-database and broker to become ready, and only then starts Compact. It pins the
-images verified by the Flow Steward release it names (`flow_steward_release` at
-the top of the file), checks `/health/ready`, and prints the private
+database and broker to become ready, and only then starts Compact. It uses the
+images of the release pinned in that repository's [`release.env`](https://github.com/Flow-Steward/flow-steward-deploy/blob/main/release.env), which follows
+the latest published release, checks `/health/ready`, and prints the private
 first-admin setup link from Compact's deploy logs. Open that link promptly;
-it expires 15 minutes after issuance. Keep the downloaded file if you need
-to review the exact commands;
+it expires 15 minutes after issuance. Review [`railway/install.sh`](https://github.com/Flow-Steward/flow-steward-deploy/blob/main/railway/install.sh) for the exact commands;
 it is a fresh-install example, not an upgrade tool. If a step fails, inspect
 the named Railway services and their logs before deciding whether to remove
 the partial installation and start with a new empty project.
@@ -365,8 +380,7 @@ POSTGRES_PASSWORD=<new strong random password>
 `PGDATA` must be a subdirectory of the volume because a new Railway volume can
 contain `lost+found`, which PostgreSQL refuses as its data directory. Use the
 published **Flow Steward PostgreSQL 17 image with Apache AGE and pgvector**
-pinned in the helper, for example
-`ghcr.io/flow-steward/flow-steward-postgres@sha256:1904c420b22fc6554f145ef5904404e5f907ea81d85fa500e9cbde96a71e495e`.
+pinned as `POSTGRES_IMAGE` in [`release.env`](https://github.com/Flow-Steward/flow-steward-deploy/blob/main/release.env).
 Railway's standard managed PostgreSQL image does not supply the required AGE
 extension. Wait until its logs say the database is ready to accept connections.
 Keep port 5432 private.
@@ -382,8 +396,7 @@ RABBITMQ_DEFAULT_PASS=<different strong random password>
 RABBITMQ_DEFAULT_VHOST=flow
 ```
 
-Connect the RabbitMQ image the release uses,
-`rabbitmq@sha256:e582c0bc7766f3342496d8485efb5a1df782b5ce3886ad017e2eaae442311f69`.
+Connect the RabbitMQ image the release uses, `RABBITMQ_IMAGE` in [`release.env`](https://github.com/Flow-Steward/flow-steward-deploy/blob/main/release.env).
 Wait for the AMQP listener on port 5672 and keep it private; the management
 port must not be published just to make the app work.
 
@@ -413,9 +426,8 @@ PORT=8080
 Configure one replica, health check `/health/ready`, **Always** restart, zero
 deployment overlap, and at least 180 seconds of draining time. Compact is a
 single-runtime profile; overlapping two live copies against the same database
-and broker is unsupported. Finally connect the Compact image pinned in the
-helper, for example
-`ghcr.io/flow-steward/flow-steward-compact@sha256:df980396aacc3b80da0387d1bd63702aa4bbe78b4a1eec5a06e0a84c8a4deb31`.
+and broker is unsupported. Finally connect the Compact image pinned as
+`COMPACT_IMAGE` in [`release.env`](https://github.com/Flow-Steward/flow-steward-deploy/blob/main/release.env).
 Wait for Railway deployment status **Success** and HTTP readiness. A successful
 image upload or a running PostgreSQL service alone does not prove the app is
 ready.
@@ -439,7 +451,7 @@ token into tickets, screenshots, or a query string.
 Opening the public `/bootstrap` page directly shows a **Setup token** field:
 the public page cannot display the secret. Use the complete URL containing
 `#setup-token=...` instead. The browser removes that fragment from the address
-bar and submits the token with the form. The downloaded deployment example
+bar and submits the token with the form. The Railway installer
 prints this URL when Compact first becomes ready. If you configured Railway
 manually, open **Compact → Deployments → current deployment → Deploy Logs** in
 the Railway dashboard and find the line beginning `Flow Steward has no
@@ -499,11 +511,9 @@ saved runtime settings for that command alone, then uses its container-aware
 management adapters. Do not read or copy
 `/data/state/runtime-secrets.json` yourself. If `flow-steward` is not found,
 the deployed image predates this command: update the Compact image after checking
-its deployment requirements. Until then,
-the [legacy Railway command wrapper](/examples/railway/admin-compact.sh) can
-run the packaged CLI over Railway SSH from your computer. That fallback needs
-Railway CLI and a registered SSH key; `railway ssh --service compact` opens the
-same running container from a locally linked Railway project.
+its deployment requirements. `railway ssh --service compact` opens the running
+container from a locally linked Railway project; it needs the Railway CLI and a
+registered SSH key.
 
 The command is part of the Compact image, so its invocation is the same in a
 container console on another provider. Each provider's deployment, persistent
@@ -545,7 +555,7 @@ and generated keys survived. Before holding valuable data, arrange backups of
 **all three** persistent stores: PostgreSQL, RabbitMQ, and `/data`. The
 Compose-based Flow Steward restore command is not a Railway restore procedure.
 
-The downloadable example automates the passwords, services, volumes, domain,
+The Railway installer automates the passwords, services, volumes, domain,
 variables, and dependency sequence for a fresh project. Manual setup still
 requires these steps. `PORT=8080` must match the Compact listener because
 Railway uses it for its health check; the domain target port alone does not
@@ -566,8 +576,7 @@ and ran it (`Hello, …!` output); after a Compact restart the same browser sess
 project, workflow and job were still there and a second run completed.
 
 Fresh guided installation on **2026-09-28** used Compact source
-`31652e30e9c65b16576e9a4b3d105072c24b8337`, image index
-`sha256:dee794207e38a4828cadd659cb41cbeaf65a1bdfedd6e4532bcb2a89c77681b1`.
+`31652e30e9c65b16576e9a4b3d105072c24b8337`.
 The actual script generated credentials, deployed dependencies in sequence
 and delivered the private bootstrap link. First-administrator setup, browser
 login, native CLI administration and user/session/file/key persistence after
@@ -585,15 +594,14 @@ Use the same public Compact, extension-enabled PostgreSQL and RabbitMQ images
 as the Render and Elestio examples. Fly uses one application per image, so
 this installation has three TOMLs:
 
-- [Compact configuration](/examples/fly/compact.toml)
-- [PostgreSQL configuration](/examples/fly/postgres.toml)
-- [RabbitMQ configuration](/examples/fly/rabbitmq.toml)
-- [Guided installation script](/examples/fly/install.sh)
-- [Complete installation commands](/examples/fly/installation.txt)
+- [Compact configuration](https://github.com/Flow-Steward/flow-steward-deploy/blob/main/fly/compact.toml)
+- [PostgreSQL configuration](https://github.com/Flow-Steward/flow-steward-deploy/blob/main/fly/postgres.toml)
+- [RabbitMQ configuration](https://github.com/Flow-Steward/flow-steward-deploy/blob/main/fly/rabbitmq.toml)
+- [Guided installation script](https://github.com/Flow-Steward/flow-steward-deploy/blob/main/fly/install.sh)
+- [Complete installation commands](https://github.com/Flow-Steward/flow-steward-deploy/blob/main/fly/README.md)
 
-The same files are in the public
-[deployment configuration repository](https://github.com/Flow-Steward/flow-steward-deploy/tree/main/fly).
-They pull pinned images; they do not build a separate Fly-specific image.
+They pull the images pinned in [`release.env`](https://github.com/Flow-Steward/flow-steward-deploy/blob/main/release.env), which follows the latest
+published release; they do not build a separate Fly-specific image.
 
 Install [Fly CLI](https://fly.io/docs/flyctl/install/); the installer also
 needs `jq`, `openssl` and `curl`. The reported check required a paid account for a persistent
