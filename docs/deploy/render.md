@@ -55,8 +55,7 @@ Render's automatic second deploy went live about a minute later; no action was
 needed.
 
 Fresh Blueprint acceptance on **2026-09-28** used Compact source
-`31652e30e9c65b16576e9a4b3d105072c24b8337`, image digest
-`sha256:dee794207e38a4828cadd659cb41cbeaf65a1bdfedd6e4532bcb2a89c77681b1`.
+`31652e30e9c65b16576e9a4b3d105072c24b8337`.
 It covered readiness, first-administrator setup, browser sign-in, the users,
 projects, jobs and status CLI commands, and a restart preserving the user,
 existing session, a data file and saved runtime keys. Graceful shutdown was

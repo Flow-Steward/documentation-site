@@ -116,15 +116,17 @@ hook without the same `/data` volume is not an equivalent bootstrap environment.
 ### Guided fresh-project installation
 
 Use the [Railway installation guide](installation#railway-compact-in-dependency-order)
-and [downloadable helper](/examples/railway/deploy-compact.sh). The guide describes
+and the [Railway installer](https://github.com/Flow-Steward/flow-steward-deploy/tree/main/railway). The guide describes
 a helper that handles sign-in and empty-project setup, starts PostgreSQL then
 RabbitMQ, and connects Compact only after its dependencies are ready. It is
 intended for a fresh project, not updates or resuming an interrupted installation.
-Review the helper's behavior and fixed image digests before running it;
-these provider release pins are distinct from a local source build.
+Its images are the release pinned in [`release.env`](https://github.com/Flow-Steward/flow-steward-deploy/blob/main/release.env), which follows the latest
+published release; these provider pins are distinct from a local source build.
 
 ```bash
-bash deploy-compact.sh
+git clone https://github.com/Flow-Steward/flow-steward-deploy.git
+cd flow-steward-deploy
+bash railway/install.sh
 ```
 
 An interrupted run can leave billable partial resources. Inspect and clean up
@@ -279,11 +281,6 @@ flow-steward database status
 
 Run it in the provider's live container shell with the existing `/data` mount.
 It loads saved runtime settings without requiring you to extract secret files.
-The historical [Railway admin wrapper](/examples/railway/admin-compact.sh)
-(`static/examples/railway/admin-compact.sh`) is documented as a fallback for older
-images: `bash admin-compact.sh users list`. Confirm its requirements and selectors
-in the linked script before use; this wrapper is separate from the current
-in-container command.
 
 Host installation, Compose stack/config management, and Docker quality commands
 are unavailable in this provider shell. `doctor` can report configuration but
