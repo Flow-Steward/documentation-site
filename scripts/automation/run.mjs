@@ -2,7 +2,7 @@ import {readFileSync, writeFileSync, appendFileSync, statSync, readdirSync, exis
 import {execFileSync} from 'node:child_process';
 import {resolve} from 'node:path';
 import {checkpoint, SHA, validateProposal} from './proposal.mjs';
-import {sourceContext} from './source.mjs';
+import {pinSourceRevision, sourceContext} from './source.mjs';
 import {reviewPlan, checkPlan, checkReceipt, combineReceipts} from './batches.mjs';
 import {githubApi, publishProposal, DOCS_REPO, BRANCH} from './publish.mjs';
 
@@ -45,9 +45,12 @@ if (action === 'prepare') {
   writeFileSync(resolve(directory, 'plan.json'), JSON.stringify(plan, null, 2) + '\n');
   writeFileSync(resolve(directory, 'changed-paths.txt'), context.changedPaths.join('\n') + '\n');
   output('tasks', JSON.stringify(plan.tasks.map(task => task.id)));
-  output('source_sha', sourceSha); output('docs_sha', docsSha);
   output('needed', context.mode === 'unchanged' ? 'false' : 'true');
   console.log(`Documentation context: ${context.mode}, ${context.changedPaths.length} source paths`);
+} else if (action === 'pin-source') {
+  const metadata = loadJSON(metadataPath);
+  if (gitSha(process.cwd()) !== metadata.docsSha) throw new Error('checkout differs from documentation base');
+  pinSourceRevision(input, metadata.sourceSha);
 } else if (action === 'select-task') {
   const metadata = loadJSON(metadataPath), directory = resolve(metadataPath, '..');
   if (gitSha(process.cwd()) !== metadata.docsSha) throw new Error('checkout differs from documentation base');

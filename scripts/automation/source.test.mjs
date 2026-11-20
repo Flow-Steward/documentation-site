@@ -4,7 +4,27 @@ import {execFileSync} from 'node:child_process';
 import {mkdtempSync, rmSync, writeFileSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
-import {sourceContext} from './source.mjs';
+import {pinSourceRevision, sourceContext} from './source.mjs';
+
+test('a prepared source revision must be on public main before it can be checked out', t => {
+  const root = mkdtempSync(join(tmpdir(), 'fs-source-pin-test-'));
+  t.after(() => rmSync(root, {recursive: true, force: true}));
+  const git = (...args) => execFileSync('git', args, {cwd: root, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe']}).trim();
+  git('init', '-b', 'main'); git('config', 'user.email', 'test@example.invalid'); git('config', 'user.name', 'Test');
+  git('commit', '--allow-empty', '-m', 'prepared');
+  const snapshot = git('rev-parse', 'HEAD');
+  git('commit', '--allow-empty', '-m', 'advanced main');
+  const main = git('rev-parse', 'HEAD');
+  git('update-ref', 'refs/remotes/origin/main', main);
+  git('checkout', '-b', 'unrelated');
+  git('commit', '--allow-empty', '-m', 'off main');
+  const unrelated = git('rev-parse', 'HEAD');
+  git('checkout', 'main');
+  assert.throws(() => pinSourceRevision(root, unrelated), /public main/);
+  assert.equal(git('rev-parse', 'HEAD'), main);
+  pinSourceRevision(root, snapshot);
+  assert.equal(git('rev-parse', 'HEAD'), snapshot);
+});
 
 test('bootstrap covers the tree and later context covers every commit since acceptance', t => {
   const root = mkdtempSync(join(tmpdir(), 'fs-source-test-'));
